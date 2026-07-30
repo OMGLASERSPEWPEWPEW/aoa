@@ -1,15 +1,22 @@
 import { supabase } from './supabase'
 
+type Provider = 'anthropic' | 'openai' | 'gemini' | 'deepseek'
+
 interface CallModelOptions {
+  provider?: Provider
   model?: string
   systemPrompt?: string
   messages: { role: 'user' | 'assistant'; content: string }[]
   maxTokens?: number
+  temperature?: number
 }
 
 export async function callModel(options: CallModelOptions): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new Error('Not authenticated')
+
+  const provider = options.provider ?? 'anthropic'
+  const model = options.model ?? 'claude-sonnet-4-20250514'
 
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-gateway`,
@@ -20,10 +27,12 @@ export async function callModel(options: CallModelOptions): Promise<string> {
         Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
-        model: options.model ?? 'claude-sonnet-4-20250514',
+        provider,
+        model,
         system: options.systemPrompt,
         messages: options.messages,
-        max_tokens: options.maxTokens ?? 1024,
+        maxTokens: options.maxTokens ?? 1024,
+        temperature: options.temperature,
       }),
     },
   )
@@ -34,5 +43,5 @@ export async function callModel(options: CallModelOptions): Promise<string> {
   }
 
   const result = await response.json()
-  return result.content?.[0]?.text ?? result.text ?? ''
+  return result.text ?? ''
 }
