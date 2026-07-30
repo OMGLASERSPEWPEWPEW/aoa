@@ -1,0 +1,109 @@
+{
+  "divisions": [
+    {
+      "name": "Command",
+      "color": "yellow",
+      "hex": "#FFD700",
+      "emoji": "Y",
+      "description": "Strategic leadership and product orchestration",
+      "agents": [
+        "zephyr",
+        "prd-specialist"
+      ]
+    },
+    {
+      "name": "Engineering",
+      "color": "blue",
+      "hex": "#3B82F6",
+      "emoji": "B",
+      "description": "Core development, architecture, and infrastructure",
+      "agents": [
+        "frontend-developer",
+        "backend-architect",
+        "Sashiko-code-architect",
+        "devops-engineer"
+      ]
+    },
+    {
+      "name": "Quality",
+      "color": "red",
+      "hex": "#EF4444",
+      "emoji": "R",
+      "description": "Testing, security, debugging, and performance",
+      "agents": [
+        "Argus-code-reviewer",
+        "test-engineer",
+        "security-engineer",
+        "debugger",
+        "performance-engineer"
+      ]
+    },
+    {
+      "name": "Design",
+      "color": "purple",
+      "hex": "#A855F7",
+      "emoji": "P",
+      "description": "UI/UX design, research, and accessibility",
+      "agents": [
+        "ui-designer",
+        "ux-researcher",
+        "Dorsaidh-mobile-ux-optimizer",
+        "accessibility-specialist"
+      ]
+    },
+    {
+      "name": "Growth",
+      "color": "orange",
+      "hex": "#F97316",
+      "emoji": "O",
+      "description": "Marketing, branding, and public relations",
+      "agents": [
+        "marketing",
+        "Theia-branding",
+        "public-relations"
+      ]
+    },
+    {
+      "name": "Operations",
+      "color": "cyan",
+      "hex": "#06B6D4",
+      "emoji": "C",
+      "description": "Git workflows, documentation, education, and legal",
+      "agents": [
+        "git-manager",
+        "technical-writer",
+        "montessori-guide",
+        "legal-advisor"
+      ]
+    },
+    {
+      "name": "Intelligence",
+      "color": "green",
+      "hex": "#22C55E",
+      "emoji": "G",
+      "description": "Analytics, metrics, and data-driven insights",
+      "agents": [
+        "analytics-engineer"
+      ]
+    },
+    {
+      "name": "Empathy",
+      "color": "pink",
+      "hex": "#EC4899",
+      "emoji": "K",
+      "description": "Emotional safety, sensitivity review, and user wellbeing. This division is flexible -- Zephyr should assess whether your project needs it and recommend domain-specific agents to add.",
+      "agents": [
+        "Hestia-emotional-safety-advocate",
+        "sensitivity-reader"
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2026-02-16",
+    "totalAgents": 25,
+    "totalDivisions": 8,
+    "inspiration": "Star Trek Starfleet divisions",
+    "pattern": "HarborMoon"
+  }
+}
