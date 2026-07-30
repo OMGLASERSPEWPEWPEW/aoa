@@ -169,5 +169,12 @@ Agents organized in `.claude/agents/divisions.json`:
 | `/observe` | Diagnostic evolution |
 | `/cap` | Screenshot and annotate UI |
 | `/clio` | Language precision check |
+| `/create-tests` | Incremental test generation and coverage reporting |
+| `/implementation` | Implement features from /new-feature docs |
+| `/promote-hook` | Promote hooks/skills to patterns library + all projects |
+| `/refactor` | Structured refactoring with test checkpoints |
+| `/security-review` | Security audit — trust boundaries, data flows |
+| `/search-knowledge` | Cross-project search for patterns and prior solutions |
+| `/rs` | Restart dev server |
 
 **Skills are NEVER auto-triggered.** They must be explicitly invoked by the user with `/<skill-name>`.

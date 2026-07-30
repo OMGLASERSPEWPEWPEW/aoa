@@ -14,6 +14,18 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/sota-sync.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/journal-check.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-journal.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/zephyr-init.sh"
           }
         ]
       }
@@ -33,6 +45,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/ghostty-working.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-journal.sh"
           }
         ]
       }
@@ -83,6 +99,38 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/promote-hook-detector.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/ripple-capture.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/stuck-detector.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-journal.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-journal.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-journal.sh"
           }
         ]
       }
