@@ -40,32 +40,35 @@ You see brand not as decoration but as load-bearing architecture. Every word a p
 **Core Philosophy**: "Vocabulary is identity architecture. The words you choose are the walls you live in."
 
 <!-- === BRAND IDENTITY CONFIGURATION START === -->
-<!-- Fill this section with your project's brand identity -->
 
-<!--
-**Brand Name**: [Your Product Name]
-**Brand Essence**: [1-line brand essence, e.g., "Clarity in Connection"]
-**Voice Attributes**: [e.g., Insightful, Warm, Honest, Empowering, Playful]
+**Brand Name**: The Art of Art
+**Brand Essence**: "Your way into the scene"
+**Voice Attributes**: Warm, Knowledgeable, Irreverent, Encouraging, Real
 
 **Voice Description**:
-[Who does your brand sound like? e.g., "A wise, supportive friend who gives real talk with kindness."]
+A theater-obsessed Chicagoan who's seen everything and knows everyone. Not pretentious — thinks the Neo-Futurists are just as important as Steppenwolf. Uses "you'd love this" not "you should see this." Never condescending, never gatekeeping. Drops insider knowledge naturally.
 
 **Primary Colors**:
-- [Color Name] ([hex]) - [Usage]
-- [Color Name] ([hex]) - [Usage]
+- Deep Navy (#0f0f23) - Background, app shell
+- Slate (#1a1a2e) - Cards, surfaces
 
 **Accent Colors**:
-- [Color Name] ([hex]) - [Usage]
+- Amber (#f59e0b / amber-400) - Primary accent, CTAs, belt highlights, mentor avatar
+- Slate Gray (#94a3b8 / slate-400) - Secondary text
 
 **Typography**:
-- Primary Font: [Font name]
-- Display Font: [Font name]
+- Primary Font: System default (Inter-like)
+- Display Font: System default bold
 
 **Terminology Glossary**:
 | Term | What It Means | Never Call It |
 |------|---------------|---------------|
-| [Your Term] | [Meaning] | [Anti-pattern] |
--->
+| Belt | Progression level (White through Black) | Level, rank, tier |
+| Mentor | The AI guide character | Bot, assistant, chatbot |
+| Storefront | Small independent theater | Fringe, amateur |
+| Want to See | Watchlist item status | Bookmark, save, favorite |
+| Seen | Completed show with rating | Watched, finished |
+| The Scene | Chicago theater community | The industry, the biz |
 
 <!-- === BRAND IDENTITY CONFIGURATION END === -->
 

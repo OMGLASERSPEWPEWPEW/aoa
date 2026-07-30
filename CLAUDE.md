@@ -8,7 +8,7 @@ A map-centric PWA that guides newcomers into the Chicago theater scene through a
 - **Backend**: Supabase Edge Functions (Deno) — all server-side logic
 - **Auth + DB**: Supabase (auth, Postgres, Realtime, RLS)
 - **AI**: Multi-provider gateway via Edge Function (see `supabase/functions/ai-gateway/`)
-- **Map**: Mapbox GL JS (pending — Phase 3)
+- **Map**: Mapbox GL JS (installed, needs `VITE_MAPBOX_TOKEN` in .env.local)
 - **Offline**: Dexie v4 (IndexedDB)
 - **Deployment**: Vercel (static hosting ONLY — no serverless functions)
 - **PWA**: vite-plugin-pwa with workbox
@@ -26,6 +26,11 @@ A map-centric PWA that guides newcomers into the Chicago theater scene through a
 | `src/contexts/AuthContext.tsx` | Supabase auth state management |
 | `src/lib/supabase.ts` | Supabase client |
 | `src/lib/gateway.ts` | AI gateway client |
+| `src/lib/models.ts` | Model registry (feature-to-model mapping) |
+| `src/pages/MentorChat.tsx` | AI mentor chat UI |
+| `src/hooks/useMap.ts` | Mapbox GL JS hook |
+| `supabase/functions/ai-gateway/index.ts` | Multi-provider AI gateway Edge Function |
+| `supabase/functions/mentor-chat/index.ts` | Profile-aware mentor Edge Function |
 | `supabase/migrations/` | Database schema (profiles, venues, events, watchlist, reviews, conversations, messages, user_progress, learning_content, friendships) |
 | `docs/graph-engineering.md` | Executable build graph (33 nodes, 7 phases) |
 | `.claude/docs/prd/` | PRD + architecture spec |
@@ -39,6 +44,7 @@ npm run build        # Production build
 npm run preview      # Preview production build
 supabase db push     # Push migrations to remote DB
 supabase functions serve  # Local edge functions
+supabase functions deploy <name>  # Deploy edge function
 vercel deploy --prod # Deploy to Vercel
 ```
 
@@ -58,7 +64,7 @@ Belt level stored on profiles.belt_level, history on user_progress.belt_history.
 - Phase 0: Foundation (scaffold) ✅
 - Phase 1: Infrastructure (patterns, DB, auth) ✅
 - Phase 2: Core Shell (app shell, routing, PWA) ✅
-- Phase 3: Map + Mentor (Mapbox, AI chat)
+- Phase 3: Map + Mentor (Mapbox, AI chat) ⏳ (code done, needs Mapbox token)
 - Phase 4: Content + Social (watchlist, reviews, learning, friends)
 - Phase 5: Progression + Polish (belt system, onboarding, notifications)
 - Phase 6: Launch (seed data, performance, deploy)
