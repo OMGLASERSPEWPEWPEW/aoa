@@ -197,15 +197,15 @@ function EventDetail({ event, watchlistStatus, onWatchlistToggle, onClose }: {
           )}
 
           <div className="flex flex-col sm:flex-row gap-2">
-            {event.ticket_url && (
+            {(event.ticket_url || venue?.website_url) && (
               <a
-                href={event.ticket_url}
+                href={event.ticket_url || venue?.website_url || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto text-center px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 text-sm font-medium hover:bg-amber-300 transition-colors"
                 onClick={e => e.stopPropagation()}
               >
-                Get Tickets ↗
+                {event.ticket_url ? 'Get Tickets ↗' : 'Visit Website ↗'}
               </a>
             )}
             <button
