@@ -1,34 +1,87 @@
-import { NavLink } from 'react-router-dom'
-import { Compass, MapPin, Bookmark, MessageCircle, GraduationCap, Users, User } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
 
 const tabs = [
-  { to: '/app', icon: Compass, label: 'Discover', end: true },
-  { to: '/app/map', icon: MapPin, label: 'Map' },
-  { to: '/app/watchlist', icon: Bookmark, label: 'My Shows' },
-  { to: '/app/mentor', icon: MessageCircle, label: 'TME' },
-  { to: '/app/learn', icon: GraduationCap, label: 'Learn' },
-  { to: '/app/social', icon: Users, label: 'Social' },
-  { to: '/app/profile', icon: User, label: 'Profile' },
+  { to: '/app', glyph: '◉', label: 'TONIGHT', end: true },
+  { to: '/app/map', glyph: '⌖', label: 'MAP' },
+  { to: '/app/watchlist', glyph: '▤', label: 'MY SHOWS' },
+  { to: '/app/profile', glyph: '◇', label: 'YOU' },
 ]
 
 export function Navigation() {
+  const navigate = useNavigate()
+
   return (
-    <nav className="flex items-center justify-around bg-slate-900 border-t border-slate-800 py-2 px-0.5">
-      {tabs.map(({ to, icon: Icon, label, end }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          className={({ isActive }) =>
-            `flex flex-col items-center gap-0.5 px-1.5 py-1 text-[10px] transition-colors ${
-              isActive ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'
-            }`
-          }
+    <nav
+      className="flex items-center justify-around"
+      style={{
+        borderTop: '1px solid #2b2720',
+        backgroundColor: '#0c0a05',
+        padding: '8px 6px 22px',
+      }}
+    >
+      {/* Slot 1-2 */}
+      {tabs.slice(0, 2).map(tab => (
+        <NavSlot key={tab.to} {...tab} />
+      ))}
+
+      {/* Slot 3: Gold FAB */}
+      <div className="flex justify-center" style={{ flex: 1 }}>
+        <button
+          onClick={() => navigate('/app/watchlist')}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            backgroundColor: 'oklch(0.80 0.14 55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: "'Newsreader', Georgia, serif",
+            fontStyle: 'italic',
+            fontSize: 19,
+            color: '#0c0a05',
+            border: 'none',
+          }}
+          aria-label="Log a show"
         >
-          <Icon size={18} />
-          <span>{label}</span>
-        </NavLink>
+          ✦
+        </button>
+      </div>
+
+      {/* Slot 4-5 */}
+      {tabs.slice(2).map(tab => (
+        <NavSlot key={tab.to} {...tab} />
       ))}
     </nav>
+  )
+}
+
+function NavSlot({ to, glyph, label, end }: { to: string; glyph: string; label: string; end?: boolean }) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      style={{ flex: 1, height: 48, textDecoration: 'none' }}
+      className="flex flex-col items-center justify-center"
+    >
+      {({ isActive }) => (
+        <>
+          <span style={{ fontSize: 15, color: isActive ? 'oklch(0.80 0.14 55)' : '#625b4c' }}>
+            {glyph}
+          </span>
+          <span
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 9,
+              color: isActive ? 'oklch(0.80 0.14 55)' : '#625b4c',
+              marginTop: 3,
+              letterSpacing: '0.06em',
+            }}
+          >
+            {label}
+          </span>
+        </>
+      )}
+    </NavLink>
   )
 }

@@ -4,7 +4,7 @@ import { Navigation } from '../components/Navigation'
 
 export function AppShell() {
   return (
-    <div className="flex flex-col h-dvh bg-slate-950">
+    <div className="flex flex-col h-dvh" style={{ backgroundColor: 'var(--bg)' }}>
       <Header />
       <main className="flex-1 overflow-auto">
         <Outlet />
