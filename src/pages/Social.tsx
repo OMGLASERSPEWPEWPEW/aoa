@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Users, UserPlus } from 'lucide-react'
 import { useFriendships } from '../hooks/useFriendships'
 import { FriendsList } from '../components/FriendsList'
 import { AddFriend } from '../components/AddFriend'
@@ -11,7 +10,7 @@ export function Social() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-slate-500">
+      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
         Loading...
       </div>
     )
@@ -19,23 +18,37 @@ export function Social() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <Users size={18} className="text-amber-400" />
-          <h2 className="text-white font-medium">Social</h2>
-        </div>
+      <div
+        className="flex items-center justify-between"
+        style={{ padding: 12, borderBottom: '1px solid #2b2720' }}
+      >
+        <span
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontSize: 9,
+            letterSpacing: '0.1em',
+            color: '#625b4c',
+          }}
+        >
+          YOUR PEOPLE
+        </span>
         <button
           onClick={() => setShowAddFriend(true)}
-          className="flex items-center gap-1 text-xs text-amber-400 bg-amber-400/10 px-2.5 py-1.5 rounded-md hover:bg-amber-400/20 transition-colors"
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontSize: 10,
+            letterSpacing: '0.06em',
+            color: 'oklch(0.80 0.14 55)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >
-          <UserPlus size={14} />
-          Add Friend
+          + ADD FRIEND
         </button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-6">
+      <div className="flex-1 overflow-y-auto" style={{ padding: 12 }}>
         <FriendsList
           friends={friends}
           pending={pending}

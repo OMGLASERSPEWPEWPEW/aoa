@@ -1008,15 +1008,15 @@ All four can run simultaneously in separate worktrees:
 ### Phase 6: Discover + Shared Components (parallel)
 
 **Track A (discover):**
-- [ ] discover-page
+- [x] discover-page
 - [ ] play-pages
 
 **Track B (shared components):**
-- [ ] navigation-v2
-- [ ] genre-chips (may already exist from tonight-hero; skip if so)
-- [ ] review-badge (may already exist from production-detail; skip if so)
-- [ ] access-chips (may already exist from production-detail; skip if so)
-- [ ] loading-skeleton
+- [x] navigation-v2
+- [x] genre-chips (may already exist from tonight-hero; skip if so)
+- [x] review-badge (may already exist from production-detail; skip if so)
+- [x] access-chips (may already exist from production-detail; skip if so)
+- [x] loading-skeleton
 
 **Worktree guidance:** Track A touches `src/pages/Discover.tsx` and `src/pages/PlayDetail.tsx`. Track B touches `src/components/Navigation.tsx` and shared components. Navigation update depends on tonight-page and profile-page being done.
 

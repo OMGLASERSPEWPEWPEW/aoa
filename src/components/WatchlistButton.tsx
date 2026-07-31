@@ -13,13 +13,19 @@ export function WatchlistButton({ status, onToggle }: WatchlistButtonProps) {
         e.stopPropagation()
         onToggle()
       }}
-      className={`p-1.5 rounded-lg transition-colors shrink-0 ${
-        status === 'seen'
-          ? 'text-green-400 bg-green-400/10'
+      style={{
+        padding: 6,
+        borderRadius: 3,
+        border: 'none',
+        backgroundColor: 'transparent',
+        color: status === 'seen'
+          ? 'oklch(0.68 0.13 150)'
           : status
-            ? 'text-amber-400 bg-amber-400/10'
-            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
-      }`}
+            ? 'oklch(0.80 0.14 55)'
+            : '#625b4c',
+        cursor: 'pointer',
+        flexShrink: 0,
+      }}
       title={status === 'seen' ? 'Seen' : status === 'want_to_see' ? 'Want to See' : status === 'booked' ? 'Booked' : 'Add to Watchlist'}
     >
       {status === 'seen' ? <Eye size={18} /> : status ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}

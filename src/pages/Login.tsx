@@ -2,6 +2,18 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
+const inputStyle: React.CSSProperties = {
+  backgroundColor: '#141109',
+  border: '1px solid #2b2720',
+  borderRadius: 3,
+  padding: '12px 16px',
+  color: 'var(--ink)',
+  fontFamily: "'Courier Prime', monospace",
+  fontSize: 13,
+  width: '100%',
+  outline: 'none',
+}
+
 export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,16 +36,29 @@ export function Login() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white px-6">
-      <h1 className="text-2xl font-bold mb-6">Sign In</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-xs">
-        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+    <div
+      className="flex flex-col items-center justify-center min-h-screen px-6"
+      style={{ backgroundColor: 'var(--bg)', color: 'var(--ink)' }}
+    >
+      <h1
+        style={{
+          fontFamily: "'Newsreader', Georgia, serif",
+          fontStyle: 'italic',
+          fontSize: 24,
+          fontWeight: 400,
+          marginBottom: 24,
+        }}
+      >
+        Sign In
+      </h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full" style={{ maxWidth: 280 }}>
+        {error && <p style={{ color: 'oklch(0.66 0.19 35)', fontSize: 13, textAlign: 'center' }}>{error}</p>}
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+          style={inputStyle}
           required
         />
         <input
@@ -41,21 +66,35 @@ export function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+          style={inputStyle}
           required
         />
         <button
           type="submit"
           disabled={loading}
-          className="bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-semibold py-3 px-6 rounded-lg transition-colors"
+          style={{
+            backgroundColor: 'oklch(0.80 0.14 55)',
+            color: '#0c0a05',
+            fontFamily: "'Newsreader', Georgia, serif",
+            fontStyle: 'italic',
+            fontSize: 15,
+            padding: '14px 24px',
+            borderRadius: 3,
+            border: 'none',
+            cursor: 'pointer',
+            opacity: loading ? 0.5 : 1,
+          }}
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-      <p className="text-slate-500 text-sm mt-6">
-        Don't have an account? <Link to="/signup" className="text-amber-400 hover:underline">Sign up</Link>
+      <p style={{ color: '#625b4c', fontSize: 13, marginTop: 24, fontFamily: "'Courier Prime', monospace" }}>
+        Don't have an account?{' '}
+        <Link to="/signup" style={{ color: 'oklch(0.80 0.14 55)', textDecoration: 'none' }}>Sign up</Link>
       </p>
-      <Link to="/" className="text-slate-600 text-sm mt-4 hover:text-slate-400">&larr; Back</Link>
+      <Link to="/" style={{ color: '#4f4a3e', fontSize: 12, marginTop: 16, textDecoration: 'none', fontFamily: "'Courier Prime', monospace" }}>
+        &larr; Back
+      </Link>
     </div>
   )
 }

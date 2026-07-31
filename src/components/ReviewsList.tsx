@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { MessageSquare } from 'lucide-react'
 import { useReviews } from '../hooks/useReviews'
 import { useAuth } from '../contexts/AuthContext'
 import { ReviewForm } from './ReviewForm'
@@ -17,29 +16,49 @@ export function ReviewsList({ eventId }: Props) {
   if (loading) return null
 
   return (
-    <div className="mt-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-white text-sm font-medium">Reviews</h3>
+    <div style={{ marginTop: 16 }}>
+      <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+        <div className="flex items-baseline gap-2">
+          <span
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 9,
+              letterSpacing: '0.1em',
+              color: '#625b4c',
+            }}
+          >
+            REVIEWS
+          </span>
           {reviews.length > 0 && (
-            <span className="text-slate-500 text-xs">({reviews.length})</span>
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: '#4f4a3e' }}>
+              ({reviews.length})
+            </span>
           )}
         </div>
         {user && !userReview && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1 text-xs text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-md hover:bg-amber-400/20 transition-colors"
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 10,
+              letterSpacing: '0.06em',
+              color: 'oklch(0.80 0.14 55)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            <MessageSquare size={12} />
-            Write Review
+            WRITE ONE
           </button>
         )}
       </div>
 
       {reviews.length === 0 ? (
-        <p className="text-slate-600 text-sm">No reviews yet. Be the first!</p>
+        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 14, color: '#9c9586' }}>
+          No reviews yet. Be the first.
+        </p>
       ) : (
-        <div className="space-y-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {reviews.map(review => (
             <ReviewCard
               key={review.id}
