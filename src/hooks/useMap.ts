@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
+import { supabase } from '../lib/supabase'
 
 const CHICAGO_CENTER: [number, number] = [-87.6298, 41.8781]
 const DEFAULT_ZOOM = 12
+
+const VENUE_TYPE_COLORS: Record<string, string> = {
+  storefront: '#FBBF24',
+  institutional: '#F97316',
+  experimental: '#A855F7',
+  school: '#3B82F6',
+}
 
 export function useMap(container: React.RefObject<HTMLDivElement | null>) {
   const mapRef = useRef<mapboxgl.Map | null>(null)
@@ -38,7 +46,51 @@ export function useMap(container: React.RefObject<HTMLDivElement | null>) {
       'top-right',
     )
 
-    map.on('load', () => setReady(true))
+    map.on('load', async () => {
+      setReady(true)
+
+      const { data: venues } = await supabase
+        .from('venues')
+        .select('id, name, slug, venue_type, address, neighborhood, latitude, longitude, price_range')
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null)
+
+      if (!venues) return
+
+      for (const venue of venues) {
+        const color = VENUE_TYPE_COLORS[venue.venue_type ?? ''] ?? '#FBBF24'
+        const typeLabel = venue.venue_type
+          ? venue.venue_type.charAt(0).toUpperCase() + venue.venue_type.slice(1)
+          : 'Theater'
+
+        const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
+          .setHTML(`
+            <div style="font-family: system-ui; max-width: 200px;">
+              <strong style="font-size: 14px;">${venue.name}</strong>
+              <div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">
+                ${venue.neighborhood ?? ''}${venue.price_range ? ` · ${venue.price_range}` : ''}
+              </div>
+              <div style="color: #FBBF24; font-size: 11px; margin-top: 4px;">
+                ${typeLabel}
+              </div>
+            </div>
+          `)
+
+        const el = document.createElement('div')
+        el.style.width = '14px'
+        el.style.height = '14px'
+        el.style.borderRadius = '50%'
+        el.style.backgroundColor = color
+        el.style.border = '2px solid white'
+        el.style.cursor = 'pointer'
+        el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.4)'
+
+        new mapboxgl.Marker(el)
+          .setLngLat([venue.longitude, venue.latitude])
+          .setPopup(popup)
+          .addTo(map)
+      }
+    })
 
     mapRef.current = map
 

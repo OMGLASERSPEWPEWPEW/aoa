@@ -8,16 +8,19 @@ import { CommunityRating } from '../components/CommunityRating'
 import type { Event } from '../lib/types'
 
 const EVENT_TYPES = ['all', 'show', 'class', 'workshop', 'festival'] as const
+const VENUE_TYPES = ['all', 'storefront', 'institutional', 'experimental'] as const
 
 export function Discover() {
   const { events, loading } = useEvents()
   const { addToWatchlist, removeFromWatchlist, getStatus } = useWatchlist()
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [venueTypeFilter, setVenueTypeFilter] = useState<string>('all')
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
 
   const filtered = events.filter(e => {
     if (typeFilter !== 'all' && e.event_type !== typeFilter) return false
+    if (venueTypeFilter !== 'all' && e.venue?.venue_type !== venueTypeFilter) return false
     if (search) {
       const q = search.toLowerCase()
       return (
@@ -75,6 +78,23 @@ export function Discover() {
               }`}
             >
               {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
+            </button>
+          ))}
+        </div>
+
+        {/* Venue type filter chips */}
+        <div className="flex gap-2 mt-1.5 overflow-x-auto">
+          {VENUE_TYPES.map(type => (
+            <button
+              key={type}
+              onClick={() => setVenueTypeFilter(type)}
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                venueTypeFilter === type
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-slate-800/50 text-slate-500 hover:text-white border border-slate-700'
+              }`}
+            >
+              {type === 'all' ? 'All Venues' : type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
           ))}
         </div>
