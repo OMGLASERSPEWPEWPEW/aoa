@@ -7,7 +7,7 @@ import { Signup } from './pages/Signup'
 import { AppShell } from './pages/AppShell'
 import { MapHome } from './pages/MapHome'
 import { Discover } from './pages/Discover'
-import { Watchlist } from './pages/Watchlist'
+import { MyShows } from './pages/MyShows'
 import { MentorChat } from './pages/MentorChat'
 import { Learn } from './pages/Learn'
 import { Profile } from './pages/Profile'
@@ -34,7 +34,7 @@ export default function App() {
           >
             <Route index element={<Discover />} />
             <Route path="map" element={<MapHome />} />
-            <Route path="watchlist" element={<Watchlist />} />
+            <Route path="watchlist" element={<MyShows />} />
             <Route path="mentor" element={<MentorChat />} />
             <Route path="learn" element={<Learn />} />
             <Route path="social" element={<Social />} />

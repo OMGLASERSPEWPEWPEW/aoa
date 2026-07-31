@@ -5,7 +5,7 @@ import { ChatInput } from './ChatInput'
 describe('ChatInput', () => {
   it('renders input and submit button', () => {
     render(<ChatInput onSend={vi.fn()} />)
-    expect(screen.getByPlaceholderText('Ask your mentor anything...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Ask anything about Chicago theater...')).toBeInTheDocument()
     expect(screen.getByRole('button')).toBeInTheDocument()
   })
 
@@ -14,7 +14,7 @@ describe('ChatInput', () => {
     const user = userEvent.setup()
 
     render(<ChatInput onSend={onSend} />)
-    const input = screen.getByPlaceholderText('Ask your mentor anything...')
+    const input = screen.getByPlaceholderText('Ask anything about Chicago theater...')
 
     await user.type(input, '  hello world  ')
     await user.click(screen.getByRole('button'))
@@ -38,7 +38,7 @@ describe('ChatInput', () => {
     const user = userEvent.setup()
 
     render(<ChatInput onSend={onSend} />)
-    await user.type(screen.getByPlaceholderText('Ask your mentor anything...'), '   ')
+    await user.type(screen.getByPlaceholderText('Ask anything about Chicago theater...'), '   ')
     await user.click(screen.getByRole('button'))
 
     expect(onSend).not.toHaveBeenCalled()
@@ -51,7 +51,7 @@ describe('ChatInput', () => {
 
   it('disables input and button when disabled prop is true', () => {
     render(<ChatInput onSend={vi.fn()} disabled />)
-    expect(screen.getByPlaceholderText('Ask your mentor anything...')).toBeDisabled()
+    expect(screen.getByPlaceholderText('Ask anything about Chicago theater...')).toBeDisabled()
     expect(screen.getByRole('button')).toBeDisabled()
   })
 })

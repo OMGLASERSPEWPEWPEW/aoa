@@ -4,7 +4,7 @@ import { Compass, MapPin, Bookmark, MessageCircle, GraduationCap, Users, User } 
 const tabs = [
   { to: '/app', icon: Compass, label: 'Discover', end: true },
   { to: '/app/map', icon: MapPin, label: 'Map' },
-  { to: '/app/watchlist', icon: Bookmark, label: 'Watchlist' },
+  { to: '/app/watchlist', icon: Bookmark, label: 'My Shows' },
   { to: '/app/mentor', icon: MessageCircle, label: 'TME' },
   { to: '/app/learn', icon: GraduationCap, label: 'Learn' },
   { to: '/app/social', icon: Users, label: 'Social' },
