@@ -101,6 +101,7 @@ describe('AuthContext', () => {
     expect(supabase.auth.signUp).toHaveBeenCalledWith({
       email: 'a@b.com',
       password: 'pw',
+      options: { emailRedirectTo: 'http://localhost:3000' },
     })
   })
 
