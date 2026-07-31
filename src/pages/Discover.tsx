@@ -176,28 +176,28 @@ function EventDetail({ event, watchlistStatus, onWatchlistToggle, onClose }: {
             </div>
           )}
 
-          <div className="flex gap-2">
-            <button
-              onClick={onWatchlistToggle}
-              className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-colors ${
-                watchlistStatus
-                  ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30'
-                  : 'bg-amber-400 text-slate-900 hover:bg-amber-300'
-              }`}
-            >
-              {watchlistStatus === 'seen' ? '✓ Seen' : watchlistStatus ? '✓ On Watchlist' : '+ Want to See'}
-            </button>
+          <div className="flex flex-col sm:flex-row gap-2">
             {event.ticket_url && (
               <a
                 href={event.ticket_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2.5 rounded-lg bg-slate-800 text-white text-sm font-medium hover:bg-slate-700 transition-colors"
+                className="w-full sm:w-auto text-center px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 text-sm font-medium hover:bg-amber-300 transition-colors"
                 onClick={e => e.stopPropagation()}
               >
-                Tickets ↗
+                Get Tickets ↗
               </a>
             )}
+            <button
+              onClick={onWatchlistToggle}
+              className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-colors ${
+                watchlistStatus
+                  ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30'
+                  : 'bg-slate-800 text-white hover:bg-slate-700'
+              }`}
+            >
+              {watchlistStatus === 'seen' ? '✓ Seen' : watchlistStatus ? '✓ On Watchlist' : '+ Want to See'}
+            </button>
           </div>
 
           <ReviewsList eventId={event.id} />
