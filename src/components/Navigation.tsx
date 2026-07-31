@@ -5,7 +5,7 @@ const tabs = [
   { to: '/app', icon: Compass, label: 'Discover', end: true },
   { to: '/app/map', icon: MapPin, label: 'Map' },
   { to: '/app/watchlist', icon: Bookmark, label: 'Watchlist' },
-  { to: '/app/mentor', icon: MessageCircle, label: 'Mentor' },
+  { to: '/app/mentor', icon: MessageCircle, label: 'TME' },
   { to: '/app/learn', icon: GraduationCap, label: 'Learn' },
   { to: '/app/social', icon: Users, label: 'Social' },
   { to: '/app/profile', icon: User, label: 'Profile' },

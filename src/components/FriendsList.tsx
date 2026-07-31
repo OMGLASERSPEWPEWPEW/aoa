@@ -1,5 +1,5 @@
 import { UserMinus, Check, X } from 'lucide-react'
-import { BELT_NAMES, BELT_COLORS } from '../lib/types'
+import { HOUSE_RANKS } from '../lib/types'
 import type { Friendship } from '../lib/types'
 
 interface Props {
@@ -13,7 +13,6 @@ interface Props {
 export function FriendsList({ friends, pending, onAccept, onDecline, onRemove }: Props) {
   return (
     <div className="space-y-4">
-      {/* Pending requests */}
       {pending.length > 0 && (
         <div>
           <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">
@@ -28,8 +27,8 @@ export function FriendsList({ friends, pending, onAccept, onDecline, onRemove }:
                   </div>
                   <div>
                     <p className="text-white text-sm">{f.profile?.username ?? 'Unknown'}</p>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${BELT_COLORS[f.profile?.belt_level ?? 0]}`}>
-                      {BELT_NAMES[f.profile?.belt_level ?? 0]}
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-amber-400/10 text-amber-400">
+                      {HOUSE_RANKS[f.profile?.house_rank ?? 0]}
                     </span>
                   </div>
                 </div>
@@ -53,7 +52,6 @@ export function FriendsList({ friends, pending, onAccept, onDecline, onRemove }:
         </div>
       )}
 
-      {/* Friends */}
       <div>
         <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">
           Friends ({friends.length})
@@ -70,8 +68,8 @@ export function FriendsList({ friends, pending, onAccept, onDecline, onRemove }:
                   </div>
                   <div>
                     <p className="text-white text-sm">{f.profile?.username ?? 'Unknown'}</p>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${BELT_COLORS[f.profile?.belt_level ?? 0]}`}>
-                      {BELT_NAMES[f.profile?.belt_level ?? 0]}
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-amber-400/10 text-amber-400">
+                      {HOUSE_RANKS[f.profile?.house_rank ?? 0]}
                     </span>
                   </div>
                 </div>

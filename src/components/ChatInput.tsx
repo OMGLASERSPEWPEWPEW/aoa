@@ -23,7 +23,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         type="text"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Ask your mentor anything..."
+        placeholder="Ask anything about Chicago theater..."
         disabled={disabled}
         className="flex-1 bg-slate-800 text-white rounded-full px-4 py-2.5 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-400 disabled:opacity-50"
       />

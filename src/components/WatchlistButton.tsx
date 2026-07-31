@@ -20,7 +20,7 @@ export function WatchlistButton({ status, onToggle }: WatchlistButtonProps) {
             ? 'text-amber-400 bg-amber-400/10'
             : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
       }`}
-      title={status === 'seen' ? 'Seen' : status === 'want_to_see' ? 'Want to See' : status === 'seeing' ? 'Seeing' : 'Add to Watchlist'}
+      title={status === 'seen' ? 'Seen' : status === 'want_to_see' ? 'Want to See' : status === 'booked' ? 'Booked' : 'Add to Watchlist'}
     >
       {status === 'seen' ? <Eye size={18} /> : status ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
     </button>

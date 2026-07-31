@@ -41,7 +41,7 @@ export function useWatchlist() {
     }
   }, [user])
 
-  const updateStatus = useCallback(async (eventId: string, status: WatchlistStatus, extra?: { rating?: number; reflection?: string; seen_date?: string }) => {
+  const updateStatus = useCallback(async (eventId: string, status: WatchlistStatus, extra?: { reflection?: string; seen_date?: string; emotions?: string[]; room_volume?: string }) => {
     if (!user) return
     const { data } = await supabase
       .from('watchlist')

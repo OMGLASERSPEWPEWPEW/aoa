@@ -25,7 +25,7 @@ export function useFriendships() {
 
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, username, belt_level, avatar_url')
+      .select('id, username, house_rank, avatar_url')
       .in('id', otherUserIds)
 
     const profileMap = new Map((profiles ?? []).map(p => [p.id, p]))
@@ -71,15 +71,15 @@ export function useFriendships() {
     await fetchFriendships()
   }, [fetchFriendships])
 
-  const searchUsers = useCallback(async (query: string): Promise<Pick<Profile, 'id' | 'username' | 'belt_level' | 'avatar_url'>[]> => {
+  const searchUsers = useCallback(async (query: string): Promise<Pick<Profile, 'id' | 'username' | 'house_rank' | 'avatar_url'>[]> => {
     if (!query || query.length < 2) return []
     const { data } = await supabase
       .from('profiles')
-      .select('id, username, belt_level, avatar_url')
+      .select('id, username, house_rank, avatar_url')
       .ilike('username', `%${query}%`)
       .neq('id', user?.id)
       .limit(10)
-    return (data ?? []) as Pick<Profile, 'id' | 'username' | 'belt_level' | 'avatar_url'>[]
+    return (data ?? []) as Pick<Profile, 'id' | 'username' | 'house_rank' | 'avatar_url'>[]
   }, [user])
 
   return { friends, pending, loading, sendRequest, acceptRequest, declineRequest, removeFriend, searchUsers, refetch: fetchFriendships }

@@ -4,7 +4,6 @@ import { useEvents } from '../hooks/useEvents'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { EventCard } from '../components/EventCard'
 import { ReviewsList } from '../components/ReviewsList'
-import { CommunityRating } from '../components/CommunityRating'
 import type { Event } from '../lib/types'
 
 const EVENT_TYPES = ['all', 'show', 'class', 'workshop', 'festival'] as const
@@ -52,7 +51,6 @@ export function Discover() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Search bar */}
       <div className="p-3 border-b border-slate-800">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -65,7 +63,6 @@ export function Discover() {
           />
         </div>
 
-        {/* Type filter chips */}
         <div className="flex gap-2 mt-2 overflow-x-auto">
           {EVENT_TYPES.map(type => (
             <button
@@ -82,7 +79,6 @@ export function Discover() {
           ))}
         </div>
 
-        {/* Venue type filter chips */}
         <div className="flex gap-2 mt-1.5 overflow-x-auto">
           {VENUE_TYPES.map(type => (
             <button
@@ -100,7 +96,6 @@ export function Discover() {
         </div>
       </div>
 
-      {/* Event list */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-slate-500">
@@ -123,7 +118,6 @@ export function Discover() {
         )}
       </div>
 
-      {/* Event detail modal */}
       {selectedEvent && (
         <EventDetail
           event={selectedEvent}
@@ -138,7 +132,7 @@ export function Discover() {
 
 function EventDetail({ event, watchlistStatus, onWatchlistToggle, onClose }: {
   event: Event
-  watchlistStatus: 'want_to_see' | 'seeing' | 'seen' | null
+  watchlistStatus: 'want_to_see' | 'booked' | 'seen' | null
   onWatchlistToggle: () => void
   onClose: () => void
 }) {
@@ -161,30 +155,21 @@ function EventDetail({ event, watchlistStatus, onWatchlistToggle, onClose }: {
             <button onClick={onClose} className="text-slate-500 hover:text-white p-1">✕</button>
           </div>
 
-          {event.community_rating && (
-            <div className="mb-3">
-              <CommunityRating rating={event.community_rating} count={event.rating_count} />
-            </div>
-          )}
-
           {event.description && (
             <p className="text-slate-300 text-sm leading-relaxed mb-4">{event.description}</p>
           )}
 
           <div className="space-y-2 text-sm mb-4">
             {venue?.neighborhood && (
-              <p className="text-slate-400">📍 {venue.address ?? venue.neighborhood}</p>
+              <p className="text-slate-400">{venue.address ?? venue.neighborhood}</p>
             )}
             {event.start_date && (
-              <p className="text-slate-400">📅 {new Date(event.start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                {event.end_date && event.end_date !== event.start_date && ` – ${new Date(event.end_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
+              <p className="text-slate-400">{new Date(event.start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                {event.end_date && event.end_date !== event.start_date && ` - ${new Date(event.end_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
               </p>
             )}
             {(event.price_min !== null || event.price_max !== null) && (
-              <p className="text-slate-400">🎟️ {event.price_min === event.price_max ? `$${event.price_min}` : `$${event.price_min ?? 0}–$${event.price_max}`}</p>
-            )}
-            {venue?.venue_type && (
-              <p className="text-slate-400">🏛️ {venue.venue_type.charAt(0).toUpperCase() + venue.venue_type.slice(1)} theater</p>
+              <p className="text-slate-400">{event.price_min === event.price_max ? `$${event.price_min}` : `$${event.price_min ?? 0}-$${event.price_max}`}</p>
             )}
           </div>
 
@@ -205,7 +190,7 @@ function EventDetail({ event, watchlistStatus, onWatchlistToggle, onClose }: {
                 className="w-full sm:w-auto text-center px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 text-sm font-medium hover:bg-amber-300 transition-colors"
                 onClick={e => e.stopPropagation()}
               >
-                {event.ticket_url ? 'Get Tickets ↗' : 'Visit Website ↗'}
+                {event.ticket_url ? 'Get Tickets' : 'Visit Website'}
               </a>
             )}
             <button
@@ -216,7 +201,7 @@ function EventDetail({ event, watchlistStatus, onWatchlistToggle, onClose }: {
                   : 'bg-slate-800 text-white hover:bg-slate-700'
               }`}
             >
-              {watchlistStatus === 'seen' ? '✓ Seen' : watchlistStatus ? '✓ On Watchlist' : '+ Want to See'}
+              {watchlistStatus === 'seen' ? 'Seen' : watchlistStatus ? 'On Watchlist' : '+ Want to See'}
             </button>
           </div>
 

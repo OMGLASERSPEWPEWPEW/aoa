@@ -1,10 +1,10 @@
-import { Calendar, GraduationCap, MapPin, Star, Ticket } from 'lucide-react'
+import { Calendar, GraduationCap, MapPin, Ticket } from 'lucide-react'
 import type { Event } from '../lib/types'
 import { WatchlistButton } from './WatchlistButton'
 
 interface EventCardProps {
   event: Event
-  watchlistStatus: 'want_to_see' | 'seeing' | 'seen' | null
+  watchlistStatus: 'want_to_see' | 'booked' | 'seen' | null
   onWatchlistToggle: (eventId: string) => void
   onTap?: (event: Event) => void
 }
@@ -16,16 +16,16 @@ function formatDateRange(start: string | null, end: string | null): string {
   const startStr = s.toLocaleDateString('en-US', opts)
   if (!end || start === end) return startStr
   const e = new Date(end + 'T00:00:00')
-  if (s.getMonth() === e.getMonth()) return `${startStr}–${e.getDate()}`
-  return `${startStr} – ${e.toLocaleDateString('en-US', opts)}`
+  if (s.getMonth() === e.getMonth()) return `${startStr}-${e.getDate()}`
+  return `${startStr} - ${e.toLocaleDateString('en-US', opts)}`
 }
 
 function formatPrice(min: number | null, max: number | null): string {
   if (min === null && max === null) return 'Free'
   if (min === 0 && (max === null || max === 0)) return 'Free'
   if (min === max) return `$${min}`
-  if (min === 0) return `Free–$${max}`
-  return `$${min}–$${max}`
+  if (min === 0) return `Free-$${max}`
+  return `$${min}-$${max}`
 }
 
 export function EventCard({ event, watchlistStatus, onWatchlistToggle, onTap }: EventCardProps) {
@@ -72,12 +72,6 @@ export function EventCard({ event, watchlistStatus, onWatchlistToggle, onTap }: 
           <Ticket size={12} />
           {formatPrice(event.price_min, event.price_max)}
         </span>
-        {event.community_rating && (
-          <span className="flex items-center gap-1 text-amber-400">
-            <Star size={12} fill="currentColor" />
-            {event.community_rating.toFixed(1)}
-          </span>
-        )}
         {event.hottix_available && (
           <span className="text-green-400 font-medium">HotTix</span>
         )}

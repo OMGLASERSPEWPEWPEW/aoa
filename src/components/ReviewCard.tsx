@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ThumbsUp, AlertTriangle, Trash2 } from 'lucide-react'
-import { BELT_NAMES, BELT_COLORS } from '../lib/types'
+import { HOUSE_RANKS } from '../lib/types'
 import type { Review } from '../lib/types'
 
 interface Props {
@@ -15,31 +15,23 @@ export function ReviewCard({ review, isOwn, onVoteHelpful, onDelete }: Props) {
 
   return (
     <div className="bg-slate-800/50 rounded-lg p-3.5">
-      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-white text-sm font-medium">
             {review.profile?.username ?? 'Anonymous'}
           </span>
           {review.profile && (
-            <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${BELT_COLORS[review.profile.belt_level]}`}>
-              {BELT_NAMES[review.profile.belt_level]}
+            <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-amber-400/10 text-amber-400">
+              {HOUSE_RANKS[review.profile.house_rank]}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <span key={i} className={`text-xs ${i < review.rating ? 'text-amber-400' : 'text-slate-700'}`}>★</span>
-          ))}
-        </div>
       </div>
 
-      {/* Title */}
       {review.title && (
         <p className="text-white text-sm font-medium mb-1">{review.title}</p>
       )}
 
-      {/* Body */}
       {review.body && (
         <>
           {review.contains_spoilers && !spoilerRevealed ? (
@@ -48,7 +40,7 @@ export function ReviewCard({ review, isOwn, onVoteHelpful, onDelete }: Props) {
               className="flex items-center gap-1.5 text-orange-400 text-xs bg-orange-400/10 px-2 py-1.5 rounded-md hover:bg-orange-400/20 transition-colors"
             >
               <AlertTriangle size={12} />
-              Contains spoilers — tap to reveal
+              Contains spoilers - tap to reveal
             </button>
           ) : (
             <p className="text-slate-400 text-sm leading-relaxed">{review.body}</p>
@@ -56,7 +48,6 @@ export function ReviewCard({ review, isOwn, onVoteHelpful, onDelete }: Props) {
         </>
       )}
 
-      {/* Footer */}
       <div className="flex items-center justify-between mt-3">
         <div className="flex items-center gap-3">
           <button

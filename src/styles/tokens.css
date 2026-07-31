@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Courier+Prime:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Surfaces */
+  --bg: #0c0a05;
+  --bg-card: #141109;
+  --bg-chrome: #1a1610;
+  --rule: #2b2720;
+  --rule-soft: #211d17;
+
+  /* Ink */
+  --ink: #ebe5d6;
+  --ink-dim: #9c9586;
+  --ink-faint: #625b4c;
+  --ink-ghost: #4f4a3e;
+  --ink-whisper: #3f3a31;
+
+  /* Accent (gold) */
+  --accent: oklch(0.80 0.14 55);
+  --accent-text: oklch(0.84 0.13 55);
+  --accent-border: oklch(0.42 0.09 55);
+  --accent-bg: oklch(0.20 0.04 55);
+  --accent-deep: oklch(0.45 0.10 55);
+
+  /* Semantic */
+  --live: oklch(0.74 0.16 145);
+  --access: oklch(0.68 0.13 150);
+
+  /* Gold gradient */
+  --gold-gradient: linear-gradient(180deg, oklch(0.16 0.04 55), #0c0a05);
+}
+
+.font-display {
+  font-family: 'Newsreader', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.font-body {
+  font-family: 'Newsreader', Georgia, serif;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.font-label {
+  font-family: 'Courier Prime', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}

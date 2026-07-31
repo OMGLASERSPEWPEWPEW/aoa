@@ -1,34 +1,26 @@
 import { useState } from 'react'
 import { Bookmark, Eye } from 'lucide-react'
 import { useWatchlist } from '../hooks/useWatchlist'
-import { useBeltCheck } from '../hooks/useBeltCheck'
 import { EventCard } from '../components/EventCard'
-import { LogShowModal } from '../components/LogShowModal'
-import { BeltUpgradeModal } from '../components/BeltUpgradeModal'
-import type { WatchlistStatus, WatchlistItem } from '../lib/types'
+import type { WatchlistStatus } from '../lib/types'
 
 const TABS: { key: WatchlistStatus | 'all'; label: string; icon: typeof Bookmark }[] = [
   { key: 'all', label: 'All', icon: Bookmark },
   { key: 'want_to_see', label: 'Want to See', icon: Bookmark },
+  { key: 'booked', label: 'Booked', icon: Bookmark },
   { key: 'seen', label: 'Seen', icon: Eye },
 ]
 
 export function Watchlist() {
-  const { items, loading, updateStatus, removeFromWatchlist } = useWatchlist()
-  const { result: beltResult, checkBelt, dismiss: dismissBelt } = useBeltCheck()
+  const { items, loading, removeFromWatchlist } = useWatchlist()
   const [tab, setTab] = useState<WatchlistStatus | 'all'>('all')
-  const [loggingItem, setLoggingItem] = useState<WatchlistItem | null>(null)
 
   const filtered = tab === 'all' ? items : items.filter(i => i.status === tab)
 
   function handleToggle(eventId: string) {
     const item = items.find(i => i.event_id === eventId)
     if (!item) return
-    if (item.status === 'want_to_see') {
-      setLoggingItem(item)
-    } else {
-      removeFromWatchlist(eventId)
-    }
+    removeFromWatchlist(eventId)
   }
 
   if (loading) {
@@ -41,7 +33,6 @@ export function Watchlist() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Tabs */}
       <div className="flex border-b border-slate-800">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
@@ -62,7 +53,6 @@ export function Watchlist() {
         ))}
       </div>
 
-      {/* List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-slate-500">
@@ -84,47 +74,10 @@ export function Watchlist() {
                   onWatchlistToggle={() => handleToggle(item.event_id)}
                 />
               )}
-              {item.status === 'want_to_see' && (
-                <button
-                  onClick={() => setLoggingItem(item)}
-                  className="absolute bottom-3 right-3 flex items-center gap-1 text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-md hover:bg-green-400/20 transition-colors"
-                >
-                  <Eye size={12} />
-                  Log as Seen
-                </button>
-              )}
-              {item.status === 'seen' && item.rating && (
-                <div className="absolute bottom-3 right-3 flex items-center gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} className={`text-xs ${i < item.rating! ? 'text-amber-400' : 'text-slate-700'}`}>★</span>
-                  ))}
-                </div>
-              )}
             </div>
           ))
         )}
       </div>
-
-      {/* Log show modal */}
-      {loggingItem && (
-        <LogShowModal
-          event={loggingItem.event!}
-          onSave={async (rating, reflection) => {
-            await updateStatus(loggingItem.event_id, 'seen', {
-              rating,
-              reflection,
-              seen_date: new Date().toISOString().split('T')[0],
-            })
-            setLoggingItem(null)
-            await checkBelt()
-          }}
-          onClose={() => setLoggingItem(null)}
-        />
-      )}
-
-      {beltResult && (
-        <BeltUpgradeModal beltLevel={beltResult.newBeltLevel!} onClose={dismissBelt} />
-      )}
     </div>
   )
 }

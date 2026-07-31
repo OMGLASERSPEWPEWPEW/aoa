@@ -1,20 +1,16 @@
 import { useState } from 'react'
-import { Star, AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X } from 'lucide-react'
 
 interface Props {
-  onSubmit: (review: { rating: number; title: string; body: string; contains_spoilers: boolean }) => Promise<void>
+  onSubmit: (review: { title: string; body: string; contains_spoilers: boolean }) => Promise<void>
   onClose: () => void
 }
 
 export function ReviewForm({ onSubmit, onClose }: Props) {
-  const [rating, setRating] = useState(0)
-  const [hoverRating, setHoverRating] = useState(0)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [spoilers, setSpoilers] = useState(false)
   const [saving, setSaving] = useState(false)
-
-  const activeRating = hoverRating || rating
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
@@ -30,29 +26,6 @@ export function ReviewForm({ onSubmit, onClose }: Props) {
             </button>
           </div>
 
-          {/* Rating */}
-          <div className="mb-4">
-            <label className="text-slate-400 text-xs block mb-2">Rating</label>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map(n => (
-                <button
-                  key={n}
-                  type="button"
-                  onMouseEnter={() => setHoverRating(n)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  onClick={() => setRating(n)}
-                  className="text-2xl transition-colors"
-                >
-                  <Star
-                    size={28}
-                    className={n <= activeRating ? 'text-amber-400 fill-amber-400' : 'text-slate-700'}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Title */}
           <div className="mb-4">
             <label className="text-slate-400 text-xs block mb-1">Title</label>
             <input
@@ -65,7 +38,6 @@ export function ReviewForm({ onSubmit, onClose }: Props) {
             />
           </div>
 
-          {/* Body */}
           <div className="mb-4">
             <label className="text-slate-400 text-xs block mb-1">Review</label>
             <textarea
@@ -77,7 +49,6 @@ export function ReviewForm({ onSubmit, onClose }: Props) {
             />
           </div>
 
-          {/* Spoiler toggle */}
           <label className="flex items-center gap-2 mb-6 cursor-pointer">
             <input
               type="checkbox"
@@ -91,11 +62,11 @@ export function ReviewForm({ onSubmit, onClose }: Props) {
 
           <button
             onClick={async () => {
-              if (rating === 0) return
+              if (!body.trim()) return
               setSaving(true)
-              await onSubmit({ rating, title, body, contains_spoilers: spoilers })
+              await onSubmit({ title, body, contains_spoilers: spoilers })
             }}
-            disabled={saving || rating === 0}
+            disabled={saving || !body.trim()}
             className="w-full py-2.5 rounded-lg bg-amber-400 text-slate-900 text-sm font-medium hover:bg-amber-300 disabled:opacity-30 transition-colors"
           >
             {saving ? 'Posting...' : 'Post Review'}

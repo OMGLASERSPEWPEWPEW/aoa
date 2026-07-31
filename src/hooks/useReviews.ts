@@ -11,7 +11,7 @@ export function useReviews(eventId: string) {
   const fetchReviews = useCallback(async () => {
     const { data } = await supabase
       .from('reviews')
-      .select('*, profile:profiles(id, username, belt_level)')
+      .select('*, profile:profiles(id, username, house_rank)')
       .eq('event_id', eventId)
       .order('created_at', { ascending: false })
     setReviews((data as Review[]) ?? [])
@@ -21,10 +21,11 @@ export function useReviews(eventId: string) {
   useEffect(() => { fetchReviews() }, [fetchReviews])
 
   const submitReview = useCallback(async (review: {
-    rating: number
     title: string
     body: string
     contains_spoilers: boolean
+    emotions?: string[]
+    prompt?: string
   }) => {
     if (!user) return
     await supabase.from('reviews').insert({

@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { Search, UserPlus, X } from 'lucide-react'
-import { BELT_NAMES, BELT_COLORS } from '../lib/types'
+import { HOUSE_RANKS } from '../lib/types'
 import type { Profile } from '../lib/types'
 
 interface Props {
-  onSearch: (query: string) => Promise<Pick<Profile, 'id' | 'username' | 'belt_level' | 'avatar_url'>[]>
+  onSearch: (query: string) => Promise<Pick<Profile, 'id' | 'username' | 'house_rank' | 'avatar_url'>[]>
   onSendRequest: (userId: string) => Promise<void>
   onClose: () => void
 }
 
 export function AddFriend({ onSearch, onSendRequest, onClose }: Props) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Pick<Profile, 'id' | 'username' | 'belt_level' | 'avatar_url'>[]>([])
+  const [results, setResults] = useState<Pick<Profile, 'id' | 'username' | 'house_rank' | 'avatar_url'>[]>([])
   const [sent, setSent] = useState<Set<string>>(new Set())
   const [searching, setSearching] = useState(false)
 
@@ -71,8 +71,8 @@ export function AddFriend({ onSearch, onSendRequest, onClose }: Props) {
                   </div>
                   <div>
                     <p className="text-white text-sm">{p.username ?? 'Anonymous'}</p>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${BELT_COLORS[p.belt_level]}`}>
-                      {BELT_NAMES[p.belt_level]}
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-amber-400/10 text-amber-400">
+                      {HOUSE_RANKS[p.house_rank]}
                     </span>
                   </div>
                 </div>

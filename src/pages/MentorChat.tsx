@@ -63,7 +63,7 @@ export function MentorChat() {
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full px-6 pb-4">
             <MentorAvatar size={64} />
-            <h2 className="text-lg font-semibold text-white mt-4 mb-1">Your Theater Mentor</h2>
+            <h2 className="text-lg font-semibold text-white mt-4 mb-1">Theater Made Easy</h2>
             <p className="text-sm text-slate-400 text-center max-w-xs mb-6">
               I know Chicago theater inside and out. Ask me anything — where to start, what to see, or how the scene works.
             </p>
