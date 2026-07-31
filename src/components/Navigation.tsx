@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { Map, Bookmark, MessageCircle, GraduationCap, User } from 'lucide-react'
+import { Compass, Bookmark, MessageCircle, GraduationCap, Users, User } from 'lucide-react'
 
 const tabs = [
-  { to: '/app', icon: Map, label: 'Map', end: true },
+  { to: '/app', icon: Compass, label: 'Discover', end: true },
   { to: '/app/watchlist', icon: Bookmark, label: 'Watchlist' },
   { to: '/app/mentor', icon: MessageCircle, label: 'Mentor' },
   { to: '/app/learn', icon: GraduationCap, label: 'Learn' },
+  { to: '/app/social', icon: Users, label: 'Social' },
   { to: '/app/profile', icon: User, label: 'Profile' },
 ]
 

@@ -6,11 +6,13 @@ import { Login } from './pages/Login'
 import { Signup } from './pages/Signup'
 import { AppShell } from './pages/AppShell'
 import { MapHome } from './pages/MapHome'
+import { Discover } from './pages/Discover'
 import { Watchlist } from './pages/Watchlist'
 import { MentorChat } from './pages/MentorChat'
 import { Learn } from './pages/Learn'
 import { Profile } from './pages/Profile'
 import { Settings } from './pages/Settings'
+import { Social } from './pages/Social'
 
 export default function App() {
   return (
@@ -28,10 +30,12 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<MapHome />} />
+            <Route index element={<Discover />} />
+            <Route path="map" element={<MapHome />} />
             <Route path="watchlist" element={<Watchlist />} />
             <Route path="mentor" element={<MentorChat />} />
             <Route path="learn" element={<Learn />} />
+            <Route path="social" element={<Social />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
           </Route>
