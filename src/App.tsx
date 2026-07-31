@@ -13,6 +13,8 @@ import { Learn } from './pages/Learn'
 import { Profile } from './pages/Profile'
 import { Settings } from './pages/Settings'
 import { Social } from './pages/Social'
+import { LogShow } from './pages/LogShow'
+import { WriteReview } from './pages/WriteReview'
 
 export default function App() {
   return (
@@ -36,6 +38,8 @@ export default function App() {
             <Route path="mentor" element={<MentorChat />} />
             <Route path="learn" element={<Learn />} />
             <Route path="social" element={<Social />} />
+            <Route path="log/:eventId" element={<LogShow />} />
+            <Route path="log/:eventId/review" element={<WriteReview />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
           </Route>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import type { WatchlistItem, WatchlistStatus } from '../lib/types'
+import type { WatchlistItem, WatchlistStatus, Emotion, RoomVolume } from '../lib/types'
 
 export function useWatchlist() {
   const { user } = useAuth()
@@ -41,7 +41,7 @@ export function useWatchlist() {
     }
   }, [user])
 
-  const updateStatus = useCallback(async (eventId: string, status: WatchlistStatus, extra?: { reflection?: string; seen_date?: string; emotions?: string[]; room_volume?: string }) => {
+  const updateStatus = useCallback(async (eventId: string, status: WatchlistStatus, extra?: { reflection?: string; seen_date?: string; emotions?: Emotion[]; room_volume?: RoomVolume | null }) => {
     if (!user) return
     const { data } = await supabase
       .from('watchlist')
