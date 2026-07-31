@@ -349,10 +349,20 @@ export function ProductionDetail() {
 
       {/* 5. Play link */}
       {event.play_id && play && (
-        <div
+        <button
+          onClick={() => navigate(`/app/play/${event.play_id}`)}
           style={{
+            display: 'block',
+            width: '100%',
             padding: '14px 20px',
             borderTop: '1px solid #2b2720',
+            background: 'none',
+            border: 'none',
+            borderTopStyle: 'solid',
+            borderTopWidth: 1,
+            borderTopColor: '#2b2720',
+            textAlign: 'left',
+            cursor: 'pointer',
           }}
         >
           <span
@@ -367,7 +377,7 @@ export function ProductionDetail() {
             <span style={{ color: 'var(--ink)' }}>{play.title}</span>
             {' →'}
           </span>
-        </div>
+        </button>
       )}
     </div>
   )

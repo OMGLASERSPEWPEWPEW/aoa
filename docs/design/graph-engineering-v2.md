@@ -1009,7 +1009,7 @@ All four can run simultaneously in separate worktrees:
 
 **Track A (discover):**
 - [x] discover-page
-- [ ] play-pages
+- [x] play-pages
 
 **Track B (shared components):**
 - [x] navigation-v2
