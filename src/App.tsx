@@ -5,6 +5,7 @@ import { Landing } from './pages/Landing'
 import { Login } from './pages/Login'
 import { Signup } from './pages/Signup'
 import { AppShell } from './pages/AppShell'
+import { Tonight } from './pages/Tonight'
 import { MapHome } from './pages/MapHome'
 import { Discover } from './pages/Discover'
 import { MyShows } from './pages/MyShows'
@@ -33,7 +34,8 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Discover />} />
+            <Route index element={<Tonight />} />
+            <Route path="discover" element={<Discover />} />
             <Route path="map" element={<MapHome />} />
             <Route path="watchlist" element={<MyShows />} />
             <Route path="mentor" element={<MentorChat />} />

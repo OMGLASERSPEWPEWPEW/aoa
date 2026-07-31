@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useWatchlist } from '../hooks/useWatchlist'
+import { useHouseCheck } from '../hooks/useHouseCheck'
 import { EmotionWheel } from '../components/EmotionWheel'
 import { RoomVolumeSelector } from '../components/RoomVolumeSelector'
+import { HouseRankModal } from '../components/HouseRankModal'
 import type { Emotion, RoomVolume } from '../lib/emotions'
 import type { Event, Venue } from '../lib/types'
 
@@ -11,6 +13,8 @@ export function LogShow() {
   const { eventId } = useParams<{ eventId: string }>()
   const navigate = useNavigate()
   const { updateStatus } = useWatchlist()
+  const { rankUp, checkRank, dismissRankUp } = useHouseCheck()
+  const [pendingNav, setPendingNav] = useState<string | null>(null)
 
   const [event, setEvent] = useState<(Event & { venue?: Venue }) | null>(null)
   const [loading, setLoading] = useState(true)
@@ -43,15 +47,35 @@ export function LogShow() {
 
   const handleNext = async () => {
     await writeWatchlist()
-    navigate(`/app/log/${eventId}/review`, {
-      replace: true,
-      state: { emotions, volume, event },
-    })
+    await checkRank()
+    setPendingNav(`/app/log/${eventId}/review`)
   }
 
   const handleJustLog = async () => {
     await writeWatchlist()
-    navigate('/app/watchlist', { replace: true })
+    await checkRank()
+    setPendingNav('/app/watchlist')
+  }
+
+  const handleDismissRankUp = () => {
+    dismissRankUp()
+    if (pendingNav) {
+      const nav = pendingNav
+      setPendingNav(null)
+      if (nav.includes('/review')) {
+        navigate(nav, { replace: true, state: { emotions, volume, event } })
+      } else {
+        navigate(nav, { replace: true })
+      }
+    }
+  }
+
+  if (!rankUp && pendingNav) {
+    if (pendingNav.includes('/review')) {
+      navigate(pendingNav, { replace: true, state: { emotions, volume, event } })
+    } else {
+      navigate(pendingNav, { replace: true })
+    }
   }
 
   if (loading || !event) {
@@ -188,6 +212,10 @@ export function LogShow() {
           JUST LOG IT
         </button>
       </div>
+
+      {rankUp !== null && (
+        <HouseRankModal rank={rankUp} onDismiss={handleDismissRankUp} />
+      )}
     </div>
   )
 }

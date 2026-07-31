@@ -977,17 +977,17 @@ All four can run simultaneously in separate worktrees:
 - [x] production-detail (depends on spectrum-bar, interpretation-copy, schema-plays, schema-access)
 
 **Track B (tonight):**
-- [ ] marquee-ticker
-- [ ] tonight-hero (depends on spectrum-bar)
-- [ ] tonight-friends
-- [ ] tonight-free
-- [ ] tonight-page (depends on all above)
+- [x] marquee-ticker
+- [x] tonight-hero (depends on spectrum-bar)
+- [x] tonight-friends
+- [x] tonight-free
+- [x] tonight-page (depends on all above)
 
 **Track C (map overhaul):**
-- [ ] map-markers (depends on production-detail for navigation target)
-- [ ] map-filters (depends on map-markers)
-- [ ] venue-sheet (depends on map-filters, spectrum-bar)
-- [ ] map-basemap (depends on map-markers)
+- [x] map-markers (depends on production-detail for navigation target)
+- [x] map-filters (depends on map-markers)
+- [x] venue-sheet (depends on map-filters, spectrum-bar)
+- [x] map-basemap (depends on map-markers)
 
 **Track D (profile):**
 - [x] seating-chart
@@ -997,9 +997,9 @@ All four can run simultaneously in separate worktrees:
 - [x] profile-page (depends on all above)
 
 **Track E (House engine):**
-- [ ] house-check-fn (depends on schema-house, log-show-page)
-- [ ] house-rank-modal (depends on seating-chart, house-check-fn)
-- [ ] house-hook (depends on house-rank-modal)
+- [x] house-check-fn (depends on schema-house, log-show-page)
+- [x] house-rank-modal (depends on seating-chart, house-check-fn)
+- [x] house-hook (depends on house-rank-modal)
 
 **Worktree guidance:** Tracks A-E touch different files. Track A: `src/pages/ProductionDetail.tsx`. Track B: `src/pages/Tonight.tsx` + `src/components/Marquee*.tsx` + `src/components/Tonight*.tsx`. Track C: `src/components/Map*.tsx` + `src/components/VenueSheet.tsx`. Track D: `src/pages/Profile.tsx` + `src/components/Seating*.tsx` + `src/components/House*.tsx` + `src/components/Palette*.tsx` + `src/components/Stat*.tsx`. Track E: `supabase/functions/house-check/` + `src/components/HouseRankModal.tsx` + `src/hooks/useHouseCheck.ts`. No file conflicts — safe for 5-way fan-out with worktree isolation.
 

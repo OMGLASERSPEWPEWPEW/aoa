@@ -1,0 +1,88 @@
+import { useNavigate } from 'react-router-dom'
+import type { Event } from '../lib/types'
+
+interface Props {
+  freeEvents: Event[]
+  cheapestEvents: Event[]
+}
+
+export function TonightFree({ freeEvents, cheapestEvents }: Props) {
+  const navigate = useNavigate()
+  const hasFree = freeEvents.length > 0
+  const items = hasFree ? freeEvents : cheapestEvents.slice(0, 3)
+
+  return (
+    <div style={{ padding: '16px 20px' }}>
+      <div style={{ marginBottom: 10 }}>
+        <span
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontSize: 9,
+            letterSpacing: '0.1em',
+            color: hasFree ? 'oklch(0.68 0.13 150)' : '#625b4c',
+          }}
+        >
+          {hasFree ? 'FREE TONIGHT' : 'CHEAPEST TONIGHT'}
+        </span>
+        {hasFree && (
+          <span
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 9,
+              letterSpacing: '0.1em',
+              color: '#4f4a3e',
+            }}
+          >
+            {' — NO CATCH, NO TICKET'}
+          </span>
+        )}
+      </div>
+
+      {items.length === 0 ? (
+        <p
+          style={{
+            fontFamily: "'Newsreader', Georgia, serif",
+            fontSize: 14,
+            color: '#9c9586',
+            fontStyle: 'italic',
+          }}
+        >
+          Nothing playing tonight — check back tomorrow.
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {items.map(event => (
+            <button
+              key={event.id}
+              onClick={() => navigate(`/app/show/${event.id}`)}
+              style={{
+                background: 'none',
+                border: 'none',
+                textAlign: 'left',
+                padding: 0,
+                cursor: 'pointer',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Newsreader', Georgia, serif",
+                  fontSize: 15,
+                  lineHeight: 1.4,
+                  color: '#9c9586',
+                }}
+              >
+                <span style={{ fontStyle: 'italic', color: '#ebe5d6' }}>{event.title}</span>
+                {event.venue?.name && (
+                  <span> at {event.venue.name}</span>
+                )}
+                {!hasFree && event.price_min !== null && (
+                  <span style={{ color: 'oklch(0.68 0.13 150)' }}> · ${event.price_min}</span>
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
