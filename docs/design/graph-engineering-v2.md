@@ -807,6 +807,32 @@ Phase 7:  [delete-belt-code] [delete-star-ratings] [delete-learn]
 - **Retry**: on styling -> check gradient, oklch values; on content -> check rank calculation, palette query -> fix (max 3 cycles)
 - **Stop condition**: profile matches spec, no belt references, next-step sentence warm and inviting
 
+### Loop: seating-chart
+- **Trigger**: house-constants complete
+- **Inner cycle**:
+  1. Discover: read THE-HOUSE.md §seating chart (container, rows, lit seat, row formula)
+  2. Plan: 4×8 grid with row assignment from rankRow(), lit seat at index 3
+  3. Execute: build SeatingChart.tsx with all visual layers
+  4. Verify: rank 0 → row 3 (back); rank 6 → row 0 (front); lit seat 11px with glow; correct oklch per row tier
+- **Evaluator**: all 7 ranks produce visually correct seat placement
+- **Retry**: on row mismatch → check rankRow() formula → fix (max 3 cycles)
+- **Stop condition**: all ranks render correctly, lit seat glows, STAGE/STANDING ROOM labels present
+
+### Loop: house-chips
+- **Trigger**: house-constants complete
+- **Inner cycle**: one-shot — build HouseChips.tsx, verify 7 chips with 3 states
+- **Stop condition**: achieved=strikethrough, current=gold, future=dashed
+
+### Loop: palette-bar
+- **Trigger**: spectrum-bar complete
+- **Inner cycle**: one-shot — wrap SpectrumBar at 30px with useEmotionAggregates hook
+- **Stop condition**: bar renders with personal insight sentence
+
+### Loop: stat-strip
+- **Trigger**: design-tokens complete
+- **Inner cycle**: one-shot — build StatStrip.tsx with 4 cells
+- **Stop condition**: 4 cells with correct fonts, ushered always green
+
 ### Loop: house-check-fn
 - **Trigger**: schema-house, log-show-page complete
 - **Inner cycle**:
@@ -919,27 +945,27 @@ All four can run simultaneously in separate worktrees:
 
 ### Phase 2: Log a Show (sequential — this is the data source for everything)
 
-- [ ] emotion-wheel
-- [ ] room-volume
-- [ ] log-show-page
+- [x] emotion-wheel
+- [x] room-volume
+- [x] log-show-page
 
 **Quality gate:** can log a show with 1-3 emotions + optional room volume; watchlist row created with status='seen', emotions array, seen_date; emotion aggregate triggers fire and populate event_emotion_counts; booking cleared if applicable. This gate is critical: **every downstream screen reads data this flow produces.**
 
 ### Phase 3: Write a Review (sequential, depends on Phase 2)
 
-- [ ] write-review-page
+- [x] write-review-page
 
 **Quality gate:** can write a review with prompt, emotions, body, spoiler toggle; emotions default from log step; JUST LOG IT skips review; Post to the house creates review; emotions sync between watchlist and review rows.
 
 ### Phase 4: Core Display Components (two parallel tracks)
 
 **Track A (shelves):**
-- [ ] my-shows-ledger
-- [ ] my-shows-empty-states
+- [x] my-shows-ledger
+- [x] my-shows-empty-states
 
 **Track B (spectrum):**
-- [ ] spectrum-bar
-- [ ] interpretation-copy
+- [x] spectrum-bar
+- [x] interpretation-copy
 
 **Worktree guidance:** Track A touches `src/pages/MyShows.tsx`. Track B touches `src/components/SpectrumBar.tsx` and `src/components/InterpretationSentence.tsx`. No file conflicts — safe to fan out.
 
@@ -948,7 +974,7 @@ All four can run simultaneously in separate worktrees:
 ### Phase 5: Feature Pages (four parallel tracks)
 
 **Track A (show detail):**
-- [ ] production-detail (depends on spectrum-bar, interpretation-copy, schema-plays, schema-access)
+- [x] production-detail (depends on spectrum-bar, interpretation-copy, schema-plays, schema-access)
 
 **Track B (tonight):**
 - [ ] marquee-ticker
@@ -964,11 +990,11 @@ All four can run simultaneously in separate worktrees:
 - [ ] map-basemap (depends on map-markers)
 
 **Track D (profile):**
-- [ ] seating-chart
-- [ ] house-chips
-- [ ] palette-bar (depends on spectrum-bar)
-- [ ] stat-strip
-- [ ] profile-page (depends on all above)
+- [x] seating-chart
+- [x] house-chips
+- [x] palette-bar (depends on spectrum-bar)
+- [x] stat-strip
+- [x] profile-page (depends on all above)
 
 **Track E (House engine):**
 - [ ] house-check-fn (depends on schema-house, log-show-page)

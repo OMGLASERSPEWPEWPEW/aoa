@@ -15,6 +15,7 @@ import { Settings } from './pages/Settings'
 import { Social } from './pages/Social'
 import { LogShow } from './pages/LogShow'
 import { WriteReview } from './pages/WriteReview'
+import { ProductionDetail } from './pages/ProductionDetail'
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="social" element={<Social />} />
             <Route path="log/:eventId" element={<LogShow />} />
             <Route path="log/:eventId/review" element={<WriteReview />} />
+            <Route path="show/:eventId" element={<ProductionDetail />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
           </Route>

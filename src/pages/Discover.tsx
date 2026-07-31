@@ -1,10 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, SlidersHorizontal } from 'lucide-react'
 import { useEvents } from '../hooks/useEvents'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { EventCard } from '../components/EventCard'
-import { ReviewsList } from '../components/ReviewsList'
-import type { Event } from '../lib/types'
 
 const EVENT_TYPES = ['all', 'show', 'class', 'workshop', 'festival'] as const
 const VENUE_TYPES = ['all', 'storefront', 'institutional', 'experimental'] as const
@@ -15,7 +14,7 @@ export function Discover() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [venueTypeFilter, setVenueTypeFilter] = useState<string>('all')
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const navigate = useNavigate()
 
   const filtered = events.filter(e => {
     if (typeFilter !== 'all' && e.event_type !== typeFilter) return false
@@ -111,103 +110,13 @@ export function Discover() {
                 event={event}
                 watchlistStatus={getStatus(event.id)}
                 onWatchlistToggle={handleWatchlistToggle}
-                onTap={setSelectedEvent}
+                onTap={(e) => navigate(`/app/show/${e.id}`)}
               />
             ))}
           </>
         )}
       </div>
 
-      {selectedEvent && (
-        <EventDetail
-          event={selectedEvent}
-          watchlistStatus={getStatus(selectedEvent.id)}
-          onWatchlistToggle={() => handleWatchlistToggle(selectedEvent.id)}
-          onClose={() => setSelectedEvent(null)}
-        />
-      )}
-    </div>
-  )
-}
-
-function EventDetail({ event, watchlistStatus, onWatchlistToggle, onClose }: {
-  event: Event
-  watchlistStatus: 'want_to_see' | 'booked' | 'seen' | null
-  onWatchlistToggle: () => void
-  onClose: () => void
-}) {
-  const venue = event.venue
-
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
-      <div
-        className="bg-slate-900 w-full sm:max-w-lg sm:rounded-xl rounded-t-xl max-h-[85vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="p-5">
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <h2 className="text-white text-lg font-bold">{event.title}</h2>
-              {venue && (
-                <p className="text-amber-400 text-sm mt-0.5">{venue.name}</p>
-              )}
-            </div>
-            <button onClick={onClose} className="text-slate-500 hover:text-white p-1">✕</button>
-          </div>
-
-          {event.description && (
-            <p className="text-slate-300 text-sm leading-relaxed mb-4">{event.description}</p>
-          )}
-
-          <div className="space-y-2 text-sm mb-4">
-            {venue?.neighborhood && (
-              <p className="text-slate-400">{venue.address ?? venue.neighborhood}</p>
-            )}
-            {event.start_date && (
-              <p className="text-slate-400">{new Date(event.start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                {event.end_date && event.end_date !== event.start_date && ` - ${new Date(event.end_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
-              </p>
-            )}
-            {(event.price_min !== null || event.price_max !== null) && (
-              <p className="text-slate-400">{event.price_min === event.price_max ? `$${event.price_min}` : `$${event.price_min ?? 0}-$${event.price_max}`}</p>
-            )}
-          </div>
-
-          {event.genre_tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {event.genre_tags.map(tag => (
-                <span key={tag} className="text-xs px-2 py-1 bg-slate-800 text-slate-300 rounded-md">{tag}</span>
-              ))}
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            {(event.ticket_url || venue?.website_url) && (
-              <a
-                href={event.ticket_url || venue?.website_url || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto text-center px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 text-sm font-medium hover:bg-amber-300 transition-colors"
-                onClick={e => e.stopPropagation()}
-              >
-                {event.ticket_url ? 'Get Tickets' : 'Visit Website'}
-              </a>
-            )}
-            <button
-              onClick={onWatchlistToggle}
-              className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-colors ${
-                watchlistStatus
-                  ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30'
-                  : 'bg-slate-800 text-white hover:bg-slate-700'
-              }`}
-            >
-              {watchlistStatus === 'seen' ? 'Seen' : watchlistStatus ? 'On Watchlist' : '+ Want to See'}
-            </button>
-          </div>
-
-          <ReviewsList eventId={event.id} />
-        </div>
-      </div>
     </div>
   )
 }
