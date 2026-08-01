@@ -77,8 +77,30 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
   if (!venue) {
     return (
       <div style={sheetBase}>
-        <div className="flex justify-center" style={{ padding: '10px 0 6px' }}>
+        <div className="flex justify-center" style={{ padding: '10px 0 6px', position: 'relative' }}>
           <div style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: '#2b2720' }} />
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              right: 16,
+              top: 8,
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              border: '1px solid #2b2720',
+              backgroundColor: 'transparent',
+              color: '#625b4c',
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
         </div>
         <div style={{ padding: '0 20px 16px', textAlign: 'center' }}>
           <div
@@ -281,7 +303,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
         )}
 
         <div className="flex gap-2">
-          {venue.website_url && (
+          {venue.website_url && /^https?:\/\//i.test(venue.website_url) && (
             <a
               href={venue.website_url}
               target="_blank"

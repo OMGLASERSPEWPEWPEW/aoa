@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 const tabs = [
   { to: '/app', glyph: '◉', label: 'TONIGHT', end: true },
   { to: '/app/map', glyph: '⌖', label: 'MAP' },
-  { to: '/app/watchlist', glyph: '▤', label: 'MY SHOWS' },
+  { to: '/app/discover', glyph: '◎', label: 'DISCOVER' },
   { to: '/app/profile', glyph: '◇', label: 'YOU' },
 ]
 
@@ -42,7 +42,7 @@ export function Navigation() {
             color: '#0c0a05',
             border: 'none',
           }}
-          aria-label="Log a show"
+          aria-label="My Shows"
         >
           ✦
         </button>
