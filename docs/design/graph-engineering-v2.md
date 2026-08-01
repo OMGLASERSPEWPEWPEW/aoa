@@ -1225,7 +1225,7 @@ All prerequisite schema exists in DB (is_up_tonight(), profile_emotion_counts, e
 
 **Track A (Data Integration — parallel, no deps between them):**
 - [x] personal-palette
-- [ ] is-up-tonight-wire (blocked: needs show_times jsonb populated in events)
+- [x] is-up-tonight-wire (client-side isUpTonight() + scraper show_times extraction)
 
 **Track B (Feature Gaps — after Track A):**
 - [x] search-by-feeling
@@ -1303,21 +1303,21 @@ If a phase fails its quality gate:
 Update this section as nodes complete:
 
 ```
-Phase 0: [ ] schema-emotions [ ] schema-plays [ ] schema-access [ ] schema-shelves
-         [ ] schema-house [ ] schema-emotion-agg [ ] schema-tonight [ ] schema-privacy
-Phase 1: [ ] emotion-constants [ ] house-constants [ ] design-tokens [ ] type-updates
-Phase 2: [ ] emotion-wheel [ ] room-volume [ ] log-show-page
-Phase 3: [ ] write-review-page
-Phase 4: [ ] my-shows-ledger [ ] my-shows-empty-states [ ] spectrum-bar [ ] interpretation-copy
-Phase 5: [ ] production-detail [ ] marquee-ticker [ ] tonight-hero [ ] tonight-friends
-         [ ] tonight-free [ ] tonight-page [ ] map-markers [ ] map-filters
-         [ ] venue-sheet [ ] map-basemap [ ] seating-chart [ ] house-chips
-         [ ] palette-bar [ ] stat-strip [ ] profile-page [ ] house-check-fn
-         [ ] house-rank-modal [ ] house-hook
-Phase 6: [ ] discover-page [ ] play-pages [ ] navigation-v2 [ ] genre-chips
-         [ ] review-badge [ ] access-chips [ ] loading-skeleton
+Phase 0: [x] schema-emotions [x] schema-plays [x] schema-access [x] schema-shelves
+         [x] schema-house [x] schema-emotion-agg [x] schema-tonight [x] schema-privacy
+Phase 1: [x] emotion-constants [x] house-constants [x] design-tokens [x] type-updates
+Phase 2: [x] emotion-wheel [x] room-volume [x] log-show-page
+Phase 3: [x] write-review-page
+Phase 4: [x] my-shows-ledger [x] my-shows-empty-states [x] spectrum-bar [x] interpretation-copy
+Phase 5: [x] production-detail [x] marquee-ticker [x] tonight-hero [x] tonight-friends
+         [x] tonight-free [x] tonight-page [x] map-markers [x] map-filters
+         [x] venue-sheet [x] map-basemap [x] seating-chart [x] house-chips
+         [x] palette-bar [x] stat-strip [x] profile-page [x] house-check-fn
+         [x] house-rank-modal [x] house-hook
+Phase 6: [x] discover-page [x] play-pages [x] navigation-v2 [x] genre-chips
+         [x] review-badge [x] access-chips [x] loading-skeleton
 Phase 7: [x] delete-belt-code [x] delete-star-ratings [x] delete-learn
-Phase 8: [x] personal-palette [ ] is-up-tonight-wire [x] search-by-feeling
+Phase 8: [x] personal-palette [x] is-up-tonight-wire [x] search-by-feeling
          [x] venue-sheet-states [x] scene-news [x] pull-to-refresh
          [x] reduced-motion-complete [x] osm-attribution [x] offline-dexie
 ```

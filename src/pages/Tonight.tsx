@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import { isUpTonight } from '../lib/tonight'
 import { MarqueeTicker } from '../components/MarqueeTicker'
 import { TonightHero } from '../components/TonightHero'
 import { TonightFriends } from '../components/TonightFriends'
@@ -30,12 +31,7 @@ export function Tonight() {
 
     const events = (allEvents as Event[]) ?? []
 
-    const today = new Date().toISOString().split('T')[0]
-    const tonightEvents = events.filter(e =>
-      e.start_date && e.end_date
-        ? e.start_date <= today && e.end_date >= today
-        : e.start_date === today
-    )
+    const tonightEvents = events.filter(isUpTonight)
 
     const under20 = events.filter(e => e.price_min !== null && e.price_min <= 20)
     const free = tonightEvents.filter(e =>
@@ -46,6 +42,7 @@ export function Tonight() {
       .filter(e => e.price_min !== null)
       .sort((a, b) => (a.price_min ?? 999) - (b.price_min ?? 999))
 
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
     const openingTonight = tonightEvents.filter(e => e.start_date === today)
 
     setTonightCount(tonightEvents.length)

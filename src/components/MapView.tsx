@@ -8,6 +8,7 @@ import { createMarkerElement } from './MapMarker'
 import { MapFilterChips } from './MapFilterChips'
 import { MapKey } from './MapKey'
 import { VenueSheet } from './VenueSheet'
+import { isUpTonight } from '../lib/tonight'
 import type { Venue, Event } from '../lib/types'
 
 const CHICAGO_CENTER: [number, number] = [-87.6298, 41.8781]
@@ -62,15 +63,9 @@ export function MapView() {
     load()
   }, [user])
 
-  const today = new Date().toISOString().split('T')[0]
-
   const tonightEventsByVenue = useCallback((venueId: string) => {
-    return events.filter(e =>
-      e.venue_id === venueId &&
-      e.start_date && e.end_date &&
-      e.start_date <= today && e.end_date >= today
-    )
-  }, [events, today])
+    return events.filter(e => e.venue_id === venueId && isUpTonight(e))
+  }, [events])
 
   const isVenueDimmed = useCallback((venue: Venue) => {
     if (activeFilters.size === 0) return false

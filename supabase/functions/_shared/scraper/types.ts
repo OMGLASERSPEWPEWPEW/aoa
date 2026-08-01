@@ -16,6 +16,7 @@ export interface ScrapedEvent {
   price_max: number | null;
   ticket_url: string | null;
   hottix_available: boolean;
+  show_times: Record<string, string[]> | null;
 }
 
 export interface ScrapeResult {

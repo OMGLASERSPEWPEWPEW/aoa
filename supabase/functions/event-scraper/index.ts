@@ -159,6 +159,7 @@ async function processVenue(
         price_max: event.price_max,
         ticket_url: event.ticket_url || venue.calendar_url,
         hottix_available: event.hottix_available,
+        show_times: event.show_times ?? null,
         source: "scraped" as const,
         scraped_at: new Date().toISOString(),
         source_url: venue.calendar_url,
