@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { isUpTonight } from './tonight'
+import { isUpTonight, getTonightTimes, formatShowTime } from './tonight'
 import type { Event } from './types'
 
 function makeEvent(overrides: Partial<Event> = {}): Event {
@@ -60,5 +60,57 @@ describe('isUpTonight', () => {
       },
     })
     expect(isUpTonight(event)).toBe(false)
+  })
+})
+
+describe('getTonightTimes', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('returns empty array when show_times is null', () => {
+    expect(getTonightTimes(null)).toEqual([])
+  })
+
+  it('returns times for current day of week', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-01T20:00:00-05:00')) // Saturday
+    expect(getTonightTimes({ sat: ['14:00', '19:30'] })).toEqual(['14:00', '19:30'])
+  })
+
+  it('returns empty array on dark day', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-03T20:00:00-05:00')) // Monday
+    expect(getTonightTimes({ sat: ['14:00'] })).toEqual([])
+  })
+
+  it('uses exception times over regular schedule', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-01T20:00:00-05:00'))
+    const times = getTonightTimes({
+      sat: ['14:00', '19:30'],
+      exceptions: { '2026-08-01': ['15:00'] },
+    })
+    expect(times).toEqual(['15:00'])
+  })
+})
+
+describe('formatShowTime', () => {
+  it('formats afternoon time', () => {
+    expect(formatShowTime('14:00')).toBe('2:00 PM')
+  })
+
+  it('formats evening time', () => {
+    expect(formatShowTime('19:30')).toBe('7:30 PM')
+  })
+
+  it('formats morning time', () => {
+    expect(formatShowTime('10:00')).toBe('10:00 AM')
+  })
+
+  it('formats midnight', () => {
+    expect(formatShowTime('00:00')).toBe('12:00 AM')
+  })
+
+  it('formats noon', () => {
+    expect(formatShowTime('12:00')).toBe('12:00 PM')
   })
 })

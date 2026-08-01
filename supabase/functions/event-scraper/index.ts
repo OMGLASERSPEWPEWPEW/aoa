@@ -69,7 +69,7 @@ async function extractEvents(
           { role: "user", content: cleaned },
         ],
         response_format: { type: "json_object" },
-        max_tokens: 8192,
+        max_tokens: 16384,
         temperature: 0.1,
       }),
       signal: controller.signal,

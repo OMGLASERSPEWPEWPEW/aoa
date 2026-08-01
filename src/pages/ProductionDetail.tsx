@@ -298,7 +298,7 @@ export function ProductionDetail() {
               color: '#625b4c',
             }}
           >
-            REVIEWS
+            WHAT PEOPLE SAID
           </span>
           <button
             onClick={() => navigate(`/app/log/${event.id}/review`, {

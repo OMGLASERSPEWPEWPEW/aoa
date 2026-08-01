@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useWatchlist } from '../hooks/useWatchlist'
+import { getTonightTimes, formatShowTime } from '../lib/tonight'
 import { SpectrumBar } from './SpectrumBar'
 import { GenreChip } from './GenreChip'
 import type { Event, SpectrumSlice } from '../lib/types'
@@ -25,10 +26,15 @@ export function TonightHero({ event, spectrum, totalCards }: Props) {
           ? `$${event.price_min}`
           : `$${event.price_min ?? 0}–$${event.price_max}`
 
+  const tonightTimes = getTonightTimes(event.show_times)
+  const curtainStr = tonightTimes.length > 0
+    ? tonightTimes.map(formatShowTime).join(', ')
+    : null
+
   const venueLine = [
     venue?.name?.toUpperCase(),
     venue?.venue_type?.toUpperCase(),
-    venue?.neighborhood?.toUpperCase(),
+    curtainStr,
   ].filter(Boolean).join(' • ')
 
   return (

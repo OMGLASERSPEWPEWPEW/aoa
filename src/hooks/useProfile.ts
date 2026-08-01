@@ -10,7 +10,10 @@ export function useProfile() {
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
     const [profileRes, progressRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
       supabase.from('user_progress').select('*').eq('user_id', user.id).maybeSingle(),

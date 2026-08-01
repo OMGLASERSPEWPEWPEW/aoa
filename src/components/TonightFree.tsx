@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { getTonightTimes, formatShowTime } from '../lib/tonight'
 import type { Event } from '../lib/types'
 
 interface Props {
@@ -75,6 +76,12 @@ export function TonightFree({ freeEvents, cheapestEvents }: Props) {
                 {event.venue?.name && (
                   <span> at {event.venue.name}</span>
                 )}
+                {(() => {
+                  const times = getTonightTimes(event.show_times)
+                  return times.length > 0 ? (
+                    <span style={{ color: '#625b4c' }}> · {times.map(formatShowTime).join(', ')}</span>
+                  ) : null
+                })()}
                 {!hasFree && event.price_min !== null && (
                   <span style={{ color: 'oklch(0.68 0.13 150)' }}> · ${event.price_min}</span>
                 )}
