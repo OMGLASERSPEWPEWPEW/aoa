@@ -16,6 +16,7 @@ export interface ScrapedEvent {
   price_max: number | null;
   ticket_url: string | null;
   hottix_available: boolean;
+  photo_url: string | null;
   show_times: Record<string, string[]> | null;
 }
 

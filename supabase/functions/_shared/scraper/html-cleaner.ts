@@ -11,6 +11,10 @@ export function cleanHtml(raw: string, maxChars = 30_000): string {
   html = html.replace(/<a\s[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
     (_, url, text) => `${text.replace(/<[^>]+>/g, '')} [${url}]`);
 
+  // Preserve image URLs before stripping tags
+  html = html.replace(/<img\s[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*\/?>/gi,
+    (_, src) => `[img: ${src}]`);
+
   // Remove all remaining HTML tags, keep text content
   html = html.replace(/<[^>]+>/g, " ");
 
