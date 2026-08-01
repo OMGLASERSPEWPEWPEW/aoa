@@ -235,8 +235,8 @@ serve(async (req) => {
   }
 
   // Shared secret auth (not JWT — this is a server-to-server cron call)
-  const authHeader = req.headers.get("Authorization");
-  if (authHeader !== `Bearer ${SCRAPER_SECRET}`) {
+  const scraperKey = req.headers.get("x-scraper-key") ?? req.headers.get("Authorization")?.replace("Bearer ", "");
+  if (scraperKey !== SCRAPER_SECRET) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
