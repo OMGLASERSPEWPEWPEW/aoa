@@ -95,17 +95,18 @@ export function VersionStamp() {
           role="dialog"
           aria-label="Changelog"
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            right: 0,
-            width: 320,
+            position: 'fixed',
+            top: 52,
+            left: 10,
+            right: 10,
+            maxWidth: 380,
             maxHeight: '60vh',
             overflowY: 'auto',
             borderRadius: 3,
             border: '1px solid #2b2720',
             background: '#0c0a05',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-            zIndex: 100,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            zIndex: 200,
           }}
         >
           <div

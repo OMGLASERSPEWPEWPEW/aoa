@@ -8,6 +8,19 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.11',
+    date: '2026-08-01',
+    title: 'My Shows marquee + version changelog',
+    summary: 'Two views for My Shows: a visual marquee with poster cards and the dense ledger. Version stamp is now clickable with a changelog dropdown.',
+    details: [
+      'New: Take A "The Marquee" view with Want to See posters, Booked date blocks, Seen palette',
+      'Toggle between marquee and ledger views in My Shows header',
+      'New: clickable VersionStamp with changelog dropdown (latest 3 entries)',
+      'Unread indicator when a new version ships',
+      'Fixed: changelog dropdown positioning on mobile',
+    ],
+  },
+  {
     version: '0.4.9',
     date: '2026-08-01',
     title: 'Cast members + scraper improvements',
