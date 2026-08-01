@@ -1,7 +1,7 @@
 # Version Convention Wrong
 
 **Category:** change
-**Status:** pending
+**Status:** complete
 **Phase:** 4
 **Priority:** P3
 

@@ -1,5 +1,6 @@
 import { LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { VersionStamp } from './VersionStamp'
 
 export function Header() {
   const { signOut } = useAuth()
@@ -21,17 +22,7 @@ export function Header() {
         >
           The Art of Art
         </h1>
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 9,
-            color: 'var(--ink-faint)',
-          }}
-        >
-          v{__APP_VERSION__}
-          {' · '}
-          {new Date(__BUILD_TIME__).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-        </span>
+        <VersionStamp />
       </div>
       <button
         onClick={signOut}

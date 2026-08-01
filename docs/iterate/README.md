@@ -2,23 +2,23 @@
 
 **Created:** 2026-08-01
 **Total Items:** 15
-**Completed:** 11
+**Completed:** 15
 **Total Token Cost:** $0.00
 
 ## Phase 1: Data Pipeline — pending
 | Item | Category | Status | Cost |
 |------|----------|--------|------|
-| [Scraper data completeness](scraper-data-completeness.md) | data-issue | pending | — |
+| [Scraper data completeness](scraper-data-completeness.md) | data-issue | complete | — |
 | [Tonight missing show time](tonight-missing-show-time.md) | bug | complete | — |
 | [Truncated scraper responses](truncated-scraper-responses.md) | data-issue | complete | — |
-| [No cast info on event detail](no-cast-info.md) | feature | pending | — |
+| [No cast info on event detail](no-cast-info.md) | feature | complete | — |
 
 ## Phase 2: Critical UI Bugs — pending
 | Item | Category | Status | Cost |
 |------|----------|--------|------|
 | [Ticker not showing](ticker-not-showing.md) | bug | complete | — |
 | [You page broken](you-page-broken.md) | bug | complete | — |
-| [Want to See buggy + My Shows gaps](want-to-see-my-shows.md) | bug | pending | — |
+| [Want to See buggy + My Shows gaps](want-to-see-my-shows.md) | bug | complete | — |
 | [Reviews label wrong](reviews-label-wrong.md) | bug | complete | — |
 
 ## Phase 3: Navigation + Map — pending
@@ -34,4 +34,4 @@
 |------|----------|--------|------|
 | [Claude CLI error](claude-cli-error.md) | bug | complete | — |
 | [Loading slow / no caching](loading-slow-caching.md) | change | complete | — |
-| [Version convention wrong](version-convention.md) | change | pending | — |
+| [Version convention wrong](version-convention.md) | change | complete | — |

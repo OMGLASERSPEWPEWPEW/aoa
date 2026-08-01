@@ -1,7 +1,7 @@
 # Want to See Buggy + My Shows Gaps
 
 **Category:** bug
-**Status:** pending
+**Status:** complete
 **Phase:** 2
 **Priority:** P1
 
