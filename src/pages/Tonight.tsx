@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { isUpTonight } from '../lib/tonight'
@@ -8,74 +9,78 @@ import { TonightFriends } from '../components/TonightFriends'
 import { TonightFree } from '../components/TonightFree'
 import type { Event, SpectrumSlice } from '../lib/types'
 
-export function Tonight() {
-  const [heroEvent, setHeroEvent] = useState<Event | null>(null)
-  const [heroSpectrum, setHeroSpectrum] = useState<SpectrumSlice[]>([])
-  const [heroTotalCards, setHeroTotalCards] = useState(0)
-  const [tonightCount, setTonightCount] = useState(0)
-  const [under20Count, setUnder20Count] = useState(0)
-  const [openingsCount, setOpeningsCount] = useState(0)
-  const [freeEvents, setFreeEvents] = useState<Event[]>([])
-  const [cheapestEvents, setCheapestEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const { onTouchStart, onTouchEnd } = usePullToRefresh(scrollRef, async () => { await loadData() })
+async function fetchTonightData() {
+  const { data: allEvents } = await supabase
+    .from('events')
+    .select('*, venue:venues(*)')
+    .order('start_date', { ascending: true })
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
+  const events = (allEvents as Event[]) ?? []
+  const tonightEvents = events.filter(isUpTonight)
+  const under20 = events.filter(e => e.price_min !== null && e.price_min <= 20)
+  const free = tonightEvents.filter(e =>
+    (e.price_min === 0 || e.price_min === null) &&
+    (e.price_max === 0 || e.price_max === null)
+  )
+  const cheapest = [...tonightEvents]
+    .filter(e => e.price_min !== null)
+    .sort((a, b) => (a.price_min ?? 999) - (b.price_min ?? 999))
 
-    const { data: allEvents } = await supabase
-      .from('events')
-      .select('*, venue:venues(*)')
-      .order('start_date', { ascending: true })
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
+  const openingTonight = tonightEvents.filter(e => e.start_date === today)
+  const hero = tonightEvents[0] ?? events[0] ?? null
 
-    const events = (allEvents as Event[]) ?? []
+  let heroSpectrum: SpectrumSlice[] = []
+  let heroTotalCards = 0
 
-    const tonightEvents = events.filter(isUpTonight)
+  if (hero) {
+    const { data: specData } = await supabase
+      .from('event_emotion_counts')
+      .select('*')
+      .eq('event_id', hero.id)
 
-    const under20 = events.filter(e => e.price_min !== null && e.price_min <= 20)
-    const free = tonightEvents.filter(e =>
-      (e.price_min === 0 || e.price_min === null) &&
-      (e.price_max === 0 || e.price_max === null)
-    )
-    const cheapest = [...tonightEvents]
-      .filter(e => e.price_min !== null)
-      .sort((a, b) => (a.price_min ?? 999) - (b.price_min ?? 999))
-
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
-    const openingTonight = tonightEvents.filter(e => e.start_date === today)
-
-    setTonightCount(tonightEvents.length)
-    setUnder20Count(under20.length)
-    setOpeningsCount(openingTonight.length)
-    setFreeEvents(free)
-    setCheapestEvents(cheapest)
-
-    const hero = tonightEvents[0] ?? events[0] ?? null
-    setHeroEvent(hero)
-
-    if (hero) {
-      const { data: specData } = await supabase
-        .from('event_emotion_counts')
-        .select('*')
-        .eq('event_id', hero.id)
-
-      if (specData && specData.length > 0) {
-        const total = specData.reduce((s: number, r: any) => s + (r.pick_count ?? 0), 0)
-        setHeroTotalCards(Math.ceil(total / 3))
-        setHeroSpectrum(
-          specData.map((r: any) => ({
-            emotion: r.emotion_slug,
-            pct: total > 0 ? Math.round((r.pick_count / total) * 100) : 0,
-          })).filter((s: SpectrumSlice) => s.pct > 0)
-        )
-      }
+    if (specData && specData.length > 0) {
+      const total = specData.reduce((s: number, r: any) => s + (r.pick_count ?? 0), 0)
+      heroTotalCards = Math.ceil(total / 3)
+      heroSpectrum = specData
+        .map((r: any) => ({
+          emotion: r.emotion_slug,
+          pct: total > 0 ? Math.round((r.pick_count / total) * 100) : 0,
+        }))
+        .filter((s: SpectrumSlice) => s.pct > 0)
     }
+  }
 
-    setLoading(false)
-  }, [])
+  return {
+    hero,
+    heroSpectrum,
+    heroTotalCards,
+    tonightCount: tonightEvents.length,
+    under20Count: under20.length,
+    openingsCount: openingTonight.length,
+    freeEvents: free,
+    cheapestEvents: cheapest,
+  }
+}
 
-  useEffect(() => { loadData() }, [loadData])
+export function Tonight() {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['tonight-events'],
+    queryFn: fetchTonightData,
+  })
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { onTouchStart, onTouchEnd } = usePullToRefresh(scrollRef, async () => { await refetch() })
+
+  const loading = isLoading
+  const heroEvent = data?.hero ?? null
+  const heroSpectrum = data?.heroSpectrum ?? []
+  const heroTotalCards = data?.heroTotalCards ?? 0
+  const tonightCount = data?.tonightCount ?? 0
+  const under20Count = data?.under20Count ?? 0
+  const openingsCount = data?.openingsCount ?? 0
+  const freeEvents = data?.freeEvents ?? []
+  const cheapestEvents = data?.cheapestEvents ?? []
 
   if (loading) {
     return (

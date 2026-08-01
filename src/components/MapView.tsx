@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { supabase } from '../lib/supabase'
@@ -20,23 +21,23 @@ export function MapView() {
   const { user } = useAuth()
   const { getStatus } = useWatchlist()
 
-  const [venues, setVenues] = useState<Venue[]>([])
-  const [events, setEvents] = useState<Event[]>([])
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
-  const [visitCounts, setVisitCounts] = useState<Record<string, number>>({})
-  const [lastVisitDates, setLastVisitDates] = useState<Record<string, string>>({})
 
   const hasToken = !!import.meta.env.VITE_MAPBOX_TOKEN
 
-  useEffect(() => {
-    async function load() {
+  const { data: mapData } = useQuery({
+    queryKey: ['map-data', user?.id],
+    queryFn: async () => {
       const [venueRes, eventRes] = await Promise.all([
         supabase.from('venues').select('*').not('latitude', 'is', null).not('longitude', 'is', null),
         supabase.from('events').select('*, venue:venues(*)').order('start_date', { ascending: true }),
       ])
-      setVenues((venueRes.data as Venue[]) ?? [])
-      setEvents((eventRes.data as Event[]) ?? [])
+      const venues = (venueRes.data as Venue[]) ?? []
+      const events = (eventRes.data as Event[]) ?? []
+
+      let visitCounts: Record<string, number> = {}
+      let lastVisitDates: Record<string, string> = {}
 
       if (user) {
         const { data: watchlist } = await supabase
@@ -44,24 +45,26 @@ export function MapView() {
           .select('event_id, seen_date, events(venue_id)')
           .eq('user_id', user.id)
           .eq('status', 'seen')
-        const counts: Record<string, number> = {}
-        const lastDates: Record<string, string> = {}
         for (const w of watchlist ?? []) {
           const vid = (w as any).events?.venue_id
           if (vid) {
-            counts[vid] = (counts[vid] ?? 0) + 1
+            visitCounts[vid] = (visitCounts[vid] ?? 0) + 1
             const sd = (w as any).seen_date
-            if (sd && (!lastDates[vid] || sd > lastDates[vid])) {
-              lastDates[vid] = sd
+            if (sd && (!lastVisitDates[vid] || sd > lastVisitDates[vid])) {
+              lastVisitDates[vid] = sd
             }
           }
         }
-        setVisitCounts(counts)
-        setLastVisitDates(lastDates)
       }
-    }
-    load()
-  }, [user])
+
+      return { venues, events, visitCounts, lastVisitDates }
+    },
+  })
+
+  const venues = mapData?.venues ?? []
+  const events = mapData?.events ?? []
+  const visitCounts = mapData?.visitCounts ?? {}
+  const lastVisitDates = mapData?.lastVisitDates ?? {}
 
   const tonightEventsByVenue = useCallback((venueId: string) => {
     return events.filter(e => e.venue_id === venueId && isUpTonight(e))

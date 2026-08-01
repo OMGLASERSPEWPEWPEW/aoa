@@ -2,7 +2,7 @@
 
 **Created:** 2026-08-01
 **Total Items:** 15
-**Completed:** 4
+**Completed:** 7
 **Total Token Cost:** $0.00
 
 ## Phase 1: Data Pipeline — pending
@@ -24,9 +24,9 @@
 ## Phase 3: Navigation + Map — pending
 | Item | Category | Status | Cost |
 |------|----------|--------|------|
-| [Map venue links broken](map-venue-links.md) | bug | pending | — |
-| [Map banner dismiss + pulse](map-banner-dismiss.md) | feature | pending | — |
-| [Discover page + nav reorder](discover-nav-reorder.md) | feature | pending | — |
+| [Map venue links broken](map-venue-links.md) | bug | complete | — |
+| [Map banner dismiss + pulse](map-banner-dismiss.md) | feature | complete | — |
+| [Discover page + nav reorder](discover-nav-reorder.md) | feature | complete | — |
 | [Map missing color coding](map-color-coding.md) | change | pending | — |
 
 ## Phase 4: Polish + Infra — pending

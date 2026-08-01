@@ -1,21 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Event } from '../lib/types'
 
+async function fetchEvents(): Promise<Event[]> {
+  const { data } = await supabase
+    .from('events')
+    .select('*, venue:venues(*)')
+    .order('start_date', { ascending: true })
+  return (data as Event[]) ?? []
+}
+
 export function useEvents() {
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useQuery({
+    queryKey: ['events'],
+    queryFn: fetchEvents,
+  })
 
-  useEffect(() => {
-    supabase
-      .from('events')
-      .select('*, venue:venues(*)')
-      .order('start_date', { ascending: true })
-      .then(({ data }) => {
-        setEvents((data as Event[]) ?? [])
-        setLoading(false)
-      })
-  }, [])
-
-  return { events, loading }
+  return { events: data ?? [], loading: isLoading }
 }
