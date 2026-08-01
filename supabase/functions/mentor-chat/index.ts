@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { logUsage } from "../_shared/logUsage.ts";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5204",
@@ -157,6 +158,19 @@ serve(async (req) => {
 
   const data = await response.json();
   const text = data.content?.[0]?.text ?? "";
+
+  try {
+    await logUsage(supabase, {
+      userId: user.id,
+      model: "claude-sonnet-4-20250514",
+      provider: "anthropic",
+      feature: "mentor-chat",
+      inputTokens: data.usage?.input_tokens ?? 0,
+      outputTokens: data.usage?.output_tokens ?? 0,
+    });
+  } catch (e) {
+    console.error("[mentor-chat] Usage logging failed:", e);
+  }
 
   return new Response(JSON.stringify({ text, model: "claude-sonnet-4-20250514" }), {
     status: 200,

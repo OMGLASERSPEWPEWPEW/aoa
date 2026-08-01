@@ -9,6 +9,7 @@ import type {
   ScrapeResult,
   DeepSeekResponse,
 } from "../_shared/scraper/types.ts";
+import { logUsage } from "../_shared/logUsage.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY")!;
@@ -129,6 +130,22 @@ async function processVenue(
     result.ai_input_tokens = inputTokens;
     result.ai_output_tokens = outputTokens;
     result.events_found = events.length;
+
+    if (inputTokens > 0) {
+      try {
+        await logUsage(supabase, {
+          userId: null,
+          model: "deepseek-v4-flash",
+          provider: "deepseek",
+          feature: "event-scraper",
+          inputTokens,
+          outputTokens,
+          metadata: { venue_id: venue.id, venue_name: venue.name, run_id: runId },
+        });
+      } catch (e) {
+        console.error("[event-scraper] Usage logging failed:", e);
+      }
+    }
 
     for (const event of events) {
       const slug = generateSlug(event.title, venue.slug);

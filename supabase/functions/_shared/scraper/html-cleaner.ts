@@ -7,7 +7,11 @@ export function cleanHtml(raw: string, maxChars = 30_000): string {
   // Remove HTML comments
   html = html.replace(/<!--[\s\S]*?-->/g, "");
 
-  // Remove all HTML tags, keep text content
+  // Preserve link URLs inline before stripping tags
+  html = html.replace(/<a\s[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
+    (_, url, text) => `${text.replace(/<[^>]+>/g, '')} [${url}]`);
+
+  // Remove all remaining HTML tags, keep text content
   html = html.replace(/<[^>]+>/g, " ");
 
   // Decode common HTML entities

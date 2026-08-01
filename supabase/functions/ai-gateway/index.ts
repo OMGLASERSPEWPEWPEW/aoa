@@ -25,6 +25,7 @@ import { deepseekAdapter } from "../_shared/providers/deepseekAdapter.ts";
 import { dalleAdapter } from "../_shared/providers/dalleAdapter.ts";
 import { imagenAdapter } from "../_shared/providers/imagenAdapter.ts";
 import { soraAdapter } from "../_shared/providers/soraAdapter.ts";
+import { logUsage } from "../_shared/logUsage.ts";
 
 // ---------------------------------------------------------------------------
 // Provider adapters (each provider has its own dedicated adapter)
@@ -243,6 +244,7 @@ serve(async (req) => {
   const modality: Modality = (body.modality as Modality) || "text";
   const provider = body.provider as Provider;
   const model = body.model as string;
+  const feature = (body.feature as string) || undefined;
 
   if (!VALID_MODALITIES.includes(modality)) {
     return jsonError(`Invalid modality. Must be one of: ${VALID_MODALITIES.join(", ")}`, 400, cors);
@@ -288,16 +290,35 @@ serve(async (req) => {
     return jsonError(errorMessage, status, cors);
   }
 
-  // -- HOOK: Post-response billing/analytics (add your own logic here) ------
-  // Example: deduct credits, log inference cost, track usage analytics.
-  //
-  // For text:
-  //   const textResult = result as GatewayTextResponseBody;
-  //   const cost = estimateTextCost(model, textResult.usage?.inputTokens ?? 0, textResult.usage?.outputTokens ?? 0);
-  //
-  // For image/video:
-  //   const genResult = result as GatewayImageResponseBody | GatewayVideoResponseBody;
-  //   const cost = genResult.estimatedCostUsd ?? 0;
+  // -- Post-response: log usage to ai_usage table --------------------------
+  try {
+    if (modality === "text") {
+      const textResult = result as GatewayTextResponseBody;
+      await logUsage(supabase, {
+        userId: user.id,
+        model,
+        provider,
+        modality: "text",
+        feature,
+        inputTokens: textResult.usage?.inputTokens ?? 0,
+        outputTokens: textResult.usage?.outputTokens ?? 0,
+      });
+    } else {
+      const genResult = result as GatewayImageResponseBody | GatewayVideoResponseBody;
+      await logUsage(supabase, {
+        userId: user.id,
+        model,
+        provider,
+        modality,
+        feature,
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: genResult.estimatedCostUsd ?? 0,
+      });
+    }
+  } catch (e) {
+    console.error("[ai-gateway] Usage logging failed:", e);
+  }
 
   // -- Return normalized response -------------------------------------------
   return new Response(JSON.stringify(result), {

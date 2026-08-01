@@ -9,9 +9,15 @@ interface CallModelOptions {
   messages: { role: 'user' | 'assistant'; content: string }[]
   maxTokens?: number
   temperature?: number
+  feature?: string
 }
 
-export async function callModel(options: CallModelOptions): Promise<string> {
+interface CallModelResult {
+  text: string
+  usage?: { inputTokens: number; outputTokens: number }
+}
+
+export async function callModel(options: CallModelOptions): Promise<CallModelResult> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new Error('Not authenticated')
 
@@ -33,6 +39,7 @@ export async function callModel(options: CallModelOptions): Promise<string> {
         messages: options.messages,
         maxTokens: options.maxTokens ?? 1024,
         temperature: options.temperature,
+        feature: options.feature,
       }),
     },
   )
@@ -43,5 +50,5 @@ export async function callModel(options: CallModelOptions): Promise<string> {
   }
 
   const result = await response.json()
-  return result.text ?? ''
+  return { text: result.text ?? '', usage: result.usage }
 }

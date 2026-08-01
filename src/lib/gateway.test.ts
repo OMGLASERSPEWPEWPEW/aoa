@@ -65,7 +65,7 @@ describe('callModel', () => {
     const result = await callModel({
       messages: [{ role: 'user', content: 'hi' }],
     })
-    expect(result).toBe('hello back')
+    expect(result.text).toBe('hello back')
   })
 
   it('throws on non-ok response', async () => {

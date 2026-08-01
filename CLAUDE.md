@@ -182,5 +182,6 @@ Agents organized in `.claude/agents/divisions.json`:
 | `/security-review` | Security audit — trust boundaries, data flows |
 | `/search-knowledge` | Cross-project search for patterns and prior solutions |
 | `/rs` | Restart dev server |
+| `/new-design` | AI graph engineer — audits codebase against design handoff, produces executable graph doc with loop specs |
 
 **Skills are NEVER auto-triggered.** They must be explicitly invoked by the user with `/<skill-name>`.
