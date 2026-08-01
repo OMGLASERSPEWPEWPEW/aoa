@@ -8,15 +8,15 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
-    version: '0.4.13',
+    version: '0.4.14',
     date: '2026-08-01',
-    title: 'Profile page fix (third attempt)',
-    summary: 'You page now handles all failure modes: query errors, null profile, and hooks ordering. Diagnostics logging added to trace profile loading.',
+    title: 'Map marker taps + banner dismiss',
+    summary: 'Tapping a map marker now opens the venue sheet. Banner can be dismissed. Profile page error handling.',
     details: [
-      'Fixed: useProfile silently swallowed Supabase query errors — now logs via diagnostics and surfaces errors',
-      'Added: error state and null-profile fallback UI on Profile page',
-      'Added: diagnostic breadcrumbs for profile loading lifecycle',
-      'Prior: hooks ordering violation fix (v0.4.12), loading state fix (v0.4.5)',
+      'Fixed: tapping map markers now opens the venue sheet (stopPropagation was missing)',
+      'Fixed: banner "curtains up within three miles" can now be dismissed with the X button',
+      'Fixed: useProfile error handling + diagnostics logging',
+      'Added: error and null-profile fallback UI on Profile page',
     ],
   },
   {

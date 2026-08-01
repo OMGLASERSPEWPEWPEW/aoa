@@ -101,6 +101,9 @@ export function createMarkerElement({
     el.appendChild(dot)
   }
 
-  el.onclick = onClick
+  el.onclick = (e) => {
+    e.stopPropagation()
+    onClick()
+  }
   return el
 }

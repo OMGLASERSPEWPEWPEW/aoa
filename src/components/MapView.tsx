@@ -24,6 +24,7 @@ export function MapView() {
 
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   const hasToken = !!import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -196,16 +197,24 @@ export function MapView() {
 
       <MapKey />
 
-      <VenueSheet
-        venue={selectedVenue}
-        tonightEvents={selectedVenue ? tonightEventsByVenue(selectedVenue.id) : []}
-        visitCount={selectedVenue ? (visitCounts[selectedVenue.id] ?? 0) : 0}
-        lastVisitDate={selectedVenue ? (lastVisitDates[selectedVenue.id] ?? null) : null}
-        allVenues={venues}
-        allEvents={events}
-        peekCounts={{ tonight: filterCounts.tonight, under20: filterCounts.under20, pwyc: filterCounts.pwyc }}
-        onClose={() => setSelectedVenue(null)}
-      />
+      {(selectedVenue || !bannerDismissed) && (
+        <VenueSheet
+          venue={selectedVenue}
+          tonightEvents={selectedVenue ? tonightEventsByVenue(selectedVenue.id) : []}
+          visitCount={selectedVenue ? (visitCounts[selectedVenue.id] ?? 0) : 0}
+          lastVisitDate={selectedVenue ? (lastVisitDates[selectedVenue.id] ?? null) : null}
+          allVenues={venues}
+          allEvents={events}
+          peekCounts={{ tonight: filterCounts.tonight, under20: filterCounts.under20, pwyc: filterCounts.pwyc }}
+          onClose={() => {
+            if (selectedVenue) {
+              setSelectedVenue(null)
+            } else {
+              setBannerDismissed(true)
+            }
+          }}
+        />
+      )}
 
       {/* OSM attribution */}
       <div
