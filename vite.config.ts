@@ -2,12 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { diagLogPlugin } from './vite-plugins/diagLogPlugin.js'
 import pkg from './package.json' with { type: 'json' }
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    diagLogPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
