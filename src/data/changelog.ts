@@ -8,13 +8,14 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
-    version: '0.4.14',
+    version: '0.4.16',
     date: '2026-08-01',
-    title: 'Map marker taps + banner dismiss',
-    summary: 'Tapping a map marker now opens the venue sheet. Banner can be dismissed. Profile page error handling.',
+    title: 'Map fixes + My Shows routing',
+    summary: 'Map markers open venue sheets, banner dismisses, and My Shows no longer redirects to login.',
     details: [
+      'Fixed: My Shows poster/booking taps navigated to wrong route (/app/production → /app/show)',
       'Fixed: tapping map markers now opens the venue sheet (stopPropagation was missing)',
-      'Fixed: banner "curtains up within three miles" can now be dismissed with the X button',
+      'Fixed: banner dismiss now works (tracks dismissed state separately)',
       'Fixed: useProfile error handling + diagnostics logging',
       'Added: error and null-profile fallback UI on Profile page',
     ],
