@@ -258,7 +258,7 @@ function MarqueeView({
                 <PosterThumb
                   key={item.id}
                   item={item}
-                  onClick={() => item.event && navigate(`/app/production/${item.event_id}`)}
+                  onClick={() => item.event && navigate(`/app/show/${item.event_id}`)}
                 />
               ))}
               {wantItems.length > 3 && (
@@ -516,7 +516,7 @@ function BookingRow({
       <div
         className="flex items-center gap-3"
         style={{ padding: '6px 0', cursor: 'pointer' }}
-        onClick={() => navigate(`/app/production/${item.event_id}`)}
+        onClick={() => navigate(`/app/show/${item.event_id}`)}
       >
         {dayLabel && timeLabel ? (
           <div
