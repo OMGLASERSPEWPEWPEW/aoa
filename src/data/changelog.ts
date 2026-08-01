@@ -8,16 +8,15 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
-    version: '0.4.11',
+    version: '0.4.12',
     date: '2026-08-01',
-    title: 'My Shows marquee + version changelog',
-    summary: 'Two views for My Shows: a visual marquee with poster cards and the dense ledger. Version stamp is now clickable with a changelog dropdown.',
+    title: 'Profile page fix + changelog polish',
+    summary: 'Fixed blank You page caused by a React hooks ordering violation. Changelog dropdown now renders correctly on mobile.',
     details: [
-      'New: Take A "The Marquee" view with Want to See posters, Booked date blocks, Seen palette',
-      'Toggle between marquee and ledger views in My Shows header',
-      'New: clickable VersionStamp with changelog dropdown (latest 3 entries)',
-      'Unread indicator when a new version ships',
-      'Fixed: changelog dropdown positioning on mobile',
+      'Fixed: You page blank screen — useEmotionAggregates called after early return violated React hooks rules',
+      'Fixed: changelog dropdown clipped on mobile — now uses fixed positioning',
+      'My Shows marquee view with poster cards and view toggle',
+      'Clickable VersionStamp with changelog dropdown',
     ],
   },
   {

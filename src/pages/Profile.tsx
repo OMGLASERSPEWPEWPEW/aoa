@@ -11,6 +11,7 @@ import { SpectrumBar } from '../components/SpectrumBar'
 export function Profile() {
   const { user } = useAuth()
   const { profile, loading } = useProfile()
+  const { slices: paletteSlices, totalCards: paletteTotalCards } = useEmotionAggregates('season')
 
   if (loading) {
     return (
@@ -19,8 +20,6 @@ export function Profile() {
       </div>
     )
   }
-
-  const { slices: paletteSlices, totalCards: paletteTotalCards } = useEmotionAggregates('season')
   const rank = (profile?.house_rank ?? 0) as HouseRank
   const rankName = HOUSE_RANKS[rank]
   const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'Theater Explorer'
