@@ -1229,7 +1229,7 @@ All prerequisite schema exists in DB (is_up_tonight(), profile_emotion_counts, e
 
 **Track B (Feature Gaps — after Track A):**
 - [x] search-by-feeling
-- [ ] venue-sheet-states
+- [x] venue-sheet-states
 - [x] scene-news
 
 **Track C (UX Polish — parallel, independent):**
@@ -1238,7 +1238,7 @@ All prerequisite schema exists in DB (is_up_tonight(), profile_emotion_counts, e
 - [x] osm-attribution
 
 **Track D (Infrastructure — independent):**
-- [ ] offline-dexie
+- [x] offline-dexie
 
 **Worktree guidance:** Tracks A–D touch entirely different files and can run in parallel. Within Track B, all three nodes touch different files (Discover, VenueSheet, new component) so they can also run in parallel after Track A completes.
 
@@ -1318,8 +1318,8 @@ Phase 6: [ ] discover-page [ ] play-pages [ ] navigation-v2 [ ] genre-chips
          [ ] review-badge [ ] access-chips [ ] loading-skeleton
 Phase 7: [x] delete-belt-code [x] delete-star-ratings [x] delete-learn
 Phase 8: [x] personal-palette [ ] is-up-tonight-wire [x] search-by-feeling
-         [ ] venue-sheet-states [x] scene-news [x] pull-to-refresh
-         [x] reduced-motion-complete [x] osm-attribution [ ] offline-dexie
+         [x] venue-sheet-states [x] scene-news [x] pull-to-refresh
+         [x] reduced-motion-complete [x] osm-attribution [x] offline-dexie
 ```
 
 ### Critical path

@@ -24,6 +24,7 @@ export function MapView() {
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
   const [visitCounts, setVisitCounts] = useState<Record<string, number>>({})
+  const [lastVisitDates, setLastVisitDates] = useState<Record<string, string>>({})
 
   const hasToken = !!import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -39,15 +40,23 @@ export function MapView() {
       if (user) {
         const { data: watchlist } = await supabase
           .from('watchlist')
-          .select('event_id, events(venue_id)')
+          .select('event_id, seen_date, events(venue_id)')
           .eq('user_id', user.id)
           .eq('status', 'seen')
         const counts: Record<string, number> = {}
+        const lastDates: Record<string, string> = {}
         for (const w of watchlist ?? []) {
           const vid = (w as any).events?.venue_id
-          if (vid) counts[vid] = (counts[vid] ?? 0) + 1
+          if (vid) {
+            counts[vid] = (counts[vid] ?? 0) + 1
+            const sd = (w as any).seen_date
+            if (sd && (!lastDates[vid] || sd > lastDates[vid])) {
+              lastDates[vid] = sd
+            }
+          }
         }
         setVisitCounts(counts)
+        setLastVisitDates(lastDates)
       }
     }
     load()
@@ -82,6 +91,7 @@ export function MapView() {
     under20: venues.filter(v => events.some(e => e.venue_id === v.id && e.price_min !== null && e.price_min <= 20)).length,
     storefront: venues.filter(v => v.venue_type === 'storefront').length,
     never: venues.filter(v => (visitCounts[v.id] ?? 0) === 0).length,
+    pwyc: venues.filter(v => v.pay_what_you_can_days && v.pay_what_you_can_days.length > 0).length,
   }
 
   useEffect(() => {
@@ -98,6 +108,7 @@ export function MapView() {
     })
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+    map.on('click', () => setSelectedVenue(null))
 
     mapRef.current = map
 
@@ -179,21 +190,23 @@ export function MapView() {
 
       <MapKey />
 
-      {selectedVenue && (
-        <VenueSheet
-          venue={selectedVenue}
-          tonightEvents={tonightEventsByVenue(selectedVenue.id)}
-          visitCount={visitCounts[selectedVenue.id] ?? 0}
-          onClose={() => setSelectedVenue(null)}
-        />
-      )}
+      <VenueSheet
+        venue={selectedVenue}
+        tonightEvents={selectedVenue ? tonightEventsByVenue(selectedVenue.id) : []}
+        visitCount={selectedVenue ? (visitCounts[selectedVenue.id] ?? 0) : 0}
+        lastVisitDate={selectedVenue ? (lastVisitDates[selectedVenue.id] ?? null) : null}
+        allVenues={venues}
+        allEvents={events}
+        peekCounts={{ tonight: filterCounts.tonight, under20: filterCounts.under20, pwyc: filterCounts.pwyc }}
+        onClose={() => setSelectedVenue(null)}
+      />
 
       {/* OSM attribution */}
       <div
         style={{
           position: 'absolute',
-          bottom: selectedVenue ? 'auto' : 4,
-          top: selectedVenue ? 4 : 'auto',
+          bottom: 'auto',
+          top: 4,
           right: 4,
           fontFamily: "'Courier Prime', monospace",
           fontSize: 8,
