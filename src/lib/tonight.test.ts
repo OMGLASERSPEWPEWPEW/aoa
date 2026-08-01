@@ -23,6 +23,18 @@ describe('isUpTonight', () => {
     expect(isUpTonight(makeEvent())).toBe(true)
   })
 
+  it('treats null end_date as same-day event', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-01T20:00:00-05:00'))
+    expect(isUpTonight(makeEvent({ start_date: '2026-08-01', end_date: null }))).toBe(true)
+  })
+
+  it('single-day event with past start_date returns false', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-01T20:00:00-05:00'))
+    expect(isUpTonight(makeEvent({ start_date: '2026-07-30', end_date: null }))).toBe(false)
+  })
+
   it('returns false outside date range', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-15T20:00:00-05:00'))

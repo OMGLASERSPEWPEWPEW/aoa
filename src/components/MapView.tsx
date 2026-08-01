@@ -10,6 +10,7 @@ import { MapFilterChips } from './MapFilterChips'
 import { MapKey } from './MapKey'
 import { VenueSheet } from './VenueSheet'
 import { isUpTonight } from '../lib/tonight'
+import { EMOTIONS, base } from '../lib/emotions'
 import type { Venue, Event } from '../lib/types'
 
 const CHICAGO_CENTER: [number, number] = [-87.6298, 41.8781]
@@ -38,11 +39,12 @@ export function MapView() {
 
       let visitCounts: Record<string, number> = {}
       let lastVisitDates: Record<string, string> = {}
+      let venueEmotionColors: Record<string, string> = {}
 
       if (user) {
         const { data: watchlist } = await supabase
           .from('watchlist')
-          .select('event_id, seen_date, events(venue_id)')
+          .select('event_id, seen_date, emotions, events(venue_id)')
           .eq('user_id', user.id)
           .eq('status', 'seen')
         for (const w of watchlist ?? []) {
@@ -53,11 +55,16 @@ export function MapView() {
             if (sd && (!lastVisitDates[vid] || sd > lastVisitDates[vid])) {
               lastVisitDates[vid] = sd
             }
+            const emotions = (w as any).emotions as string[] | null
+            if (emotions?.length && !venueEmotionColors[vid]) {
+              const def = EMOTIONS.find(e => e.slug === emotions[0])
+              if (def) venueEmotionColors[vid] = base(def)
+            }
           }
         }
       }
 
-      return { venues, events, visitCounts, lastVisitDates }
+      return { venues, events, visitCounts, lastVisitDates, venueEmotionColors }
     },
   })
 
@@ -65,6 +72,7 @@ export function MapView() {
   const events = mapData?.events ?? []
   const visitCounts = mapData?.visitCounts ?? {}
   const lastVisitDates = mapData?.lastVisitDates ?? {}
+  const venueEmotionColors = mapData?.venueEmotionColors ?? {}
 
   const tonightEventsByVenue = useCallback((venueId: string) => {
     return events.filter(e => e.venue_id === venueId && isUpTonight(e))
@@ -136,7 +144,7 @@ export function MapView() {
       const el = createMarkerElement({
         venue,
         relationship: firstEventStatus,
-        dominantColor: null,
+        dominantColor: venueEmotionColors[venue.id] ?? null,
         isTonight: tonightEvts.length > 0,
         isSelected: selectedVenue?.id === venue.id,
         dimmed,

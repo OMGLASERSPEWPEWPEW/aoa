@@ -29,7 +29,9 @@ export function isUpTonight(event: Event): boolean {
   if (event.end_date && chicagoDate > event.end_date) return false
 
   if (!event.show_times) {
-    return !!(event.start_date && event.end_date && event.start_date <= chicagoDate && event.end_date >= chicagoDate)
+    if (!event.start_date) return false
+    const end = event.end_date ?? event.start_date
+    return event.start_date <= chicagoDate && end >= chicagoDate
   }
 
   const exceptions = event.show_times.exceptions as Record<string, string[]> | undefined
