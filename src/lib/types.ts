@@ -133,7 +133,7 @@ export interface UserProgress {
   friends_invited: number
   opening_nights_attended: number
   ushering_count: number
-  belt_history: { belt: number; earned_at: string }[]
+
   created_at: string
   updated_at: string
 }

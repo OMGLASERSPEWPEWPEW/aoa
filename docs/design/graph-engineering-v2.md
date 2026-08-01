@@ -1025,9 +1025,9 @@ All four can run simultaneously in separate worktrees:
 ### Phase 7: Cleanup (parallel, run LAST)
 
 All three can run simultaneously — they only delete code:
-- [ ] delete-belt-code
-- [ ] delete-star-ratings
-- [ ] delete-learn
+- [x] delete-belt-code
+- [x] delete-star-ratings
+- [x] delete-learn
 
 **Quality gate:** `grep -ri "belt_level\|BELT_NAMES\|BELT_COLORS\|useBeltCheck\|BeltUpgrade" src/` = 0 results. `grep -ri "rating.*star\|star.*rating\|CommunityRating\|LogShowModal" src/` = 0 results. `grep -ri "Learn\.tsx\|/learn\|LearningContent\|LearningModal\|LearningModule" src/` = 0 results. TypeScript compiles clean. App runs end-to-end: signup -> log show -> see emotions in My Shows -> see spectrum on show detail -> see rank on profile.
 
@@ -1102,7 +1102,7 @@ Phase 5: [ ] production-detail [ ] marquee-ticker [ ] tonight-hero [ ] tonight-f
          [ ] house-rank-modal [ ] house-hook
 Phase 6: [ ] discover-page [ ] play-pages [ ] navigation-v2 [ ] genre-chips
          [ ] review-badge [ ] access-chips [ ] loading-skeleton
-Phase 7: [ ] delete-belt-code [ ] delete-star-ratings [ ] delete-learn
+Phase 7: [x] delete-belt-code [x] delete-star-ratings [x] delete-learn
 ```
 
 ### Critical path

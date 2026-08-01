@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useFriendships } from '../hooks/useFriendships'
 import { FriendsList } from '../components/FriendsList'
 import { AddFriend } from '../components/AddFriend'
-import { ActivityFeed } from '../components/ActivityFeed'
 
 export function Social() {
   const { friends, pending, loading, sendRequest, acceptRequest, declineRequest, removeFriend, searchUsers } = useFriendships()
@@ -57,9 +56,6 @@ export function Social() {
           onRemove={removeFriend}
         />
 
-        {friends.length > 0 && (
-          <ActivityFeed friendIds={friends.map(f => f.profile?.id).filter(Boolean) as string[]} />
-        )}
       </div>
 
       {showAddFriend && (
