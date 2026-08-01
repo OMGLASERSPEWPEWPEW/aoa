@@ -1,10 +1,12 @@
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../hooks/useProfile'
+import { useEmotionAggregates, personalInsight } from '../hooks/useEmotionAggregates'
 import { HOUSE_RANKS, type HouseRank } from '../lib/house'
 import { RANK_CRITERIA } from '../lib/house'
 import { SeatingChart } from '../components/SeatingChart'
 import { StatStrip } from '../components/StatStrip'
 import { HouseChips } from '../components/HouseChips'
+import { SpectrumBar } from '../components/SpectrumBar'
 
 export function Profile() {
   const { user } = useAuth()
@@ -18,6 +20,7 @@ export function Profile() {
     )
   }
 
+  const { slices: paletteSlices, totalCards: paletteTotalCards } = useEmotionAggregates('season')
   const rank = (profile?.house_rank ?? 0) as HouseRank
   const rankName = HOUSE_RANKS[rank]
   const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'Theater Explorer'
@@ -147,16 +150,33 @@ export function Profile() {
         >
           YOUR PALETTE THIS SEASON
         </div>
-        <div
-          style={{
-            fontFamily: "'Newsreader', Georgia, serif",
-            fontSize: 14,
-            color: '#9c9586',
-            fontStyle: 'italic',
-          }}
-        >
-          Log more shows to see your palette.
-        </div>
+        {paletteSlices.length > 0 ? (
+          <>
+            <SpectrumBar slices={paletteSlices} height={30} totalCards={paletteTotalCards} />
+            <p
+              style={{
+                fontFamily: "'Newsreader', Georgia, serif",
+                fontSize: 14,
+                color: '#9c9586',
+                lineHeight: 1.45,
+                marginTop: 8,
+              }}
+            >
+              {personalInsight(paletteSlices)}
+            </p>
+          </>
+        ) : (
+          <p
+            style={{
+              fontFamily: "'Newsreader', Georgia, serif",
+              fontSize: 14,
+              color: '#9c9586',
+              fontStyle: 'italic',
+            }}
+          >
+            Log more shows to see your palette.
+          </p>
+        )}
       </div>
 
       {/* The House */}

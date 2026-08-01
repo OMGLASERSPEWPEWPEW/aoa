@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { MarqueeTicker } from '../components/MarqueeTicker'
 import { TonightHero } from '../components/TonightHero'
 import { TonightFriends } from '../components/TonightFriends'
@@ -16,6 +17,8 @@ export function Tonight() {
   const [freeEvents, setFreeEvents] = useState<Event[]>([])
   const [cheapestEvents, setCheapestEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { onTouchStart, onTouchEnd } = usePullToRefresh(scrollRef, async () => { await loadData() })
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -86,7 +89,7 @@ export function Tonight() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div ref={scrollRef} className="flex flex-col h-full overflow-y-auto" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       {/* Masthead */}
       <div
         className="flex items-center justify-between"

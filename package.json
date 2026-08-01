@@ -1,7 +1,7 @@
 {
   "name": "art-of-art",
   "private": true,
-  "version": "0.3.8",
+  "version": "0.3.9",
   "type": "module",
   "scripts": {
     "dev": "vite",

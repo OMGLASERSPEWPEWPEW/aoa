@@ -1224,18 +1224,18 @@ All three can run simultaneously — they only delete code:
 All prerequisite schema exists in DB (is_up_tonight(), profile_emotion_counts, event_spectrum). These nodes wire existing backend to the frontend and add missing UX polish.
 
 **Track A (Data Integration — parallel, no deps between them):**
-- [ ] personal-palette
-- [ ] is-up-tonight-wire
+- [x] personal-palette
+- [ ] is-up-tonight-wire (blocked: needs show_times jsonb populated in events)
 
 **Track B (Feature Gaps — after Track A):**
-- [ ] search-by-feeling
+- [x] search-by-feeling
 - [ ] venue-sheet-states
-- [ ] scene-news
+- [x] scene-news
 
 **Track C (UX Polish — parallel, independent):**
-- [ ] pull-to-refresh
-- [ ] reduced-motion-complete
-- [ ] osm-attribution
+- [x] pull-to-refresh
+- [x] reduced-motion-complete
+- [x] osm-attribution
 
 **Track D (Infrastructure — independent):**
 - [ ] offline-dexie
@@ -1317,9 +1317,9 @@ Phase 5: [ ] production-detail [ ] marquee-ticker [ ] tonight-hero [ ] tonight-f
 Phase 6: [ ] discover-page [ ] play-pages [ ] navigation-v2 [ ] genre-chips
          [ ] review-badge [ ] access-chips [ ] loading-skeleton
 Phase 7: [x] delete-belt-code [x] delete-star-ratings [x] delete-learn
-Phase 8: [ ] personal-palette [ ] is-up-tonight-wire [ ] search-by-feeling
-         [ ] venue-sheet-states [ ] scene-news [ ] pull-to-refresh
-         [ ] reduced-motion-complete [ ] osm-attribution [ ] offline-dexie
+Phase 8: [x] personal-palette [ ] is-up-tonight-wire [x] search-by-feeling
+         [ ] venue-sheet-states [x] scene-news [x] pull-to-refresh
+         [x] reduced-motion-complete [x] osm-attribution [ ] offline-dexie
 ```
 
 ### Critical path

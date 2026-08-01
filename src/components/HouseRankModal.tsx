@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { HOUSE_RANKS, RANK_UP_COPY, type HouseRank } from '../lib/house'
 import { SeatingChart } from './SeatingChart'
 
@@ -7,6 +8,15 @@ interface Props {
 }
 
 export function HouseRankModal({ rank, onDismiss }: Props) {
+  const [visible, setVisible] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReducedMotion(mq.matches)
+    requestAnimationFrame(() => setVisible(true))
+  }, [])
+
   if (rank < 1 || rank > 6) return null
 
   const rankName = HOUSE_RANKS[rank]
@@ -26,6 +36,8 @@ export function HouseRankModal({ rank, onDismiss }: Props) {
         justifyContent: 'center',
         padding: '0 32px',
         cursor: 'pointer',
+        opacity: visible ? 1 : 0,
+        transition: reducedMotion ? 'none' : 'opacity 400ms cubic-bezier(.2,.8,.2,1)',
       }}
     >
       <div

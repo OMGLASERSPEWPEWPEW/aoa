@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Venue, Event } from '../lib/types'
 
@@ -11,6 +12,14 @@ interface Props {
 export function VenueSheet({ venue, tonightEvents, visitCount, onClose }: Props) {
   const navigate = useNavigate()
   const isUp = tonightEvents.length > 0
+  const [entered, setEntered] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReducedMotion(mq.matches)
+    requestAnimationFrame(() => setEntered(true))
+  }, [])
 
   return (
     <div
@@ -26,6 +35,8 @@ export function VenueSheet({ venue, tonightEvents, visitCount, onClose }: Props)
         boxShadow: '0 -14px 44px rgba(0,0,0,.75)',
         maxHeight: '60vh',
         overflowY: 'auto',
+        transform: entered ? 'translateY(0)' : 'translateY(100%)',
+        transition: reducedMotion ? 'none' : 'transform 300ms cubic-bezier(.2,.8,.2,1)',
       }}
     >
       {/* Grab handle */}

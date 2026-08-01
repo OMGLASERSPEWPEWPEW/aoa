@@ -188,10 +188,32 @@ export function MapView() {
         />
       )}
 
+      {/* OSM attribution */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: selectedVenue ? 'auto' : 4,
+          top: selectedVenue ? 4 : 'auto',
+          right: 4,
+          fontFamily: "'Courier Prime', monospace",
+          fontSize: 8,
+          color: '#3f3a31',
+          pointerEvents: 'none',
+          zIndex: 5,
+        }}
+      >
+        © OpenStreetMap contributors
+      </div>
+
       <style>{`
         @keyframes tonight-pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.4; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          @keyframes tonight-pulse {
+            0%, 100% { opacity: 1; }
+          }
         }
       `}</style>
     </div>

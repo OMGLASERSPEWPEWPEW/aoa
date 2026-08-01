@@ -1,8 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { useAuth } from '../contexts/AuthContext'
+import { useEmotionAggregates, personalInsight } from '../hooks/useEmotionAggregates'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { base, emotionBySlug } from '../lib/emotions'
+import { SpectrumBar } from '../components/SpectrumBar'
 import type { WatchlistItem, WatchlistStatus } from '../lib/types'
 
 const TABS: { key: WatchlistStatus; label: string }[] = [
@@ -14,7 +17,10 @@ const TABS: { key: WatchlistStatus; label: string }[] = [
 export function MyShows() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { items, loading } = useWatchlist()
+  const { items, loading, refetch } = useWatchlist()
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { onTouchStart, onTouchEnd } = usePullToRefresh(scrollRef, async () => { await refetch() })
+  const { slices: paletteSlices, totalCards: paletteTotalCards } = useEmotionAggregates('all-time')
   const [tab, setTab] = useState<WatchlistStatus>('want_to_see')
 
   const filtered = useMemo(() => items.filter(i => i.status === tab), [items, tab])
@@ -100,7 +106,34 @@ export function MyShows() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        {tab === 'seen' && paletteSlices.length > 0 && (
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #2b2720' }}>
+            <div
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontSize: 9,
+                letterSpacing: '0.1em',
+                color: '#625b4c',
+                marginBottom: 8,
+              }}
+            >
+              YOUR PALETTE, ALL {counts.seen}
+            </div>
+            <SpectrumBar slices={paletteSlices} height={26} totalCards={paletteTotalCards} />
+            <p
+              style={{
+                fontFamily: "'Newsreader', Georgia, serif",
+                fontSize: 14,
+                color: '#9c9586',
+                lineHeight: 1.45,
+                marginTop: 8,
+              }}
+            >
+              {personalInsight(paletteSlices)}
+            </p>
+          </div>
+        )}
         {filtered.length === 0 ? (
           <EmptyState shelf={tab} />
         ) : tab === 'seen' && grouped ? (
