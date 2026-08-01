@@ -8,7 +8,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     description: null, event_type: 'show', genre_tags: [],
     start_date: '2026-07-01', end_date: '2026-08-31',
     show_times: null, price_min: null, price_max: null,
-    ticket_url: null, hottix_available: false, photo_url: null,
+    ticket_url: null, hottix_available: false, photo_url: null, cast_members: null,
     play_id: null, created_at: '',
     ...overrides,
   }

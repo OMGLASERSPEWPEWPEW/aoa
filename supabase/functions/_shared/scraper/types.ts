@@ -18,6 +18,7 @@ export interface ScrapedEvent {
   hottix_available: boolean;
   photo_url: string | null;
   show_times: Record<string, string[]> | null;
+  cast_members: Array<{ name: string; role: string | null }> | null;
 }
 
 export interface ScrapeResult {

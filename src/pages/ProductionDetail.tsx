@@ -240,6 +240,83 @@ export function ProductionDetail() {
         </div>
       </div>
 
+      {/* 2b. THE COMPANY — cast/ensemble */}
+      {event.cast_members && event.cast_members.length > 0 && (
+        <div style={{ padding: '14px 20px', borderTop: '1px solid #2b2720' }}>
+          <span
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 9,
+              letterSpacing: '0.1em',
+              color: '#625b4c',
+            }}
+          >
+            THE COMPANY
+          </span>
+          <div className="flex gap-3" style={{ marginTop: 10, overflowX: 'auto' }}>
+            {event.cast_members.slice(0, 3).map((member, i) => (
+              <div key={i} className="flex flex-col items-center" style={{ minWidth: 56 }}>
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    backgroundColor: '#2b2720',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#625b4c',
+                    fontSize: 20,
+                  }}
+                >
+                  {member.name.charAt(0).toUpperCase()}
+                </div>
+                <span
+                  style={{
+                    fontFamily: "'Newsreader', Georgia, serif",
+                    fontSize: 12.5,
+                    color: '#9c9586',
+                    marginTop: 6,
+                    textAlign: 'center',
+                    maxWidth: 70,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {member.name}
+                </span>
+                {member.role && (
+                  <span
+                    style={{
+                      fontFamily: "'Courier Prime', monospace",
+                      fontSize: 9,
+                      color: '#4f4a3e',
+                      marginTop: 2,
+                    }}
+                  >
+                    {member.role}
+                  </span>
+                )}
+              </div>
+            ))}
+            {event.cast_members.length > 3 && (
+              <div className="flex items-center" style={{ minWidth: 56 }}>
+                <span
+                  style={{
+                    fontFamily: "'Courier Prime', monospace",
+                    fontSize: 10.5,
+                    color: '#4f4a3e',
+                  }}
+                >
+                  +{event.cast_members.length - 3}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 3. "The house felt" panel */}
       <div style={{ backgroundColor: '#141109', padding: '16px 20px' }}>
         <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>

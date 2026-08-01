@@ -19,6 +19,7 @@ Return valid JSON with this exact structure:
       "ticket_url": "https://... the specific URL for THIS show's page or ticket page",
       "hottix_available": false,
       "photo_url": "https://... the promotional image/poster for THIS show, or null",
+      "cast_members": [{"name": "Actor Name", "role": "Character Name or null"}],
       "show_times": {
         "thu": ["19:30"],
         "fri": ["19:30", "22:00"],
@@ -39,5 +40,6 @@ Rules:
 - show_times: extract the weekly performance schedule using 3-letter lowercase day keys (mon, tue, wed, thu, fri, sat, sun) with times in 24h "HH:MM" format. Only include days that have performances. If the schedule is not listed, set show_times to null
 - If no events are found, return {"events": []}
 - photo_url: extract the promotional image URL for each show — look for [img: ...] markers near each event. Prefer show posters or production photos over generic venue images. Return null if no image is found for that event
+- cast_members: extract performer names and their roles/characters if listed. Return as array of {name, role} objects. If only names are listed without roles, set role to null. Return null if no cast is listed
 - Do NOT invent events — only extract what is actually on the page`;
 }

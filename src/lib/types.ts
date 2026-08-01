@@ -71,6 +71,7 @@ export interface Event {
   ticket_url: string | null
   hottix_available: boolean
   photo_url: string | null
+  cast_members: Array<{ name: string; role: string | null }> | null
   play_id: string | null
   created_at: string
   venue?: Venue

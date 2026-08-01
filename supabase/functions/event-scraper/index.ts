@@ -178,6 +178,7 @@ async function processVenue(
         hottix_available: event.hottix_available,
         show_times: event.show_times ?? null,
         photo_url: event.photo_url || null,
+        cast_members: event.cast_members ?? null,
         source: "scraped" as const,
         scraped_at: new Date().toISOString(),
         source_url: venue.calendar_url,

@@ -2,7 +2,7 @@
 
 **Created:** 2026-08-01
 **Total Items:** 15
-**Completed:** 9
+**Completed:** 11
 **Total Token Cost:** $0.00
 
 ## Phase 1: Data Pipeline — pending
@@ -16,7 +16,7 @@
 ## Phase 2: Critical UI Bugs — pending
 | Item | Category | Status | Cost |
 |------|----------|--------|------|
-| [Ticker not showing](ticker-not-showing.md) | bug | pending | — |
+| [Ticker not showing](ticker-not-showing.md) | bug | complete | — |
 | [You page broken](you-page-broken.md) | bug | complete | — |
 | [Want to See buggy + My Shows gaps](want-to-see-my-shows.md) | bug | pending | — |
 | [Reviews label wrong](reviews-label-wrong.md) | bug | complete | — |
@@ -27,7 +27,7 @@
 | [Map venue links broken](map-venue-links.md) | bug | complete | — |
 | [Map banner dismiss + pulse](map-banner-dismiss.md) | feature | complete | — |
 | [Discover page + nav reorder](discover-nav-reorder.md) | feature | complete | — |
-| [Map missing color coding](map-color-coding.md) | change | pending | — |
+| [Map missing color coding](map-color-coding.md) | change | complete | — |
 
 ## Phase 4: Polish + Infra — pending
 | Item | Category | Status | Cost |
