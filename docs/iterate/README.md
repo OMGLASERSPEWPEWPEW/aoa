@@ -1,8 +1,8 @@
 # Iterate — Issue Tracker
 
 **Created:** 2026-08-01
-**Total Items:** 15
-**Completed:** 15
+**Total Items:** 16
+**Completed:** 16
 **Total Token Cost:** $0.00
 
 ## Phase 1: Data Pipeline — pending
@@ -35,3 +35,8 @@
 | [Claude CLI error](claude-cli-error.md) | bug | complete | — |
 | [Loading slow / no caching](loading-slow-caching.md) | change | complete | — |
 | [Version convention wrong](version-convention.md) | change | complete | — |
+
+## Phase 5: Regressions — complete
+| Item | Category | Status | Cost |
+|------|----------|--------|------|
+| [You page still blank](you-page-still-blank.md) | bug | complete | — |

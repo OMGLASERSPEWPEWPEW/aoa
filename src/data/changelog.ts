@@ -8,15 +8,15 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
-    version: '0.4.12',
+    version: '0.4.13',
     date: '2026-08-01',
-    title: 'Profile page fix + changelog polish',
-    summary: 'Fixed blank You page caused by a React hooks ordering violation. Changelog dropdown now renders correctly on mobile.',
+    title: 'Profile page fix (third attempt)',
+    summary: 'You page now handles all failure modes: query errors, null profile, and hooks ordering. Diagnostics logging added to trace profile loading.',
     details: [
-      'Fixed: You page blank screen — useEmotionAggregates called after early return violated React hooks rules',
-      'Fixed: changelog dropdown clipped on mobile — now uses fixed positioning',
-      'My Shows marquee view with poster cards and view toggle',
-      'Clickable VersionStamp with changelog dropdown',
+      'Fixed: useProfile silently swallowed Supabase query errors — now logs via diagnostics and surfaces errors',
+      'Added: error state and null-profile fallback UI on Profile page',
+      'Added: diagnostic breadcrumbs for profile loading lifecycle',
+      'Prior: hooks ordering violation fix (v0.4.12), loading state fix (v0.4.5)',
     ],
   },
   {

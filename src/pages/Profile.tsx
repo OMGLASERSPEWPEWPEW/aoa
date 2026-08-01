@@ -10,7 +10,7 @@ import { SpectrumBar } from '../components/SpectrumBar'
 
 export function Profile() {
   const { user } = useAuth()
-  const { profile, loading } = useProfile()
+  const { profile, loading, error } = useProfile()
   const { slices: paletteSlices, totalCards: paletteTotalCards } = useEmotionAggregates('season')
 
   if (loading) {
@@ -20,7 +20,34 @@ export function Profile() {
       </div>
     )
   }
-  const rank = (profile?.house_rank ?? 0) as HouseRank
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-8 text-center">
+        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: '#ebe5d6', marginBottom: 6 }}>
+          Something went wrong loading your profile.
+        </p>
+        <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 11, color: '#625b4c', marginBottom: 16 }}>
+          {error}
+        </p>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-8 text-center">
+        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: '#ebe5d6', marginBottom: 6 }}>
+          Your profile is being set up.
+        </p>
+        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#9c9586' }}>
+          This usually takes a moment. Try refreshing.
+        </p>
+      </div>
+    )
+  }
+
+  const rank = (profile.house_rank ?? 0) as HouseRank
   const rankName = HOUSE_RANKS[rank]
   const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'Theater Explorer'
   const sinceDate = profile?.created_at
