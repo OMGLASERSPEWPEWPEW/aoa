@@ -8,6 +8,18 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.17',
+    date: '2026-08-01',
+    title: 'Map marker clicks fixed for real',
+    summary: 'Fixed DOM lifecycle race condition that prevented map markers from opening venue sheets.',
+    details: [
+      'Fixed: marker DOM elements destroyed mid-click by React re-render — removed selectedVenue from marker useEffect deps',
+      'Fixed: added ref-based click flag to prevent Mapbox canvas click from clearing selection',
+      'Fixed: venue sheet banner × button now 44px touch target with stopPropagation',
+      'Added: separate useEffect for selection styling (scale + glow) without recreating markers',
+    ],
+  },
+  {
     version: '0.4.16',
     date: '2026-08-01',
     title: 'Map fixes + My Shows routing',

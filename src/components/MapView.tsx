@@ -19,6 +19,7 @@ export function MapView() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<Map<string, { marker: mapboxgl.Marker; el: HTMLDivElement; venue: Venue }>>(new Map())
+  const markerClickedRef = useRef(false)
   const { user } = useAuth()
   const { getStatus } = useWatchlist()
 
@@ -115,7 +116,13 @@ export function MapView() {
     })
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right')
-    map.on('click', () => setSelectedVenue(null))
+    map.on('click', () => {
+      if (markerClickedRef.current) {
+        markerClickedRef.current = false
+        return
+      }
+      setSelectedVenue(null)
+    })
 
     mapRef.current = map
 
@@ -150,6 +157,7 @@ export function MapView() {
         isSelected: selectedVenue?.id === venue.id,
         dimmed,
         onClick: () => {
+          markerClickedRef.current = true
           setSelectedVenue(prev => prev?.id === venue.id ? null : venue)
           map.flyTo({ center: [venue.longitude!, venue.latitude!], zoom: 14, duration: 600 })
         },
@@ -161,7 +169,21 @@ export function MapView() {
 
       markersRef.current.set(venue.id, { marker, el, venue })
     }
-  }, [venues, events, activeFilters, selectedVenue, getStatus, tonightEventsByVenue, isVenueDimmed])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [venues, events, activeFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors])
+
+  useEffect(() => {
+    for (const [id, { el }] of markersRef.current) {
+      const selected = selectedVenue?.id === id
+      el.style.transform = selected ? 'scale(1.18)' : 'scale(1)'
+      const chip = el.firstElementChild as HTMLElement | null
+      if (chip) {
+        chip.style.boxShadow = selected
+          ? '0 3px 8px rgba(0,0,0,.7), 0 0 12px oklch(0.80 0.14 55)'
+          : '0 3px 8px rgba(0,0,0,.7)'
+      }
+    }
+  }, [selectedVenue])
 
   if (!hasToken) {
     return (

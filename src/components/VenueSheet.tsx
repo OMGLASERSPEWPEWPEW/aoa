@@ -80,22 +80,26 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
         <div className="flex justify-center" style={{ padding: '10px 0 6px', position: 'relative' }}>
           <div style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: '#2b2720' }} />
           <button
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation()
+              onClose()
+            }}
             style={{
               position: 'absolute',
-              right: 16,
-              top: 8,
-              width: 28,
-              height: 28,
+              right: 10,
+              top: 4,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
-              border: '1px solid #2b2720',
+              border: 'none',
               backgroundColor: 'transparent',
               color: '#625b4c',
-              fontSize: 13,
+              fontSize: 18,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
+              zIndex: 10,
             }}
             aria-label="Dismiss"
           >
