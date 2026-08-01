@@ -31,6 +31,9 @@ HOUSE-ENGINE:   house-check-fn, house-rank-modal, house-hook
 NAV-OVERHAUL:   navigation-v2, genre-chips, review-badge, access-chips, loading-skeleton
 DISCOVER:       discover-page, play-pages
 CLEANUP:        delete-belt-code, delete-star-ratings, delete-learn
+COMPLETION:     personal-palette, is-up-tonight-wire, search-by-feeling,
+                venue-sheet-states, scene-news, pull-to-refresh,
+                reduced-motion-complete, osm-attribution, offline-dexie
 ```
 
 ### Edges (-> = "must complete before")
@@ -118,6 +121,15 @@ Phase 5:  [tonight-hero]        [map-markers]    [seating-chart]   [house-check-
           [tonight-page]               |          [profile-page]
               |                        |               |
 Phase 6:  [discover-page] [play-pages] |          [navigation-v2]
+          [genre-chips] [review-badge] |          [access-chips]
+          [loading-skeleton]           |
+              |                        |
+Phase 7:  [delete-belt-code] [delete-star-ratings] [delete-learn]
+              |
+Phase 8:  [personal-palette]   [is-up-tonight-wire]   [pull-to-refresh]      [offline-dexie]
+              |                        |                [reduced-motion]
+              |                        |                [osm-attribution]
+          [search-by-feeling]  [venue-sheet-states]  [scene-news]
           [genre-chips] [review-badge] |          [access-chips]
           [loading-skeleton]           |
               |                        |
@@ -682,6 +694,107 @@ Phase 7:  [delete-belt-code] [delete-star-ratings] [delete-learn]
 - **Estimated effort**: Trivial
 - **Design reference**: `README.md` §0 (fidelity risk #3)
 
+### Completion Nodes (Phase 8)
+
+#### Node: personal-palette
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends on**: profile-page, my-shows-ledger, schema-emotion-agg
+- **Inputs**: `EMOTIONS.md` §5 (personal palette rules, insight sentence patterns), `README.md` §3.6 #3 (profile palette section), `README.md` §3.2 Take B (My Shows palette); DB: `profile_emotion_counts` table (user_id, emotion, weight, season); existing components: `src/components/SpectrumBar.tsx`, `src/components/InterpretationSentence.tsx`
+- **Outputs**: `src/hooks/useEmotionAggregates.ts` — hook that queries `profile_emotion_counts` for a user, supports `mode: 'season' | 'all-time'`, returns `SpectrumSlice[]` + `totalCards: number`; `src/pages/Profile.tsx` — replace placeholder with SpectrumBar at 30px + personal insight sentence (season mode); `src/pages/MyShows.tsx` — add palette section to Seen tab with SpectrumBar at 26px + insight sentence (all-time mode)
+- **Loop pattern**: plan-execute-verify
+- **Success criteria**: hook returns valid slices from profile_emotion_counts; Profile shows 30px SpectrumBar with personal insight when data exists; Profile shows "Log more shows to see your palette" when no data; MyShows Seen tab shows 26px palette bar with all-time insight; season boundary is Sept 1 → Aug 31; insight sentence uses warm patterns from EMOTIONS.md §5 (e.g., "You are, statistically, a person who likes to be {top1} and then {top2}.")
+- **Estimated effort**: Small
+- **Design reference**: `EMOTIONS.md` §5, `README.md` §3.6 #3, `README.md` §3.2 Take B
+
+#### Node: is-up-tonight-wire
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends on**: tonight-page, map-markers (both already use client-side tonight filtering)
+- **Inputs**: `DATA-MODEL.md` §3 (is_up_tonight function spec, show_times jsonb format); DB: `is_up_tonight()` SQL function (exists in migration `20260731100006_tonight.sql`); existing files: `src/pages/Tonight.tsx`, `src/components/MapMarker.tsx`, `src/components/MapFilterChips.tsx`, `src/components/TonightHero.tsx`
+- **Outputs**: Modified queries in Tonight.tsx and MapView.tsx to use server-side `is_up_tonight` computed column instead of client-side date comparison; events fetched with `.select('*, is_up_tonight')` so the DB function runs server-side; MarqueeTicker counts driven by server truth; map TONIGHT filter uses pre-computed boolean
+- **Loop pattern**: plan-execute-verify
+- **Success criteria**: Tonight page uses `event.is_up_tonight` boolean from server; marquee counts match DB truth; map TONIGHT filter works off server-computed field; no client-side date string comparison for tonight status; existing behavior unchanged — only data source changes
+- **Estimated effort**: Small
+- **Design reference**: `DATA-MODEL.md` §3
+
+#### Node: search-by-feeling
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends on**: discover-page, schema-emotion-agg
+- **Inputs**: `README.md` §3.7 (search placeholder "A play, a theater, a feeling…"), `EMOTIONS.md` §emotion slugs; DB: `event_spectrum` view (event_id, emotion, pct sorted descending); existing file: `src/pages/Discover.tsx`
+- **Outputs**: `src/pages/Discover.tsx` — enhanced search that detects emotion slug names in search input (e.g., typing "gutted" or "delighted") and queries `event_spectrum` view for events where that emotion has pct >= 25; results merged with existing text search results; emotion matches shown with the emotion's base oklch color on the result card
+- **Loop pattern**: plan-execute-verify
+- **Success criteria**: typing "gutted" returns productions where gutted >= 25% of spectrum; typing "delighted" returns delighted-dominant shows; mixed queries ("storefront gutted") apply both text and emotion filters; emotion color indicator on matched results; all 12 emotion slugs recognized; partial matches don't trigger (e.g., "del" doesn't match "delighted"); search still works normally for non-emotion text
+- **Estimated effort**: Medium
+- **Design reference**: `README.md` §3.7
+
+#### Node: venue-sheet-states
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends on**: venue-sheet (already exists)
+- **Inputs**: `README.md` §3.8 (sheet spec: peek state with live counts, detail state with 5 subsections); existing file: `src/components/VenueSheet.tsx`
+- **Outputs**: `src/components/VenueSheet.tsx` — rewritten with two states: **Peek** (no venue selected): grab handle + headline Newsreader italic 19px ("14 curtains up within three miles") + stats line Courier Prime ("TAP A THEATER · 4 UNDER $20 · 2 PAY-WHAT-YOU-CAN"); **Detail** (venue selected): venue photo 88×66px + name Newsreader italic 22px + metadata (NEIGHBORHOOD · KIND · $$) + history line ("YOU'VE BEEN 9 TIMES · LAST: JUL 3" or "NEVER BEEN — GOOD FIRST ONE") + tonight panel (live dot + status + production + spectrum 8px + top 2 feelings) + fact chips (gold for actionable, outline for info) + action buttons (primary gold + WANT TO SEE outline + directions 56px ↗) + "ALSO WITHIN A TEN-MINUTE WALK" section (2 nearest venues as UP/DARK rows)
+- **Loop pattern**: plan-execute-verify
+- **Success criteria**: peek state shows live counts when no venue selected; tapping marker transitions to detail state; detail has all 5 subsections; tonight panel shows ON STAGE/DARK status; spectrum bar 8px with top 2 feelings in their colors; nearby venues section shows 2 venues with UP (green) or DARK (grey) status; directions button 56px opens Apple Maps; history line accurate per user's watchlist data; tap background returns to peek; sheet never covers tab bar (bottom:79px)
+- **Estimated effort**: Medium
+- **Design reference**: `README.md` §3.8
+
+#### Node: scene-news
+- **Type**: feature
+- **Agent**: frontend-developer + backend-architect
+- **Depends on**: discover-page
+- **Inputs**: `README.md` §3.7 (THE SCENE RIGHT NOW section: 3 editorial items, each with kicker/headline/dek, kicker colored by kind); no existing DB table for editorial content
+- **Outputs**: `supabase/migrations/YYYYMMDD_scene_news.sql` — new table `scene_news(id uuid, kind text check (kind in ('season_drop','free','closing_soon')), kicker text, headline text, dek text, link_event_id uuid references events, active boolean default true, published_at timestamptz, created_at timestamptz default now())`; RLS: anyone can read where active=true; `src/components/SceneNews.tsx` — renders exactly 3 items: kicker (Courier Prime 9.5px, letter-spacing 0.12em, color by kind: season_drop=gold, free=oklch(0.68 0.13 150), closing_soon=oklch(0.58 0.16 300)), headline (Newsreader italic 18px, line-height 1.2), dek (Newsreader 14px, #9c9586), dividers 1px solid #211d17; label with 6px live dot oklch(0.74 0.16 145); `src/pages/Discover.tsx` — integrate SceneNews below filters
+- **Loop pattern**: plan-execute-verify
+- **Success criteria**: scene_news table created with RLS; SceneNews renders exactly 3 items (or fewer if < 3 active); kicker colors match spec (gold/green/purple); live dot 6px green; dividers use #211d17 (rule-soft); headline italic 18px; dek #9c9586; component handles 0 items gracefully (hidden, not empty state); migration deploys clean
+- **Estimated effort**: Medium
+- **Design reference**: `README.md` §3.7
+
+#### Node: pull-to-refresh
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends on**: tonight-page, my-shows-ledger
+- **Inputs**: `README.md` §5 (pull to refresh supported on Tonight and My Shows); existing files: `src/pages/Tonight.tsx`, `src/pages/MyShows.tsx`
+- **Outputs**: `src/hooks/usePullToRefresh.ts` — hook that listens for touchstart/touchmove/touchend on a scroll container, triggers a callback when pulled down >= 60px from scroll top, shows a brief loading indicator; `src/pages/Tonight.tsx` — wrapped with pull-to-refresh that re-fetches all tonight data; `src/pages/MyShows.tsx` — wrapped with pull-to-refresh that re-fetches watchlist
+- **Loop pattern**: one-shot
+- **Success criteria**: pulling down on Tonight triggers data refresh and shows indicator; pulling down on My Shows refreshes watchlist; pull threshold is 60px; indicator disappears after data loads; does not interfere with normal scrolling; no pull-to-refresh on other pages
+- **Estimated effort**: Small
+- **Design reference**: `README.md` §5
+
+#### Node: reduced-motion-complete
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends on**: map-markers, venue-sheet, house-rank-modal
+- **Inputs**: `README.md` §5 (reduced motion: marquee paused ✅, live dot static, sheet no animation, state changes never disabled); existing files: `src/components/MapMarker.tsx` (tonight pulse), `src/components/VenueSheet.tsx` (transitions), `src/components/HouseRankModal.tsx` (rank-up animation), `src/components/MapView.tsx` (tonight-pulse keyframe)
+- **Outputs**: `src/components/MapMarker.tsx` — tonight dot pulse respects prefers-reduced-motion (static opacity 1 when reduced); `src/components/MapView.tsx` — tonight-pulse keyframe disabled under reduced-motion; `src/components/VenueSheet.tsx` — sheet slide transition disabled (instant) under reduced-motion; `src/components/HouseRankModal.tsx` — rank-up entrance instant under reduced-motion; all via CSS `@media (prefers-reduced-motion: reduce)` or JS matchMedia
+- **Loop pattern**: one-shot
+- **Success criteria**: with prefers-reduced-motion:reduce enabled: tonight dots are static (no pulse), venue sheet appears instantly (no slide), rank-up modal appears instantly (no entrance animation); with motion enabled: all animations play normally; state changes (selection, toggle) are never disabled regardless of motion preference
+- **Estimated effort**: Small
+- **Design reference**: `README.md` §5
+
+#### Node: osm-attribution
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends on**: map-basemap
+- **Inputs**: `README.md` §3.8 (OpenStreetMap attribution always visible, Courier Prime 8px, #3f3a31); existing file: `src/components/MapView.tsx`
+- **Outputs**: `src/components/MapView.tsx` — add "© OpenStreetMap contributors" text overlay, Courier Prime 8px, color #3f3a31, positioned bottom-left or integrated with map key; visible at all times; does not interfere with Mapbox's own attribution
+- **Loop pattern**: one-shot
+- **Success criteria**: "© OpenStreetMap contributors" visible on map at all times; Courier Prime 8px; color #3f3a31 (ink-whisper); does not obscure map controls or venue sheet; persists across all map states
+- **Estimated effort**: Trivial
+- **Design reference**: `README.md` §3.8
+
+#### Node: offline-dexie
+- **Type**: feature
+- **Agent**: frontend-developer + backend-architect
+- **Depends on**: log-show-page, write-review-page
+- **Inputs**: `README.md` §5.4 (offline: queue log-a-show writes, retry on reconnect, losing reflections is worst failure); Dexie v4 already installed (`dexie@4.4.4` + `dexie-react-hooks`); existing files: `src/pages/LogShow.tsx`, `src/pages/WriteReview.tsx`, `src/hooks/useWatchlist.ts`
+- **Outputs**: `src/lib/offlineDb.ts` — Dexie database definition with tables: `pendingWrites(++id, table, payload, createdAt)` for queued inserts; `src/lib/offlineSync.ts` — sync engine that watches `navigator.onLine`, processes queue FIFO on reconnect, retries with exponential backoff (max 3), removes on success; `src/hooks/useOfflineWrite.ts` — hook wrapping Supabase writes: if online → write directly, if offline → queue in Dexie + show toast "Saved offline — will sync when connected"; `src/pages/LogShow.tsx` — use useOfflineWrite for watchlist upsert; `src/pages/WriteReview.tsx` — use useOfflineWrite for review insert; `src/components/OfflineIndicator.tsx` — small Courier Prime 9px banner "OFFLINE — YOUR WORK IS SAVED" in oklch(0.80 0.14 55) when disconnected
+- **Loop pattern**: plan-execute-verify
+- **Success criteria**: going offline then logging a show → data queued in IndexedDB → toast shown; coming back online → queued write syncs to Supabase → toast "Synced"; queue processes FIFO; failed sync retries 3x with backoff; review text never lost (the product's worst failure mode); offline indicator visible when disconnected; online behavior unchanged (direct writes, no latency added)
+- **Estimated effort**: Large
+- **Design reference**: `README.md` §5.4
+
 ---
 
 ## Section 3: Loop Specifications
@@ -877,6 +990,72 @@ Phase 7:  [delete-belt-code] [delete-star-ratings] [delete-learn]
 - **Retry**: on missed reference -> grep with broader pattern -> fix (max 3 cycles)
 - **Stop condition**: zero star/rating references, clean compile, app functional
 
+### Loop: personal-palette
+- **Trigger**: profile-page, my-shows-ledger, schema-emotion-agg complete
+- **Inner cycle**:
+  1. Discover: read EMOTIONS.md §5 (personal palette rules: season = Sept 1→Aug 31, insight patterns, warm tone). Read `profile_emotion_counts` table structure in migration `20260731100005_emotion_aggregates.sql`. Read existing SpectrumBar and InterpretationSentence components.
+  2. Plan: create `useEmotionAggregates(userId, mode)` hook that queries `profile_emotion_counts`, computes `SpectrumSlice[]` from weights, supports `'season'` (current season filter) and `'all-time'` (no season filter). Add personal insight sentence logic — either extend InterpretationSentence with `mode: 'personal'` or create separate function. Wire into Profile.tsx (replace placeholder) and MyShows.tsx Seen tab.
+  3. Execute: build hook; add personal insight patterns ("You are, statistically, a person who likes to be {top1} and then {top2}.", "Mostly {top1}. You've been going to a lot of {dominant venue kind}."); replace Profile placeholder with SpectrumBar at 30px + personal insight; add palette section to MyShows Seen tab with SpectrumBar at 26px + all-time insight.
+  4. Verify: log 3+ shows with different emotions → Profile palette bar renders with correct proportions; insight sentence uses top 2 emotions by name in italic; MyShows Seen tab shows all-time palette; Profile shows current season only; no data → placeholder text remains; season boundary crosses correctly (show from August vs September)
+- **Evaluator**: palette bar proportions match profile_emotion_counts weights; insight sentence warm and specific; season filtering correct; both Profile and MyShows render their respective modes
+- **Retry**: on empty data → check RLS policy on profile_emotion_counts; on wrong proportions → verify weight calculation → fix (max 3 cycles)
+- **Stop condition**: Profile shows seasonal palette, MyShows shows all-time palette, insight sentences are warm and personal
+
+### Loop: is-up-tonight-wire
+- **Trigger**: tonight-page, map-markers complete (both already have client-side tonight filtering)
+- **Inner cycle**:
+  1. Discover: read migration `20260731100006_tonight.sql` for `is_up_tonight()` function signature. Read current tonight filtering logic in Tonight.tsx and MapView.tsx. Identify all places that compare dates client-side for "tonight" status.
+  2. Plan: modify Supabase queries to request `is_up_tonight` as a computed column (`.select('*, is_up_tonight')`). Replace all client-side date comparisons with the server-computed boolean. Update TypeScript Event type if needed.
+  3. Execute: update Tonight.tsx queries to use `event.is_up_tonight`; update MapView.tsx marker tonight detection; update MarqueeTicker counts; remove client-side tonight date logic.
+  4. Verify: Tonight page shows same events as before (behavior unchanged); map TONIGHT filter still works; MarqueeTicker count matches; performance improved (DB does the work, not client); add `show_times` data to a test event and verify is_up_tonight responds correctly to day-of-week scheduling.
+- **Evaluator**: identical behavior to client-side filtering; no regression in marquee counts or map dots; queries simpler (no client date logic)
+- **Retry**: on query error → check PostgREST computed column syntax; on wrong results → verify `show_times` jsonb format → fix (max 3 cycles)
+- **Stop condition**: all tonight-related features use server-computed boolean, client-side date logic removed
+
+### Loop: search-by-feeling
+- **Trigger**: discover-page, schema-emotion-agg complete
+- **Inner cycle**:
+  1. Discover: read `event_spectrum` view definition (migration `20260731100005`). Read current Discover.tsx search/filter logic. Read EMOTIONS.md for all 12 slug names.
+  2. Plan: in Discover, after text search input changes, check if any token matches an emotion slug exactly (case-insensitive). If match, query `event_spectrum` view for events where that emotion has pct >= 25. Merge with text search results. Show emotion color indicator on matched result cards.
+  3. Execute: add emotion slug detection to Discover search handler; add `event_spectrum` query; merge results (deduplicate by event ID); add small color dot (8px, emotion's base oklch) next to matched event titles; handle multiple emotion terms in one query (AND logic — both must be >= 25).
+  4. Verify: type "gutted" → see productions where gutted >= 25% of spectrum; type "delighted" → see delighted-dominant shows; type "storefront gutted" → both text filter and emotion filter apply; type "gut" → no emotion match (partial match rejected); type "Gutted" → case-insensitive match works; no results → standard empty state; emotion dot color matches the emotion definition.
+- **Evaluator**: exact slug match only (no partial); correct threshold (>= 25%); results merge correctly with text search; emotion indicator visible
+- **Retry**: on no results → check event_spectrum view has data; on wrong threshold → check pct column type → fix (max 3 cycles)
+- **Stop condition**: emotion search works for all 12 slugs, merges with text search, indicator shows correct color
+
+### Loop: venue-sheet-states
+- **Trigger**: venue-sheet (already exists, single-state)
+- **Inner cycle**:
+  1. Discover: read README.md §3.8 (peek and detail state specs). Read current VenueSheet.tsx. Read current MapView.tsx to understand venue selection flow.
+  2. Plan: refactor VenueSheet into two states. **Peek** (default, no venue selected): grab handle + "N curtains up within three miles" headline (Newsreader italic 19px) + "TAP A THEATER · N UNDER $20 · N PAY-WHAT-YOU-CAN" (Courier Prime). **Detail** (venue tapped): 5 subsections — (1) venue block with 88×66 photo, name 22px, metadata NEIGHBORHOOD·KIND·$$, history line; (2) tonight panel with live dot + ON STAGE/DARK + production + 8px spectrum + top 2 feelings; (3) fact chips (gold=actionable, outline=info); (4) action buttons (primary gold + WANT TO SEE + directions 56px); (5) "ALSO WITHIN A TEN-MINUTE WALK" with 2 nearest venues as UP/DARK rows.
+  3. Execute: rebuild VenueSheet with state machine (peek/detail). Add venue photo fetching. Compute live counts for peek (tonight count, under-$20 count, PWYC count). Add nearby venues query (PostGIS or haversine on venue lat/lng within ~1.5km). Add history line from user's watchlist. Wire transitions.
+  4. Verify: no venue selected → peek state with live counts; tap marker → detail state with all 5 subsections; tonight panel shows ON STAGE (green dot) or DARK (grey dot); history line shows "YOU'VE BEEN N TIMES · LAST: {DATE}" or "NEVER BEEN — GOOD FIRST ONE"; nearby venues show 2 venues with UP/DARK status; directions opens Apple Maps; tap outside → returns to peek; sheet bottom:79px, never covers tab bar.
+- **Evaluator**: both states fully rendered; transitions smooth (300ms cubic-bezier); live counts accurate; nearby venues calculated correctly; history line accurate per watchlist data
+- **Retry**: on positioning → check z-index and bottom offset; on data → check venue queries and watchlist joins → fix (max 3 cycles)
+- **Stop condition**: peek and detail states fully functional, all 5 detail subsections render, live counts accurate
+
+### Loop: scene-news
+- **Trigger**: discover-page complete
+- **Inner cycle**:
+  1. Discover: read README.md §3.7 (THE SCENE RIGHT NOW section, 3 editorial items, kicker/headline/dek, kicker color by kind). Check if any similar tables exist in migrations.
+  2. Plan: create `scene_news` table (id, kind, kicker, headline, dek, link_event_id, active, published_at, created_at) with RLS (anyone reads active rows). Build SceneNews component. Wire into Discover below filter chips.
+  3. Execute: write migration for scene_news table + RLS policy. Build SceneNews.tsx: label "THE SCENE RIGHT NOW" with 6px green live dot (oklch(0.74 0.16 145)); query `scene_news` where active=true, order by published_at desc, limit 3; render kicker (Courier Prime 9.5px, letter-spacing 0.12em, color by kind: season_drop=oklch(0.80 0.14 55), free=oklch(0.68 0.13 150), closing_soon=oklch(0.58 0.16 300)), headline (Newsreader italic 18px), dek (Newsreader 14px #9c9586); dividers 1px solid #211d17; integrate into Discover.tsx below filters.
+  4. Verify: migration deploys clean; SceneNews hidden when 0 items (not empty state — section simply absent); 1-3 items render correctly; kicker colors match per kind; headline italic; dek secondary color; dividers use rule-soft (#211d17 not #2b2720); tapping a news item with link_event_id navigates to ProductionDetail.
+- **Evaluator**: table created with correct constraints; component renders 0-3 items; kicker colors match exactly; section hidden when empty
+- **Retry**: on migration error → check column types and constraints; on color mismatch → verify oklch values → fix (max 3 cycles)
+- **Stop condition**: migration deployed, component renders correctly for 0-3 items, kicker colors match spec
+
+### Loop: offline-dexie
+- **Trigger**: log-show-page, write-review-page complete
+- **Inner cycle**:
+  1. Discover: read Dexie v4 docs for database definition and hooks. Read current LogShow.tsx and WriteReview.tsx Supabase write logic. Read README.md §5.4 (offline rules: queue writes, retry on reconnect, losing reflections = worst failure).
+  2. Plan: Dexie database with `pendingWrites` table (++id, table, payload, createdAt). Sync engine watching `navigator.onLine` + `window.addEventListener('online', ...)`. useOfflineWrite hook wrapping Supabase inserts/upserts. OfflineIndicator banner component.
+  3. Execute: create `src/lib/offlineDb.ts` (Dexie schema, singleton instance). Create `src/lib/offlineSync.ts` (FIFO queue processor, exponential backoff 1s/2s/4s, max 3 retries, process on 'online' event + on app mount). Create `src/hooks/useOfflineWrite.ts` (if online → direct Supabase write, if offline → queue in Dexie + return optimistic success). Create `src/components/OfflineIndicator.tsx` (Courier Prime 9px, oklch(0.80 0.14 55) on #141109 bg, fixed top, "OFFLINE — YOUR WORK IS SAVED"). Wire into LogShow.tsx and WriteReview.tsx write paths. Mount OfflineIndicator in AppShell.
+  4. Verify: disable network → log a show → data queued in IndexedDB (check via DevTools Application tab) → toast/indicator shown; re-enable network → queue syncs → data appears in Supabase; queue processes in FIFO order; review text persisted (never lost); repeated sync attempts don't duplicate data (use upsert logic); online behavior unchanged (no added latency); indicator appears/disappears with connectivity.
+- **Evaluator**: offline writes queued correctly; sync succeeds on reconnect; no data loss; no duplicate writes; indicator responsive to connectivity changes; online behavior unaffected
+- **Retry**: on sync failure → check Supabase upsert conflict handling; on duplicate writes → add idempotency key; on indicator issues → check navigator.onLine detection → fix (max 3 cycles)
+- **Stop condition**: offline log/review writes queued, sync on reconnect works, indicator toggles, no data loss
+
 ---
 
 ## Section 4: Shared State Schema
@@ -906,6 +1085,15 @@ Phase 7:  [delete-belt-code] [delete-star-ratings] [delete-learn]
 | belt_code_deleted | boolean | delete-belt-code | final verification |
 | star_code_deleted | boolean | delete-star-ratings | final verification |
 | learn_code_deleted | boolean | delete-learn | final verification |
+| emotion_agg_hook_exists | boolean | personal-palette | profile-page, my-shows-ledger |
+| tonight_server_computed | boolean | is-up-tonight-wire | tonight-page, map-markers |
+| feeling_search_enabled | boolean | search-by-feeling | discover-page |
+| sheet_has_states | boolean | venue-sheet-states | map verification |
+| scene_news_table_exists | boolean | scene-news | discover-page |
+| pull_to_refresh_exists | boolean | pull-to-refresh | tonight, my-shows |
+| reduced_motion_complete | boolean | reduced-motion-complete | all animation nodes |
+| osm_attribution_visible | boolean | osm-attribution | map verification |
+| offline_queue_exists | boolean | offline-dexie | log-show, write-review |
 
 ---
 
@@ -1031,6 +1219,31 @@ All three can run simultaneously — they only delete code:
 
 **Quality gate:** `grep -ri "belt_level\|BELT_NAMES\|BELT_COLORS\|useBeltCheck\|BeltUpgrade" src/` = 0 results. `grep -ri "rating.*star\|star.*rating\|CommunityRating\|LogShowModal" src/` = 0 results. `grep -ri "Learn\.tsx\|/learn\|LearningContent\|LearningModal\|LearningModule" src/` = 0 results. TypeScript compiles clean. App runs end-to-end: signup -> log show -> see emotions in My Shows -> see spectrum on show detail -> see rank on profile.
 
+### Phase 8: Completion & Polish (9 nodes, 4 parallel tracks)
+
+All prerequisite schema exists in DB (is_up_tonight(), profile_emotion_counts, event_spectrum). These nodes wire existing backend to the frontend and add missing UX polish.
+
+**Track A (Data Integration — parallel, no deps between them):**
+- [ ] personal-palette
+- [ ] is-up-tonight-wire
+
+**Track B (Feature Gaps — after Track A):**
+- [ ] search-by-feeling
+- [ ] venue-sheet-states
+- [ ] scene-news
+
+**Track C (UX Polish — parallel, independent):**
+- [ ] pull-to-refresh
+- [ ] reduced-motion-complete
+- [ ] osm-attribution
+
+**Track D (Infrastructure — independent):**
+- [ ] offline-dexie
+
+**Worktree guidance:** Tracks A–D touch entirely different files and can run in parallel. Within Track B, all three nodes touch different files (Discover, VenueSheet, new component) so they can also run in parallel after Track A completes.
+
+**Quality gate:** Profile palette renders SpectrumBar from live data; Discover returns results when searching emotion names; VenueSheet has peek/detail toggle; pull-to-refresh triggers data reload on Tonight and My Shows; all animations respect prefers-reduced-motion; OSM attribution visible on map; Dexie queues offline writes and syncs on reconnect. `npm run build` passes. `npx vitest run` passes.
+
 ---
 
 ## Section 6: Execution Guide
@@ -1051,6 +1264,7 @@ Each phase should be invoked explicitly:
 2. **Constants (Phase 1) are fully parallel** — they touch different files (`emotions.ts`, `house.ts`, `tokens.css`, `types.ts`).
 3. **Phase 5 supports 5-way fan-out** — each track touches entirely different files. Use worktree isolation.
 4. **Cleanup (Phase 7) is fully parallel** — each cleanup node greps and deletes independently.
+5. **Completion (Phase 8) supports 4-way fan-out** — Tracks A-D touch entirely different files. Track B nodes (search-by-feeling, venue-sheet-states, scene-news) are also parallel within the track since they touch different files.
 
 ### Worktree isolation
 
@@ -1103,6 +1317,9 @@ Phase 5: [ ] production-detail [ ] marquee-ticker [ ] tonight-hero [ ] tonight-f
 Phase 6: [ ] discover-page [ ] play-pages [ ] navigation-v2 [ ] genre-chips
          [ ] review-badge [ ] access-chips [ ] loading-skeleton
 Phase 7: [x] delete-belt-code [x] delete-star-ratings [x] delete-learn
+Phase 8: [ ] personal-palette [ ] is-up-tonight-wire [ ] search-by-feeling
+         [ ] venue-sheet-states [ ] scene-news [ ] pull-to-refresh
+         [ ] reduced-motion-complete [ ] osm-attribution [ ] offline-dexie
 ```
 
 ### Critical path
@@ -1165,3 +1382,12 @@ Quick lookup for which design doc section governs each node:
 | delete-belt-code | `README.md` §0 risk #2 + `THE-HOUSE.md` §migration |
 | delete-star-ratings | `README.md` §0 risk #1 + §9 |
 | delete-learn | `README.md` §0 risk #3 |
+| personal-palette | `EMOTIONS.md` §5 + `README.md` §3.6 #3 + §3.2 Take B |
+| is-up-tonight-wire | `DATA-MODEL.md` §3 |
+| search-by-feeling | `README.md` §3.7 + `EMOTIONS.md` §slugs |
+| venue-sheet-states | `README.md` §3.8 (sheet peek/detail) |
+| scene-news | `README.md` §3.7 (THE SCENE RIGHT NOW) |
+| pull-to-refresh | `README.md` §5 |
+| reduced-motion-complete | `README.md` §5 |
+| osm-attribution | `README.md` §3.8 |
+| offline-dexie | `README.md` §5.4 + `DATA-MODEL.md` §9 |
