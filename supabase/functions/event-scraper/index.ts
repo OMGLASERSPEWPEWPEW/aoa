@@ -3,10 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { cleanHtml } from "../_shared/scraper/html-cleaner.ts";
 import { buildExtractionPrompt } from "../_shared/scraper/extraction-prompt.ts";
 import { generateSlug } from "../_shared/scraper/slug-generator.ts";
+import { extractOgImage } from "../_shared/scraper/og-image-extractor.ts";
 import type {
   VenueTarget,
   ScrapedEvent,
   ScrapeResult,
+  EnrichmentResult,
   DeepSeekResponse,
 } from "../_shared/scraper/types.ts";
 import { logUsage } from "../_shared/logUsage.ts";
@@ -230,6 +232,81 @@ async function processVenue(
   return result;
 }
 
+async function enrichVenue(
+  venue: VenueTarget,
+  runId: string,
+): Promise<EnrichmentResult> {
+  const start = Date.now();
+  const result: EnrichmentResult = {
+    venue_id: venue.id,
+    venue_name: venue.name,
+    photo_extracted: false,
+    photo_url: null,
+    website_url_valid: null,
+    error_message: null,
+    duration_ms: 0,
+  };
+
+  if (!venue.website_url) {
+    result.duration_ms = Date.now() - start;
+    return result;
+  }
+
+  try {
+    const html = await fetchVenueHtml(venue.website_url);
+    result.website_url_valid = true;
+
+    // Extract og:image if venue needs a photo
+    const needsPhoto = !venue.photo_url || venue.photo_url_source === "og_image";
+    if (needsPhoto) {
+      const ogImage = extractOgImage(html, venue.website_url);
+      if (ogImage) {
+        result.photo_extracted = true;
+        result.photo_url = ogImage;
+
+        await supabase
+          .from("venues")
+          .update({ photo_url: ogImage, photo_url_source: "og_image" })
+          .eq("id", venue.id);
+      }
+    }
+
+    await supabase
+      .from("venues")
+      .update({ website_url_checked_at: new Date().toISOString() })
+      .eq("id", venue.id);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    result.website_url_valid = false;
+    result.error_message = msg;
+    console.warn(`[enrichment] ${venue.name}: ${msg}`);
+
+    await supabase
+      .from("venues")
+      .update({ website_url_checked_at: new Date().toISOString() })
+      .eq("id", venue.id);
+  }
+
+  result.duration_ms = Date.now() - start;
+
+  await supabase.from("scrape_logs").insert({
+    run_id: runId,
+    venue_id: venue.id,
+    venue_name: venue.name,
+    status: result.error_message ? "fetch_error" : "success",
+    events_found: 0,
+    events_created: 0,
+    events_updated: 0,
+    error_message: result.error_message,
+    ai_input_tokens: 0,
+    ai_output_tokens: 0,
+    duration_ms: result.duration_ms,
+    phase: "enrichment",
+  });
+
+  return result;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204 });
@@ -247,23 +324,48 @@ serve(async (req) => {
   const runId = crypto.randomUUID();
   console.log(`[event-scraper] Starting run ${runId}`);
 
-  // Get all venues with calendar URLs
-  const { data: venues, error: venueError } = await supabase
+  // Get all venues for enrichment + scraping
+  const { data: allVenues, error: venueError } = await supabase
     .from("venues")
-    .select("id, name, slug, calendar_url")
-    .not("calendar_url", "is", null);
+    .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source");
 
-  if (venueError || !venues) {
+  if (venueError || !allVenues) {
     return new Response(
       JSON.stringify({ error: "Failed to load venues", detail: venueError?.message }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 
+  const venues = allVenues.filter((v) => v.calendar_url) as VenueTarget[];
+  const enrichmentVenues = allVenues.filter((v) => v.website_url) as VenueTarget[];
+
   // Stream results as NDJSON to keep connection alive (avoids idle timeout)
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      // --- Phase 1: Venue enrichment (photos + URL validation) ---
+      const enrichResults: EnrichmentResult[] = [];
+      const ENRICH_BATCH = 5;
+
+      for (let i = 0; i < enrichmentVenues.length; i += ENRICH_BATCH) {
+        const batch = enrichmentVenues.slice(i, i + ENRICH_BATCH);
+        const batchResults = await Promise.all(
+          batch.map((v) => enrichVenue(v, runId)),
+        );
+        enrichResults.push(...batchResults);
+
+        for (const r of batchResults) {
+          controller.enqueue(
+            encoder.encode(JSON.stringify({ type: "enrichment", data: r }) + "\n"),
+          );
+        }
+
+        if (i + ENRICH_BATCH < enrichmentVenues.length) {
+          await delay(500);
+        }
+      }
+
+      // --- Phase 2: Event scraping ---
       const results: ScrapeResult[] = [];
       const BATCH_SIZE = 3;
 
@@ -291,6 +393,11 @@ serve(async (req) => {
 
       const summary = {
         run_id: runId,
+        enrichment: {
+          venues_checked: enrichResults.length,
+          photos_found: enrichResults.filter((r) => r.photo_extracted).length,
+          url_failures: enrichResults.filter((r) => r.website_url_valid === false).length,
+        },
         venues_scraped: results.length,
         total_events_found: results.reduce((s, r) => s + r.events_found, 0),
         total_created: results.reduce((s, r) => s + r.events_created, 0),

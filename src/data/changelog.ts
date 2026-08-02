@@ -8,6 +8,18 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.18',
+    date: '2026-08-01',
+    title: 'Venue photos + URL validation',
+    summary: 'Scraper now extracts venue thumbnail photos from og:image tags and validates website URLs each run.',
+    details: [
+      'New: venue thumbnails in map venue sheet (extracted from og:image on venue homepages)',
+      'New: website URL validation during weekly scraper run — broken URLs logged to scrape_logs',
+      'New: photo_url_source column tracks provenance (og_image vs manual) — manual photos never overwritten',
+      'Fixed: broken venue photo URLs gracefully fall back to dark placeholder (onError handler)',
+    ],
+  },
+  {
     version: '0.4.17',
     date: '2026-08-01',
     title: 'Map marker clicks fixed for real',

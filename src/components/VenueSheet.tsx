@@ -160,6 +160,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
             <img
               src={venue.photo_url}
               alt={venue.name}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
               style={{
                 width: 88,
                 height: 66,

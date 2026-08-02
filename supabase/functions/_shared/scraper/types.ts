@@ -3,6 +3,9 @@ export interface VenueTarget {
   name: string;
   slug: string;
   calendar_url: string;
+  website_url?: string | null;
+  photo_url?: string | null;
+  photo_url_source?: string | null;
 }
 
 export interface ScrapedEvent {
@@ -31,6 +34,16 @@ export interface ScrapeResult {
   error_message: string | null;
   ai_input_tokens: number;
   ai_output_tokens: number;
+  duration_ms: number;
+}
+
+export interface EnrichmentResult {
+  venue_id: string;
+  venue_name: string;
+  photo_extracted: boolean;
+  photo_url: string | null;
+  website_url_valid: boolean | null;
+  error_message: string | null;
   duration_ms: number;
 }
 
