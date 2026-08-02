@@ -1,8 +1,8 @@
 # Iterate — Issue Tracker
 
 **Created:** 2026-08-01
-**Total Items:** 16
-**Completed:** 16
+**Total Items:** 21
+**Completed:** 21
 **Total Token Cost:** $0.00
 
 ## Phase 1: Data Pipeline — pending
@@ -40,3 +40,16 @@
 | Item | Category | Status | Cost |
 |------|----------|--------|------|
 | [You page still blank](you-page-still-blank.md) | bug | complete | — |
+
+## Phase 6: Map Race Condition — complete
+| Item | Category | Status | Cost |
+|------|----------|--------|------|
+| [Map marker click race condition](map-marker-click-race.md) | bug | complete | — |
+
+## Phase 7: Map UX + Data Fixes — complete
+| Item | Category | Status | Cost |
+|------|----------|--------|------|
+| [Fix broken venue URLs](fix-venue-urls.md) | data-issue | complete | — |
+| [Remove map peek banner](remove-map-banner.md) | change | complete | — |
+| [Green marker borders for tonight](green-marker-borders.md) | change | complete | — |
+| [Date/time display in header](header-date-time.md) | feature | complete | — |
