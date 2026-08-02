@@ -2,20 +2,13 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Venue, Event } from '../lib/types'
 
-interface PeekCounts {
-  tonight: number
-  under20: number
-  pwyc: number
-}
-
 interface Props {
-  venue: Venue | null
+  venue: Venue
   tonightEvents: Event[]
   visitCount: number
   lastVisitDate: string | null
   allVenues: Venue[]
   allEvents: Event[]
-  peekCounts: PeekCounts
   onClose: () => void
 }
 
@@ -27,7 +20,7 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, allVenues, allEvents, peekCounts, onClose }: Props) {
+export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, allVenues, allEvents, onClose }: Props) {
   const navigate = useNavigate()
   const [entered, setEntered] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -72,65 +65,6 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
     boxShadow: '0 -14px 44px rgba(0,0,0,.75)',
     transform: entered ? 'translateY(0)' : 'translateY(100%)',
     transition: reducedMotion ? 'none' : 'transform 300ms cubic-bezier(.2,.8,.2,1)',
-  }
-
-  if (!venue) {
-    return (
-      <div style={sheetBase}>
-        <div className="flex justify-center" style={{ padding: '10px 0 6px', position: 'relative' }}>
-          <div style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: '#2b2720' }} />
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onClose()
-            }}
-            style={{
-              position: 'absolute',
-              right: 10,
-              top: 4,
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              border: 'none',
-              backgroundColor: 'transparent',
-              color: '#625b4c',
-              fontSize: 18,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 10,
-            }}
-            aria-label="Dismiss"
-          >
-            ×
-          </button>
-        </div>
-        <div style={{ padding: '0 20px 16px', textAlign: 'center' }}>
-          <div
-            style={{
-              fontFamily: "'Newsreader', Georgia, serif",
-              fontStyle: 'italic',
-              fontSize: 19,
-              color: 'var(--ink)',
-              marginBottom: 6,
-            }}
-          >
-            {peekCounts.tonight} curtain{peekCounts.tonight !== 1 ? 's' : ''} up within three miles
-          </div>
-          <div
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 10,
-              letterSpacing: '0.06em',
-              color: '#625b4c',
-            }}
-          >
-            TAP A THEATER · {peekCounts.under20} UNDER $20 · {peekCounts.pwyc} PAY-WHAT-YOU-CAN
-          </div>
-        </div>
-      </div>
-    )
   }
 
   const isUp = tonightEvents.length > 0

@@ -8,6 +8,20 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.19',
+    date: '2026-08-02',
+    title: 'Map UX overhaul + date display',
+    summary: 'Removed map banner, tonight shows now pop with green borders, header shows date/time, fixed 3 broken venue URLs.',
+    details: [
+      'Removed: map peek banner ("curtains up within three miles") — was blocking the map',
+      'Changed: tonight shows now have green borders instead of small green dot — much more visible',
+      'New: header displays current date and time (SAT AUG 2 · 2:45 PM), updates every minute',
+      'Fixed: Shattered Globe URL (shatteredglobe.org → sgtheatre.org)',
+      'Fixed: A Red Orchid URL (removed www prefix causing redirect)',
+      'Fixed: Redtwist Theatre URL nulled (domain dead)',
+    ],
+  },
+  {
     version: '0.4.18',
     date: '2026-08-01',
     title: 'Venue photos + URL validation',

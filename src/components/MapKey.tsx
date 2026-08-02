@@ -20,7 +20,7 @@ export function MapKey() {
       <div>● you have tickets</div>
       <div>◌ want to see</div>
       <div>● been — your colour</div>
-      <div style={{ color: 'oklch(0.74 0.16 145)' }}>● curtain up tonight</div>
+      <div><span style={{ display: 'inline-block', width: 8, height: 8, border: '2px solid oklch(0.74 0.16 145)', borderRadius: 2, marginRight: 4, verticalAlign: 'middle' }} />curtain up tonight</div>
       <div>▣ house • ◧ storefront • ◬ devised</div>
     </div>
   )

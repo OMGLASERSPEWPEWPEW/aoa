@@ -25,7 +25,6 @@ export function MapView() {
 
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
-  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   const hasToken = !!import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -219,22 +218,15 @@ export function MapView() {
 
       <MapKey />
 
-      {(selectedVenue || !bannerDismissed) && (
+      {selectedVenue && (
         <VenueSheet
           venue={selectedVenue}
-          tonightEvents={selectedVenue ? tonightEventsByVenue(selectedVenue.id) : []}
-          visitCount={selectedVenue ? (visitCounts[selectedVenue.id] ?? 0) : 0}
-          lastVisitDate={selectedVenue ? (lastVisitDates[selectedVenue.id] ?? null) : null}
+          tonightEvents={tonightEventsByVenue(selectedVenue.id)}
+          visitCount={visitCounts[selectedVenue.id] ?? 0}
+          lastVisitDate={lastVisitDates[selectedVenue.id] ?? null}
           allVenues={venues}
           allEvents={events}
-          peekCounts={{ tonight: filterCounts.tonight, under20: filterCounts.under20, pwyc: filterCounts.pwyc }}
-          onClose={() => {
-            if (selectedVenue) {
-              setSelectedVenue(null)
-            } else {
-              setBannerDismissed(true)
-            }
-          }}
+          onClose={() => setSelectedVenue(null)}
         />
       )}
 
@@ -255,17 +247,6 @@ export function MapView() {
         © OpenStreetMap contributors
       </div>
 
-      <style>{`
-        @keyframes tonight-pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          @keyframes tonight-pulse {
-            0%, 100% { opacity: 1; }
-          }
-        }
-      `}</style>
     </div>
   )
 }

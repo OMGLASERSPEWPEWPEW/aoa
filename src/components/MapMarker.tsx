@@ -51,24 +51,26 @@ export function createMarkerElement({
 
   const glyph = ROOM_GLYPHS[venue.venue_type ?? ''] ?? '◧'
 
+  const tonightBorder = isTonight ? '2px solid oklch(0.74 0.16 145)' : null
+
   if (relationship === 'booked') {
-    chip.style.border = '1.5px solid oklch(0.80 0.14 55)'
+    chip.style.border = tonightBorder ?? '1.5px solid oklch(0.80 0.14 55)'
     chip.style.backgroundColor = 'oklch(0.80 0.14 55)'
     chip.textContent = glyph
     chip.style.color = '#0c0a05'
   } else if (relationship === 'want_to_see') {
-    chip.style.border = '1.5px dashed oklch(0.80 0.14 55)'
+    chip.style.border = tonightBorder ?? '1.5px dashed oklch(0.80 0.14 55)'
     chip.textContent = glyph
     chip.style.color = 'oklch(0.80 0.14 55)'
   } else if (relationship === 'seen') {
     const color = dominantColor ?? '#9c9586'
-    chip.style.border = `1.5px solid ${color}`
+    chip.style.border = tonightBorder ?? `1.5px solid ${color}`
     chip.textContent = glyph
     chip.style.color = color
   } else {
-    chip.style.border = '1.5px solid #2b2720'
+    chip.style.border = tonightBorder ?? '1.5px solid #2b2720'
     chip.textContent = glyph
-    chip.style.color = '#9c9586'
+    chip.style.color = isTonight ? 'oklch(0.74 0.16 145)' : '#9c9586'
   }
 
   el.appendChild(chip)
@@ -82,24 +84,12 @@ export function createMarkerElement({
   tail.style.position = 'absolute'
   tail.style.left = '12px'
   tail.style.top = '29px'
-  tail.style.borderRight = chip.style.border.replace('dashed', 'solid')
-  tail.style.borderBottom = chip.style.border.replace('dashed', 'solid')
+  const tailBorder = tonightBorder
+    ? '2px solid oklch(0.74 0.16 145)'
+    : chip.style.border.replace('dashed', 'solid')
+  tail.style.borderRight = tailBorder
+  tail.style.borderBottom = tailBorder
   el.appendChild(tail)
-
-  // Tonight dot
-  if (isTonight) {
-    const dot = document.createElement('div')
-    dot.style.width = '9px'
-    dot.style.height = '9px'
-    dot.style.borderRadius = '50%'
-    dot.style.backgroundColor = 'oklch(0.74 0.16 145)'
-    dot.style.border = '2px solid #0c0a05'
-    dot.style.position = 'absolute'
-    dot.style.top = '-2px'
-    dot.style.right = '0'
-    dot.style.animation = 'tonight-pulse 1.8s ease-in-out infinite'
-    el.appendChild(dot)
-  }
 
   el.onclick = (e) => {
     e.stopPropagation()
