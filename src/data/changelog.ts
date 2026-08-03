@@ -8,6 +8,20 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.22',
+    date: '2026-08-03',
+    title: 'Play search + 45 canonical plays',
+    summary: 'Discover now searches plays by title and playwright. Seeded 45 canonical plays commonly produced in Chicago.',
+    details: [
+      'New: plays table seeded with 45 works — classics, modern American, Chicago playwrights, contemporary hits, musicals',
+      'New: Discover search matches plays by title and playwright (type "doll house" or "ibsen")',
+      'New: play results appear above events with title, playwright, year, synopsis, and first award',
+      'New: tapping a play result navigates to the Play detail page',
+      'Changed: event search also matches linked play title and playwright',
+      'Changed: events query now joins play data for production-to-play connections',
+    ],
+  },
+  {
     version: '0.4.21',
     date: '2026-08-03',
     title: 'iOS keyboard zoom fix + empty states',

@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useEvents } from '../hooks/useEvents'
+import { usePlays } from '../hooks/usePlays'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { EMOTIONS, base } from '../lib/emotions'
 import type { Emotion } from '../lib/emotions'
+import type { Play } from '../lib/types'
 import { EventCard } from '../components/EventCard'
 import { SceneNews } from '../components/SceneNews'
 
@@ -15,6 +17,7 @@ const EMOTION_SLUGS = new Set(EMOTIONS.map(e => e.slug as string))
 
 export function Discover() {
   const { events, loading } = useEvents()
+  const { plays, loading: playsLoading } = usePlays()
   const { addToWatchlist, removeFromWatchlist, getStatus } = useWatchlist()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -56,13 +59,27 @@ export function Discover() {
         e.title.toLowerCase().includes(q) ||
         e.venue?.name?.toLowerCase().includes(q) ||
         e.venue?.neighborhood?.toLowerCase().includes(q) ||
-        e.genre_tags.some(t => t.toLowerCase().includes(q))
+        e.genre_tags.some(t => t.toLowerCase().includes(q)) ||
+        e.play?.title.toLowerCase().includes(q) ||
+        e.play?.playwright.toLowerCase().includes(q)
       )
       const emotionMatch = matchedEmotion ? emotionMatchIds.has(e.id) : true
       return textMatch && emotionMatch
     }
     return true
   })
+
+  const filteredPlays: Play[] = search
+    ? plays.filter(p => {
+        const q = search.toLowerCase()
+        const tokens = q.split(/\s+/).filter(t => !EMOTION_SLUGS.has(t))
+        if (tokens.length === 0) return false
+        return tokens.every(t =>
+          p.title.toLowerCase().includes(t) ||
+          p.playwright.toLowerCase().includes(t)
+        )
+      })
+    : []
 
   function handleWatchlistToggle(eventId: string) {
     const status = getStatus(eventId)
@@ -73,10 +90,10 @@ export function Discover() {
     }
   }
 
-  if (loading) {
+  if (loading && playsLoading) {
     return (
       <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
-        Loading events...
+        Loading...
       </div>
     )
   }
@@ -171,12 +188,86 @@ export function Discover() {
       <div className="flex-1 overflow-y-auto">
         <SceneNews />
         <div style={{ padding: 12 }}>
-        {filtered.length === 0 ? (
+        {filteredPlays.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: '#4f4a3e', letterSpacing: '0.06em', marginBottom: 8, textTransform: 'uppercase' }}>
+              {filteredPlays.length} Play{filteredPlays.length !== 1 ? 's' : ''}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {filteredPlays.map(play => (
+                <button
+                  key={play.id}
+                  onClick={() => navigate(`/app/play/${play.id}`)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    width: '100%',
+                    textAlign: 'left',
+                    backgroundColor: '#141109',
+                    border: '1px solid #2b2720',
+                    borderRadius: 2,
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    fontFamily: "'Newsreader', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontSize: 16,
+                    color: 'var(--ink)',
+                    lineHeight: 1.3,
+                  }}>
+                    {play.title}
+                  </span>
+                  <span style={{
+                    fontFamily: "'Courier Prime', monospace",
+                    fontSize: 10,
+                    color: '#625b4c',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                  }}>
+                    {play.playwright}{play.year_written ? ` · ${play.year_written}` : ''}
+                  </span>
+                  {play.synopsis && (
+                    <span style={{
+                      fontFamily: "'Newsreader', Georgia, serif",
+                      fontSize: 12,
+                      color: '#4f4a3e',
+                      lineHeight: 1.4,
+                      marginTop: 4,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}>
+                      {play.synopsis}
+                    </span>
+                  )}
+                  {play.awards.length > 0 && (
+                    <span style={{
+                      fontFamily: "'Courier Prime', monospace",
+                      fontSize: 9,
+                      color: 'oklch(0.80 0.14 55)',
+                      letterSpacing: '0.04em',
+                      marginTop: 2,
+                    }}>
+                      {play.awards[0]}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {filtered.length === 0 && filteredPlays.length === 0 ? (
           <div className="flex flex-col items-center justify-center" style={{ height: 160, color: '#625b4c' }}>
             <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 14 }}>
-              No events match your filters
+              {search ? 'No plays or events match your search' : 'No events match your filters'}
             </p>
           </div>
+        ) : filtered.length === 0 && filteredPlays.length > 0 ? (
+          null
         ) : (
           <>
             <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>

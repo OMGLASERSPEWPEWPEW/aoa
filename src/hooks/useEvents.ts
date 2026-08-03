@@ -5,7 +5,7 @@ import type { Event } from '../lib/types'
 async function fetchEvents(): Promise<Event[]> {
   const { data } = await supabase
     .from('events')
-    .select('*, venue:venues(*)')
+    .select('*, venue:venues(*), play:plays(*)')
     .order('start_date', { ascending: true })
   return (data as Event[]) ?? []
 }
