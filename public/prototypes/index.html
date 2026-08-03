@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Art of Art — Design Prototypes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Courier+Prime:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08070a;color:#ebe5d6;font-family:'Newsreader',Georgia,serif;min-height:100vh;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased}
+::selection{background:oklch(0.80 0.14 55);color:#0c0a05}
+.page{max-width:640px;width:100%;padding:60px 32px}
+.label{font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.18em;color:#625b4c;text-transform:uppercase}
+h1{font-size:36px;font-weight:400;font-style:italic;line-height:1.1;margin:12px 0 8px}
+.sub{font-size:16px;color:#9c9586;line-height:1.5;margin-bottom:40px}
+.cards{display:flex;flex-direction:column;gap:12px}
+a.card{display:block;background:#141109;border:1px solid #2b2720;border-radius:3px;padding:20px 24px;text-decoration:none;color:inherit;transition:border-color 0.15s}
+a.card:hover{border-color:oklch(0.42 0.09 55)}
+a.card:active{background:#1a1610}
+.card-label{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.14em;color:#625b4c;text-transform:uppercase;margin-bottom:6px}
+.card h2{font-size:22px;font-weight:400;font-style:italic;line-height:1.15;margin-bottom:6px}
+.card p{font-size:14px;color:#9c9586;line-height:1.45}
+.card .arrow{font-family:'Courier Prime',monospace;font-size:11px;color:oklch(0.80 0.14 55);margin-top:10px;display:inline-block}
+.footer{margin-top:48px;font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#3f3a31;text-align:center}
+@media(max-width:500px){.page{padding:40px 16px}h1{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="label">Design Prototypes</div>
+  <h1>The Art of Art</h1>
+  <p class="sub">Interactive HTML prototypes showing the product vision, screen designs, and design system for AoA — a map-first app for discovering Chicago theater.</p>
+
+  <div class="cards">
+    <a class="card" href="pitch-deck.html">
+      <div class="card-label">Overview</div>
+      <h2>The Pitch Deck</h2>
+      <p>The full product vision: the problem, the competitive landscape, all seven screens with phone mockups, the emotion system, the house progression, and the Goodreads-for-plays concept.</p>
+      <span class="arrow">Open &rarr;</span>
+    </a>
+
+    <a class="card" href="map.html">
+      <div class="card-label">Interactive Prototype</div>
+      <h2>The Map</h2>
+      <p>Working Leaflet prototype with real Chicago coordinates, custom venue markers, filter chips, the venue detail sheet, and the warm-night basemap tint.</p>
+      <span class="arrow">Open &rarr;</span>
+    </a>
+
+    <a class="card" href="house-record.html">
+      <div class="card-label">Full Screen Canvas</div>
+      <h2>The House Record</h2>
+      <p>Fifteen mobile screens on one pannable canvas — Tonight, My Shows, Show Detail, Log a Show, Write a Review, You, Discover, The Lobby, Artist, Play, and more.</p>
+      <span class="arrow">Open &rarr;</span>
+    </a>
+  </div>
+
+  <div class="footer">THE ART OF ART &middot; CHICAGO &middot; 2026</div>
+</div>
+</body>
+</html>
