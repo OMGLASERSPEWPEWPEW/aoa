@@ -15,7 +15,7 @@ const inputStyle: React.CSSProperties = {
 }
 
 export function Login() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,7 +26,7 @@ export function Login() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const { error } = await signIn(email, password)
+    const { error } = await signIn(username, password)
     if (error) {
       setError(error.message)
       setLoading(false)
@@ -54,11 +54,13 @@ export function Login() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full" style={{ maxWidth: 280 }}>
         {error && <p style={{ color: 'oklch(0.66 0.19 35)', fontSize: 13, textAlign: 'center' }}>{error}</p>}
         <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           style={inputStyle}
+          autoCapitalize="none"
+          autoCorrect="off"
           required
         />
         <input

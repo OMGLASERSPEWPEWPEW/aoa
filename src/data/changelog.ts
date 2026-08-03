@@ -8,6 +8,18 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.24',
+    date: '2026-08-03',
+    title: 'Username login',
+    summary: 'Login now uses username instead of email. Signup collects username + email (for recovery only).',
+    details: [
+      'Changed: login uses username + password (email never shown)',
+      'New: server-side username→email lookup via SECURITY DEFINER function',
+      'Changed: signup collects username (required) + email (for account recovery)',
+      'New: accounts created for Darklight and matti',
+    ],
+  },
+  {
     version: '0.4.23',
     date: '2026-08-03',
     title: 'Auth session persistence fix',

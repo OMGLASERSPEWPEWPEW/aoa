@@ -15,6 +15,7 @@ const inputStyle: React.CSSProperties = {
 }
 
 export function Signup() {
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -26,13 +27,18 @@ export function Signup() {
     e.preventDefault()
     setError('')
 
+    if (username.length < 2) {
+      setError('Username must be at least 2 characters')
+      return
+    }
+
     if (password.length < 8) {
       setError('Password must be at least 8 characters')
       return
     }
 
     setLoading(true)
-    const { error } = await signUp(email, password)
+    const { error } = await signUp(email, password, username)
     if (error) {
       setError(error.message)
       setLoading(false)
@@ -60,8 +66,18 @@ export function Signup() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full" style={{ maxWidth: 280 }}>
         {error && <p style={{ color: 'oklch(0.66 0.19 35)', fontSize: 13, textAlign: 'center' }}>{error}</p>}
         <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={inputStyle}
+          autoCapitalize="none"
+          autoCorrect="off"
+          required
+        />
+        <input
           type="email"
-          placeholder="Email"
+          placeholder="Email (for account recovery)"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={inputStyle}

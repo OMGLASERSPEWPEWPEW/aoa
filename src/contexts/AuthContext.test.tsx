@@ -11,8 +11,8 @@ function TestConsumer() {
     <div>
       <span data-testid="loading">{String(loading)}</span>
       <span data-testid="user">{user?.id ?? 'null'}</span>
-      <button onClick={() => signIn('a@b.com', 'pw')}>signIn</button>
-      <button onClick={() => signUp('a@b.com', 'pw')}>signUp</button>
+      <button onClick={() => signIn('testuser', 'pw')}>signIn</button>
+      <button onClick={() => signUp('a@b.com', 'pw', 'testuser')}>signUp</button>
       <button onClick={() => signOut()}>signOut</button>
     </div>
   )
@@ -29,8 +29,17 @@ beforeEach(() => {
     error: null,
   } as never)
   vi.mocked(supabase.auth.signUp).mockResolvedValue({
-    data: {},
+    data: { user: { id: 'new-user-id' } },
     error: null,
+  } as never)
+  vi.mocked(supabase.rpc).mockResolvedValue({
+    data: 'a@b.com',
+    error: null,
+  } as never)
+  vi.mocked(supabase.from).mockReturnValue({
+    update: vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    }),
   } as never)
   vi.mocked(supabase.auth.signOut).mockResolvedValue({
     error: null,
@@ -68,7 +77,7 @@ describe('AuthContext', () => {
     })
   })
 
-  it('signIn calls supabase.auth.signInWithPassword', async () => {
+  it('signIn looks up email by username then calls signInWithPassword', async () => {
     const user = userEvent.setup()
 
     render(
@@ -80,6 +89,7 @@ describe('AuthContext', () => {
     })
 
     await user.click(screen.getByText('signIn'))
+    expect(supabase.rpc).toHaveBeenCalledWith('get_email_by_username', { uname: 'testuser' })
     expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
       email: 'a@b.com',
       password: 'pw',

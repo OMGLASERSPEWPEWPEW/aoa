@@ -15,4 +15,10 @@ export const supabase = {
       data: { subscription: mockSubscription },
     }),
   },
+  rpc: vi.fn().mockResolvedValue({ data: 'a@b.com', error: null }),
+  from: vi.fn().mockReturnValue({
+    update: vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    }),
+  }),
 }
