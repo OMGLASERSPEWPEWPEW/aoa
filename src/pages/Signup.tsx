@@ -118,6 +118,9 @@ export function Signup() {
       <Link to="/" style={{ color: '#4f4a3e', fontSize: 12, marginTop: 16, textDecoration: 'none', fontFamily: "'Courier Prime', monospace" }}>
         &larr; Back
       </Link>
+      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#4f4a3e', marginTop: 16 }}>
+        v{__APP_VERSION__}
+      </p>
     </div>
   )
 }

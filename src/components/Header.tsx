@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useProfile } from '../hooks/useProfile'
 import { VersionStamp } from './VersionStamp'
+
+const ADMINS = ['darklight', 'matti']
 
 function formatNow(): string {
   const d = new Date()
@@ -14,6 +17,8 @@ function formatNow(): string {
 
 export function Header() {
   const { signOut } = useAuth()
+  const { profile } = useProfile()
+  const isAdmin = ADMINS.includes(profile?.username?.toLowerCase() ?? '')
   const [now, setNow] = useState(formatNow)
 
   useEffect(() => {
@@ -41,6 +46,22 @@ export function Header() {
         <VersionStamp />
       </div>
       <div className="flex items-center gap-3">
+        {isAdmin && (
+          <a
+            href="/prototypes/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 10,
+              letterSpacing: '0.06em',
+              color: 'oklch(0.80 0.14 55)',
+              textDecoration: 'none',
+            }}
+          >
+            DOCS
+          </a>
+        )}
         <span
           style={{
             fontFamily: "'Courier Prime', monospace",

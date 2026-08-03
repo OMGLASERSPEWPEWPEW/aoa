@@ -8,6 +8,16 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.25',
+    date: '2026-08-03',
+    title: 'Version stamp on auth pages + admin docs link',
+    summary: 'Version now visible on login and signup pages. Admins see a DOCS link in the header.',
+    details: [
+      'New: version stamp shown on Login and Signup pages',
+      'New: admin-only DOCS link in header (Darklight, matti) opens /prototypes/',
+    ],
+  },
+  {
     version: '0.4.24',
     date: '2026-08-03',
     title: 'Username login',
