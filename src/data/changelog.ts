@@ -8,6 +8,17 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.23',
+    date: '2026-08-03',
+    title: 'Auth session persistence fix',
+    summary: 'Sessions now persist reliably across app reopens and deploys.',
+    details: [
+      'Fixed: explicit auth persistence config (persistSession, autoRefreshToken, PKCE flow)',
+      'Fixed: race condition in AuthContext with mounted guard on async callbacks',
+      'Added: auth event logging for session diagnostics',
+    ],
+  },
+  {
     version: '0.4.22',
     date: '2026-08-03',
     title: 'Play search + 45 canonical plays',
