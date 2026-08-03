@@ -102,8 +102,25 @@ export function ProductionDetail() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
+        {!event.photo_url && !venue?.photo_url && (
+          <span
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 9,
+              letterSpacing: '0.1em',
+              color: '#4f4a3e',
+              position: 'relative',
+              zIndex: 1,
+            }}
+          >
+            NO PHOTO AVAILABLE
+          </span>
+        )}
         <div
           style={{
             position: 'absolute',
@@ -241,18 +258,18 @@ export function ProductionDetail() {
       </div>
 
       {/* 2b. THE COMPANY — cast/ensemble */}
-      {event.cast_members && event.cast_members.length > 0 && (
-        <div style={{ padding: '14px 20px', borderTop: '1px solid #2b2720' }}>
-          <span
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 9,
-              letterSpacing: '0.1em',
-              color: '#625b4c',
-            }}
-          >
-            THE COMPANY
-          </span>
+      <div style={{ padding: '14px 20px', borderTop: '1px solid #2b2720' }}>
+        <span
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontSize: 9,
+            letterSpacing: '0.1em',
+            color: '#625b4c',
+          }}
+        >
+          THE COMPANY
+        </span>
+        {event.cast_members && event.cast_members.length > 0 ? (
           <div className="flex gap-3" style={{ marginTop: 10, overflowX: 'auto' }}>
             {event.cast_members.slice(0, 3).map((member, i) => (
               <div key={i} className="flex flex-col items-center" style={{ minWidth: 56 }}>
@@ -314,8 +331,20 @@ export function ProductionDetail() {
               </div>
             )}
           </div>
-        </div>
-      )}
+        ) : (
+          <p
+            style={{
+              fontFamily: "'Newsreader', Georgia, serif",
+              fontSize: 14,
+              color: '#9c9586',
+              fontStyle: 'italic',
+              marginTop: 10,
+            }}
+          >
+            No cast listed — check the venue website.
+          </p>
+        )}
+      </div>
 
       {/* 3. "The house felt" panel */}
       <div style={{ backgroundColor: '#141109', padding: '16px 20px' }}>

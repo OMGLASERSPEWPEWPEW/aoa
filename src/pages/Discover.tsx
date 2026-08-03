@@ -113,7 +113,7 @@ export function Discover() {
               paddingTop: 10,
               paddingBottom: 10,
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 12,
+              fontSize: 16,
               outline: 'none',
             }}
           />

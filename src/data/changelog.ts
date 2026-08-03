@@ -8,6 +8,18 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.21',
+    date: '2026-08-03',
+    title: 'iOS keyboard zoom fix + empty states',
+    summary: 'Discover search no longer zooms on iOS, show detail always shows cast and photo sections.',
+    details: [
+      'Fixed: iOS keyboard zoom on Discover search — bumped input to 16px, added maximum-scale=1 to viewport',
+      'Fixed: bottom nav disappearing after keyboard dismiss on iOS',
+      'New: "THE COMPANY" section always visible — shows "No cast listed" when empty',
+      'New: "NO PHOTO AVAILABLE" placeholder in hero when no show/venue photo exists',
+    ],
+  },
+  {
     version: '0.4.20',
     date: '2026-08-03',
     title: 'Map stability + button fixes',
