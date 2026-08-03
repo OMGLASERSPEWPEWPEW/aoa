@@ -8,6 +8,19 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.4.20',
+    date: '2026-08-03',
+    title: 'Map stability + button fixes',
+    summary: 'Markers no longer drift during pan, Want to See responds instantly, header date stays on one line.',
+    details: [
+      'Fixed: map markers drifting/floating during pan — removed CSS transform transition that conflicted with Mapbox positioning',
+      'Fixed: "Want to See" button unresponsive — added optimistic updates, error recovery, and .maybeSingle()',
+      'Fixed: header date/time wrapping to two lines on mobile (added nowrap)',
+      'Added: Mapbox error logging for tile load diagnostics',
+      'Fixed: nulled broken venue photos (Chicago Shakespeare tiny icon, Writers Theatre empty image)',
+    ],
+  },
+  {
     version: '0.4.19',
     date: '2026-08-02',
     title: 'Map UX overhaul + date display',

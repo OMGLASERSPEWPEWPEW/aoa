@@ -115,6 +115,7 @@ export function MapView() {
     })
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+    map.on('error', (e) => console.error('[mapbox]', e.error?.message ?? e))
     map.on('click', () => {
       if (markerClickedRef.current) {
         markerClickedRef.current = false
@@ -201,7 +202,7 @@ export function MapView() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }} />
 
       <MapFilterChips
         activeFilters={activeFilters}

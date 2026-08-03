@@ -47,6 +47,8 @@ export function Header() {
             fontSize: 10,
             letterSpacing: '0.06em',
             color: 'var(--ink-dim)',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
           {now}

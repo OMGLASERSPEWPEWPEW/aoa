@@ -31,7 +31,7 @@ export function createMarkerElement({
   el.style.height = '40px'
   el.style.position = 'relative'
   el.style.cursor = 'pointer'
-  el.style.transition = 'transform 120ms, opacity 120ms'
+  el.style.transition = 'opacity 120ms'
   el.style.opacity = dimmed ? '0.22' : '1'
   el.style.transform = isSelected ? 'scale(1.18)' : 'scale(1)'
 
