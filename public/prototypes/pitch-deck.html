@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Art of Art — What We're Building</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Courier+Prime:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#08070a;color:#ebe5d6;font-family:'Newsreader',Georgia,serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+::selection{background:oklch(0.80 0.14 55);color:#0c0a05}
+
+/* layout */
+.wrap{max-width:1100px;margin:0 auto;padding:0 32px}
+section{padding:100px 0}
+section+section{border-top:1px solid #2b2720}
+
+/* type */
+h1{font-size:clamp(36px,6vw,64px);font-weight:400;font-style:italic;line-height:1.05;letter-spacing:-0.02em;margin-bottom:24px}
+h2{font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.18em;color:#625b4c;text-transform:uppercase;margin-bottom:14px}
+h3{font-size:28px;font-weight:400;font-style:italic;line-height:1.15;margin-bottom:16px}
+p{font-size:18px;color:#9c9586;line-height:1.55;margin-bottom:18px;max-width:640px}
+p em{color:#ebe5d6;font-style:italic}
+p strong{color:oklch(0.80 0.14 55);font-weight:400}
+
+.label{font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.18em;color:#625b4c;text-transform:uppercase}
+.gold{color:oklch(0.80 0.14 55)}
+.green{color:oklch(0.68 0.13 150)}
+
+/* hero */
+.hero{padding:160px 0 120px;text-align:center;background:linear-gradient(180deg, oklch(0.16 0.04 55) 0%, #08070a 70%)}
+.hero h1{margin:0 auto 20px;max-width:800px}
+.hero p{margin:0 auto 18px;text-align:center;max-width:560px}
+.hero .tagline{font-family:'Courier Prime',monospace;font-size:12px;letter-spacing:0.14em;color:oklch(0.80 0.14 55);text-transform:uppercase;margin-bottom:32px}
+
+/* phone frame */
+.phone{width:390px;height:844px;background:#0c0a05;border:1px solid #2b2720;border-radius:38px;overflow:hidden;display:flex;flex-direction:column;color:#ebe5d6;box-shadow:0 24px 60px -20px rgba(0,0,0,.8);position:relative;flex-shrink:0}
+.phone-wrap{display:flex;gap:48px;align-items:flex-start;margin:40px 0}
+.phone-wrap.center{justify-content:center}
+.phone-note{flex:1;min-width:240px;padding-top:60px}
+.phone-note h3{font-size:24px;margin-bottom:12px}
+.phone-note p{font-size:16px}
+.phone-note .detail{font-family:'Courier Prime',monospace;font-size:11px;color:#625b4c;line-height:1.7;margin-top:16px}
+.phone-note .detail span{color:#9c9586;display:block}
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 26px 6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#9c9586;flex:0 0 auto}
+.header-bar{display:flex;align-items:baseline;justify-content:space-between;padding:8px 20px 12px;border-bottom:1px solid #2b2720;flex:0 0 auto}
+.app-title{font-family:'Courier Prime',monospace;font-weight:700;font-size:19px}
+.tab-bar{display:flex;border-top:1px solid #2b2720;background:#0c0a05;padding:8px 6px 22px;margin-top:auto}
+.tab-bar .tab{flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:'Courier Prime',monospace;font-size:9px;color:#625b4c}
+.tab-bar .tab.active{color:oklch(0.80 0.14 55)}
+.tab-bar .tab .glyph{font-size:15px}
+.tab-bar .fab{width:44px;height:44px;border-radius:50%;background:oklch(0.80 0.14 55);display:flex;align-items:center;justify-content:center;font-family:'Newsreader',serif;font-style:italic;font-size:19px;color:#0c0a05;margin-top:-6px;align-self:center}
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden}
+
+/* competitor grid */
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:32px 0}
+.comp-card{background:#141109;border:1px solid #2b2720;border-radius:3px;padding:20px}
+.comp-card h4{font-family:'Newsreader',serif;font-style:italic;font-size:18px;margin-bottom:6px;color:#ebe5d6;font-weight:400}
+.comp-card .comp-type{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.12em;color:#625b4c;text-transform:uppercase;margin-bottom:10px}
+.comp-card p{font-size:14px;color:#625b4c;line-height:1.5;margin:0}
+.comp-card .verdict{font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;margin-top:10px}
+.comp-card .verdict.gap{color:oklch(0.80 0.14 55)}
+.comp-card .verdict.exists{color:#625b4c}
+
+/* insight boxes */
+.insight{background:#141109;border:1px solid #2b2720;border-radius:3px;padding:24px 28px;margin:28px 0;max-width:700px}
+.insight p{font-size:16px;margin:0}
+
+/* emotion dots */
+.edot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:middle}
+
+/* spectrum bar */
+.spectrum{display:flex;height:14px;border-radius:2px;overflow:hidden;gap:1px;margin:12px 0}
+.spectrum div{flex:none;height:100%;border-radius:1px}
+
+/* seating chart */
+.seat-chart{display:flex;flex-direction:column;align-items:center;gap:5px;background:#141109;border:1px solid #2b2720;border-radius:3px;padding:14px 0 12px;margin:16px 0}
+.seat-row{display:flex;gap:4px}
+.seat{width:7px;height:7px;border-radius:1px}
+.seat.lit{width:11px;height:11px;border-radius:2px;background:oklch(0.86 0.15 55);box-shadow:0 0 10px oklch(0.80 0.14 55)}
+
+/* wheel */
+.wheel{width:300px;height:300px;position:relative;margin:0 auto 20px}
+.wnode{position:absolute;width:66px;height:66px;border-radius:50%;border:1px solid #2b2720;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Courier Prime',monospace;font-size:10px;line-height:1.2}
+.wnode.sel{border-width:1.5px}
+
+/* timeline */
+.timeline{border-left:1px solid #2b2720;margin:24px 0 24px 20px;padding-left:24px}
+.timeline .entry{margin-bottom:28px;position:relative}
+.timeline .entry::before{content:'';position:absolute;left:-29px;top:6px;width:9px;height:9px;border-radius:50%;background:#2b2720}
+.timeline .entry.now::before{background:oklch(0.74 0.16 145)}
+
+/* chips */
+.chip{display:inline-block;font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;padding:4px 9px;border-radius:2px;margin:2px}
+.chip.done{color:#4f4a3e;border:1px solid #211d17;text-decoration:line-through}
+.chip.current{color:oklch(0.80 0.14 55);border:1px solid oklch(0.42 0.09 55);background:oklch(0.20 0.04 55)}
+.chip.future{color:#625b4c;border:1px dashed #2b2720}
+
+/* responsive */
+@media(max-width:860px){
+  .phone-wrap{flex-direction:column;align-items:center}
+  .phone-note{padding-top:24px;min-width:0;text-align:center}
+  .phone-note p{margin-left:auto;margin-right:auto}
+  .phone{transform:scale(0.85);transform-origin:top center}
+  section{padding:60px 0}
+}
+@media(max-width:500px){
+  .wrap{padding:0 16px}
+  .phone{transform:scale(0.7);transform-origin:top center;margin-bottom:-120px}
+  h1{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+  <div class="wrap">
+    <div class="tagline">Chicago Theater, 2026</div>
+    <h1>The Art of Art</h1>
+    <p>A map-first app that makes Chicago theater feel <em>alive and enterable</em> for people who want to go but don't know where to start.</p>
+    <p style="font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:0.08em;color:#4f4a3e;margin-top:32px">SCROLL TO SEE THE VISION</p>
+    <div style="margin-top:12px;color:#2b2720;font-size:24px;animation:bob 2s ease-in-out infinite">&#8595;</div>
+  </div>
+</section>
+<style>@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}</style>
+
+<!-- ==================== THE PROBLEM ==================== -->
+<section>
+  <div class="wrap">
+    <h2>The problem</h2>
+    <h3>Theater feels like a locked room</h3>
+    <p>Chicago has 250+ theater companies. Storefronts charge $10-35. Many let you <strong>usher for free</strong>. The scene is the most accessible in the country and almost nobody under 30 knows it.</p>
+    <p>There's no Letterboxd for plays. No Goodreads for scripts. No map that tells you <em>"14 curtains are up within three miles of you right now, and three of them are free."</em></p>
+    <p>People who want to go track shows in <strong>Google Sheets</strong>. Their friends text them recommendations that get buried. A play they heard about in acting class has no way to find them when it's finally staged nearby.</p>
+
+    <div class="insight">
+      <p><strong>The thesis:</strong> theater is inaccessible not because of price or geography, but because there's no <em>curation layer</em>, no <em>social layer</em>, and no visible path in for people without a theater school or friend group already inside the scene.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== WHAT EXISTS ==================== -->
+<section>
+  <div class="wrap">
+    <h2>What already exists</h2>
+    <h3>The competitive landscape is wide open</h3>
+    <p>We looked at every theater app on the market. None do what AoA does.</p>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>Spotlighter</h4>
+        <div class="comp-type">Theater diary app</div>
+        <p>Basic show logging. Star ratings. No map, no social, no play-level tracking, no discovery. Essentially a spreadsheet with a nicer UI.</p>
+        <div class="verdict gap">MISSING: map, feelings, social, plays, access info</div>
+      </div>
+      <div class="comp-card">
+        <h4>Theatregoer</h4>
+        <div class="comp-type">Logging app (UK-focused)</div>
+        <p>West End / Broadway focused. Log shows, leave reviews. No emotional vocabulary, no map, no community, no Chicago coverage.</p>
+        <div class="verdict gap">MISSING: map, feelings, local scene, progression</div>
+      </div>
+      <div class="comp-card">
+        <h4>BroadwayWorld "My Shows"</h4>
+        <div class="comp-type">Feature on a news site (launched 2025)</div>
+        <p>The biggest theater site added a "My Shows" tab. It's a list. No map, no emotion system, no play-level tracking, no social.</p>
+        <div class="verdict gap">MISSING: everything beyond a list</div>
+      </div>
+      <div class="comp-card">
+        <h4>Letterboxd</h4>
+        <div class="comp-type">Film diary + social (analog)</div>
+        <p>The gold standard for film tracking. Star ratings, lists, social. But it's for movies, which are one-to-one (one film = one thing to watch). Theater is one-to-many (one play = many productions).</p>
+        <div class="verdict exists">ANALOG: great model, wrong medium. A play needs a Goodreads-like work/edition split, not a Letterboxd-like single-entity model</div>
+      </div>
+      <div class="comp-card">
+        <h4>Goodreads</h4>
+        <div class="comp-type">Book tracking + social (analog)</div>
+        <p>Tracks the <em>work</em> separate from the <em>edition</em>. "Want to Read" shelf notifies you. This is the right model for plays &mdash; but nobody's built it for theater.</p>
+        <div class="verdict exists">ANALOG: right data model (work vs. edition), right shelf concept, wrong medium</div>
+      </div>
+      <div class="comp-card">
+        <h4>Google Maps / Yelp</h4>
+        <div class="comp-type">General maps</div>
+        <p>You can find a theater on Google Maps. You can't see what's playing tonight, whether it's free, or whether your friends went.</p>
+        <div class="verdict gap">MISSING: "what's on" layer, relationship, access info</div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <p><strong>Nobody combines:</strong> a live map of what's playing tonight + Goodreads-style play tracking + an emotion-based rating system that doesn't reduce someone's year of work to 3.2 stars + a social layer of people you trust + access information that actually gets a broke 23-year-old through the door.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== THE PRODUCT ==================== -->
+<section>
+  <div class="wrap">
+    <h2>What AoA actually is</h2>
+    <h3>Three layers, one app</h3>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin:32px 0">
+      <div style="padding:20px;border:1px solid #2b2720;border-radius:3px">
+        <div class="label" style="margin-bottom:8px">Layer 1</div>
+        <h3 style="font-size:20px;margin-bottom:8px">The Map</h3>
+        <p style="font-size:15px">A live map of every theater in Chicago. What's playing tonight, what it costs, who's been, whether you can usher for free. The social layer <em>over</em> maps that theater doesn't have.</p>
+      </div>
+      <div style="padding:20px;border:1px solid #2b2720;border-radius:3px">
+        <div class="label" style="margin-bottom:8px">Layer 2</div>
+        <h3 style="font-size:20px;margin-bottom:8px">Goodreads for Plays</h3>
+        <p style="font-size:15px">Track the <em>play</em>, not just the production. Add <em>A Doll's House</em> to "want to see." When a Chicago theater announces it, we tell you. Nobody else does this.</p>
+      </div>
+      <div style="padding:20px;border:1px solid #2b2720;border-radius:3px">
+        <div class="label" style="margin-bottom:8px">Layer 3</div>
+        <h3 style="font-size:20px;margin-bottom:8px">The On-Ramp</h3>
+        <p style="font-size:15px">Progression that rewards <em>going</em>, not spending. Usher shifts count double. Free nights are first-class. No paywall between a newcomer and the scene.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TONIGHT ==================== -->
+<section>
+  <div class="wrap">
+    <h2>Screen 1</h2>
+    <h3>Tonight</h3>
+    <p>The home screen answers one question in under ten seconds: <em>"Is there anything on tonight that I'd like and can afford?"</em></p>
+
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="status-bar"><span>7:38</span><span style="letter-spacing:.1em">&#9602;&#9604;&#9606; LTE &#9646;</span></div>
+        <div class="header-bar">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span class="app-title">The Art of Art</span>
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c">&middot; chicago</span>
+          </div>
+          <span style="font-size:18px;color:#9c9586">&#9684;</span>
+        </div>
+
+        <div class="scroll-area">
+          <!-- marquee ticker -->
+          <div style="background:linear-gradient(180deg, oklch(0.16 0.04 55), #0c0a05);border-bottom:1px solid #2b2720;overflow:hidden;white-space:nowrap;padding:9px 0">
+            <div style="display:inline-flex;gap:28px;font-family:'Courier Prime',monospace;font-size:10.5px;letter-spacing:0.14em;color:oklch(0.80 0.14 55);animation:ticker 26s linear infinite">
+              <span>47 CURTAINS UP TONIGHT</span><span style="color:#625b4c">&middot;</span>
+              <span>11 UNDER $20</span><span style="color:#625b4c">&middot;</span>
+              <span>3 OPENINGS</span><span style="color:#625b4c">&middot;</span>
+              <span>47 CURTAINS UP TONIGHT</span><span style="color:#625b4c">&middot;</span>
+              <span>11 UNDER $20</span><span style="color:#625b4c">&middot;</span>
+              <span>3 OPENINGS</span>
+            </div>
+          </div>
+
+          <!-- hero show -->
+          <div style="height:196px;background:linear-gradient(180deg, rgba(12,10,5,0.1) 40%, rgba(12,10,5,0.96)),url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22390%22 height=%22196%22><rect fill=%22%231a1610%22 width=%22390%22 height=%22196%22/><text x=%2250%25%22 y=%2240%25%22 fill=%22%232b2720%22 font-size=%2214%22 text-anchor=%22middle%22 font-family=%22monospace%22>PRODUCTION PHOTO</text></svg>');background-size:cover;position:relative;display:flex;align-items:flex-end;padding:0 20px 12px">
+            <div style="display:flex;gap:6px">
+              <span style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.12em;padding:3px 8px;border-radius:2px;color:oklch(0.82 0.15 250);background:oklch(0.22 0.05 250)">DRAMA</span>
+              <span style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.12em;padding:3px 8px;border-radius:2px;color:#9c9586;border:1px solid #2b2720">PREMIERE</span>
+            </div>
+          </div>
+          <div style="padding:14px 20px 18px;border-bottom:1px solid #2b2720">
+            <div style="font-style:italic;font-size:29px;line-height:1.04;margin-bottom:4px">Leopoldstadt</div>
+            <div style="font-family:'Courier Prime',monospace;font-size:10.5px;letter-spacing:0.08em;color:#625b4c">WRITERS THEATRE &middot; GLENCOE &middot; THRU AUG 24</div>
+            <p style="font-size:15px;color:#9c9586;line-height:1.45;margin:10px 0 12px;max-width:none">Tom Stoppard's sweeping portrait of a Jewish family in Vienna across the first half of the twentieth century.</p>
+
+            <!-- spectrum bar -->
+            <div class="label" style="margin-bottom:6px">THE HOUSE FELT</div>
+            <div class="spectrum">
+              <div style="width:31%;background:oklch(0.58 0.16 300)"></div>
+              <div style="width:24%;background:oklch(0.68 0.13 150)"></div>
+              <div style="width:18%;background:oklch(0.62 0.19 18)"></div>
+              <div style="width:14%;background:oklch(0.60 0.14 255)"></div>
+              <div style="width:13%;background:oklch(0.82 0.15 90)"></div>
+            </div>
+            <div style="font-family:'Courier Prime',monospace;font-size:10.5px;display:flex;gap:12px;margin-bottom:8px">
+              <span style="color:oklch(0.58 0.16 300)">31% unsettled</span>
+              <span style="color:oklch(0.68 0.13 150)">24% held</span>
+              <span style="color:oklch(0.62 0.19 18)">18% gutted</span>
+            </div>
+            <p style="font-size:14px;color:#9c9586;line-height:1.45;margin:0 0 14px;max-width:none">People left this one <span style="color:oklch(0.58 0.16 300);font-style:italic">unsettled</span> and <span style="color:oklch(0.68 0.13 150);font-style:italic">held</span>. Not a comfortable night. A necessary one.</p>
+
+            <div style="display:flex;gap:10px">
+              <button style="flex:1;height:46px;font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#0c0a05;background:oklch(0.80 0.14 55);border:none;border-radius:3px;cursor:pointer">Want to see</button>
+              <button style="width:104px;height:46px;font-family:'Courier Prime',monospace;font-size:11px;color:#9c9586;background:none;border:1px solid #2b2720;border-radius:3px;cursor:pointer">$25 HOTTIX</button>
+            </div>
+          </div>
+
+          <!-- free tonight -->
+          <div style="padding:16px 20px">
+            <div style="margin-bottom:8px"><span style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.18em;color:oklch(0.68 0.13 150)">FREE TONIGHT</span> <span style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.18em;color:#4f4a3e">&mdash; NO CATCH, NO TICKET</span></div>
+            <p style="font-size:15px;color:#9c9586;line-height:1.4;max-width:none"><span style="color:#ebe5d6;font-style:italic">Lifeline Theatre</span> runs a free preview tonight at 7:30. No reservations. First come, first seated.</p>
+            <p style="font-size:15px;color:#9c9586;line-height:1.4;max-width:none"><span style="color:#ebe5d6;font-style:italic">Neo-Futurists</span> pay-what-you-can every night. Roll dice for your price at the door.</p>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab active"><span class="glyph">&#9673;</span>TONIGHT</div>
+          <div class="tab"><span class="glyph">&#9637;</span>MAP</div>
+          <div class="tab" style="position:relative"><div class="fab">&#10022;</div></div>
+          <div class="tab"><span class="glyph">&#9677;</span>DISCOVER</div>
+          <div class="tab"><span class="glyph">&#9671;</span>YOU</div>
+        </div>
+      </div>
+
+      <div class="phone-note">
+        <h3>What's on right now</h3>
+        <p>The ticker scrolls live counts. The hero card shows the featured show with its <strong>emotion spectrum</strong> &mdash; not stars, feelings.</p>
+        <p><em>"Free Tonight"</em> is never empty. If nothing's free, it shows the cheapest three. <strong style="color:oklch(0.68 0.13 150)">Access is the product's promise.</strong></p>
+        <div class="detail">
+          <span>&#9673; Live ticker: 47 curtains up, 11 under $20</span>
+          <span>&#9673; Emotion spectrum replaces star ratings</span>
+          <span>&#9673; Free/cheap section always visible</span>
+          <span>&#9673; One-tap "Want to see" or "Buy tickets"</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<style>@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}</style>
+
+<!-- ==================== MAP ==================== -->
+<section>
+  <div class="wrap">
+    <h2>Screen 2</h2>
+    <h3>The Map</h3>
+    <p>Every theater in Chicago, alive on the map. Green dots pulse for shows that are on <em>right now</em>. Gold markers are places you have tickets. Dashed borders are your wishlist. Your relationship with each venue is visible at a glance.</p>
+
+    <div class="phone-wrap">
+      <div class="phone-note" style="padding-top:40px">
+        <h3>Your city, your relationship</h3>
+        <p>Markers encode your personal connection to each venue. Filters <strong>dim</strong> markers instead of removing them &mdash; the shape of the city stays visible.</p>
+        <div class="detail">
+          <span style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <b style="width:18px;height:18px;border-radius:3px;background:oklch(0.80 0.14 55);display:inline-flex;align-items:center;justify-content:center;color:#0c0a05;font-size:10px;flex-shrink:0">&#9635;</b> You have tickets
+          </span>
+          <span style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <b style="width:18px;height:18px;border-radius:3px;border:1.5px dashed oklch(0.80 0.14 55);display:inline-block;flex-shrink:0"></b> Want to see
+          </span>
+          <span style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <b style="width:18px;height:18px;border-radius:3px;border:1.5px solid oklch(0.58 0.16 300);display:inline-block;flex-shrink:0"></b> You've been &mdash; your emotion color
+          </span>
+          <span style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <b style="width:10px;height:10px;border-radius:50%;background:oklch(0.74 0.16 145);display:inline-block;flex-shrink:0;margin:0 4px"></b> Curtain up tonight (pulses)
+          </span>
+        </div>
+        <p style="margin-top:16px">Tapping a marker opens the venue sheet with what's playing, prices, and access info. <strong>USHER SLOTS</strong> filter shows venues where you can see a show for free by volunteering.</p>
+      </div>
+
+      <div class="phone">
+        <div class="status-bar"><span>7:38</span><span style="letter-spacing:.1em">&#9602;&#9604;&#9606; LTE &#9646;</span></div>
+        <div class="header-bar">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span class="app-title">The Art of Art</span>
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c">&middot; tonight</span>
+          </div>
+          <span style="font-family:'Courier Prime',monospace;font-size:10px;color:oklch(0.80 0.14 55)">14 UP</span>
+        </div>
+
+        <!-- map simulation -->
+        <div style="flex:1;position:relative;background:#0c0a05">
+          <!-- grid lines to suggest a map -->
+          <svg viewBox="0 0 390 600" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.15">
+            <line x1="0" y1="120" x2="390" y2="140" stroke="#2b2720" stroke-width="0.5"/>
+            <line x1="80" y1="0" x2="60" y2="600" stroke="#2b2720" stroke-width="0.5"/>
+            <line x1="200" y1="0" x2="220" y2="600" stroke="#2b2720" stroke-width="0.5"/>
+            <line x1="310" y1="0" x2="290" y2="600" stroke="#2b2720" stroke-width="0.5"/>
+            <line x1="0" y1="260" x2="390" y2="280" stroke="#2b2720" stroke-width="0.5"/>
+            <line x1="0" y1="400" x2="390" y2="380" stroke="#2b2720" stroke-width="0.5"/>
+            <line x1="140" y1="0" x2="150" y2="600" stroke="#2b2720" stroke-width="0.3"/>
+            <text x="30" y="200" fill="#1a1610" font-size="8" font-family="Courier Prime">LOGAN SQUARE</text>
+            <text x="160" y="100" fill="#1a1610" font-size="8" font-family="Courier Prime">LAKEVIEW</text>
+            <text x="220" y="350" fill="#1a1610" font-size="8" font-family="Courier Prime">THE LOOP</text>
+            <text x="60" y="420" fill="#1a1610" font-size="8" font-family="Courier Prime">PILSEN</text>
+            <text x="260" y="200" fill="#1a1610" font-size="8" font-family="Courier Prime">LINCOLN PARK</text>
+            <path d="M350,0 Q340,150 355,300 Q360,450 345,600" stroke="#1a1610" fill="none" stroke-width="2"/>
+            <text x="357" y="250" fill="#1a1610" font-size="7" font-family="Courier Prime" transform="rotate(85,357,250)">LAKE MICHIGAN</text>
+          </svg>
+
+          <!-- filter chips -->
+          <div style="position:absolute;left:0;right:0;top:10px;z-index:10;display:flex;gap:6px;padding:0 14px;overflow-x:auto">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;color:#0c0a05;background:oklch(0.80 0.14 55);border:1px solid oklch(0.80 0.14 55);padding:7px 12px;border-radius:15px;white-space:nowrap">TONIGHT</span>
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;color:#9c9586;border:1px solid #2b2720;background:rgba(12,10,5,.9);padding:7px 12px;border-radius:15px;white-space:nowrap">UNDER $20</span>
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;color:#9c9586;border:1px solid #2b2720;background:rgba(12,10,5,.9);padding:7px 12px;border-radius:15px;white-space:nowrap">STOREFRONT</span>
+          </div>
+
+          <!-- simulated markers -->
+          <!-- booked (gold fill) -->
+          <div style="position:absolute;left:180px;top:170px"><div style="width:30px;height:30px;border-radius:4px;background:oklch(0.80 0.14 55);border:1.5px solid oklch(0.80 0.14 55);display:flex;align-items:center;justify-content:center;font-size:14px;color:#0c0a05;box-shadow:0 3px 8px rgba(0,0,0,.7)">&#9635;</div><div style="position:absolute;right:0;top:-2px;width:9px;height:9px;border-radius:50%;background:oklch(0.74 0.16 145);border:2px solid #0c0a05;animation:lp 1.8s ease-in-out infinite"></div></div>
+          <!-- want (dashed gold) -->
+          <div style="position:absolute;left:100px;top:240px"><div style="width:30px;height:30px;border-radius:4px;background:#141109;border:1.5px dashed oklch(0.80 0.14 55);display:flex;align-items:center;justify-content:center;font-size:14px;color:oklch(0.80 0.14 55);box-shadow:0 3px 8px rgba(0,0,0,.7)">&#9640;</div></div>
+          <!-- seen (emotion color) -->
+          <div style="position:absolute;left:250px;top:130px"><div style="width:30px;height:30px;border-radius:4px;background:#141109;border:1.5px solid oklch(0.58 0.16 300);display:flex;align-items:center;justify-content:center;font-size:14px;color:oklch(0.58 0.16 300);box-shadow:0 3px 8px rgba(0,0,0,.7)">&#9635;</div><div style="position:absolute;left:-2px;top:-2px;width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.16 300);border:2px solid #0c0a05"></div></div>
+          <!-- neutral -->
+          <div style="position:absolute;left:60px;top:150px;opacity:1"><div style="width:30px;height:30px;border-radius:4px;background:#141109;border:1.5px solid #2b2720;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9c9586;box-shadow:0 3px 8px rgba(0,0,0,.7)">&#9640;</div><div style="position:absolute;right:0;top:-2px;width:9px;height:9px;border-radius:50%;background:oklch(0.74 0.16 145);border:2px solid #0c0a05;animation:lp 1.8s ease-in-out infinite"></div></div>
+          <!-- more neutral markers scattered -->
+          <div style="position:absolute;left:280px;top:290px"><div style="width:30px;height:30px;border-radius:4px;background:#141109;border:1.5px solid #2b2720;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9c9586;box-shadow:0 3px 8px rgba(0,0,0,.7)">&#9672;</div></div>
+          <div style="position:absolute;left:150px;top:360px"><div style="width:30px;height:30px;border-radius:4px;background:#141109;border:1.5px solid #2b2720;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9c9586;box-shadow:0 3px 8px rgba(0,0,0,.7)">&#9640;</div></div>
+          <div style="position:absolute;left:220px;top:420px;opacity:.22"><div style="width:30px;height:30px;border-radius:4px;background:#141109;border:1.5px solid #2b2720;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9c9586;box-shadow:0 3px 8px rgba(0,0,0,.7)">&#9635;</div></div>
+          <div style="position:absolute;left:310px;top:180px"><div style="width:30px;height:30px;border-radius:4px;background:#141109;border:1.5px solid #2b2720;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9c9586;box-shadow:0 3px 8px rgba(0,0,0,.7)">&#9640;</div><div style="position:absolute;right:0;top:-2px;width:9px;height:9px;border-radius:50%;background:oklch(0.74 0.16 145);border:2px solid #0c0a05;animation:lp 1.8s ease-in-out infinite"></div></div>
+        </div>
+        <style>@keyframes lp{0%,100%{opacity:1}50%{opacity:.45}}</style>
+
+        <div class="tab-bar">
+          <div class="tab"><span class="glyph">&#9673;</span>TONIGHT</div>
+          <div class="tab active"><span class="glyph">&#9637;</span>MAP</div>
+          <div class="tab" style="position:relative"><div class="fab">&#10022;</div></div>
+          <div class="tab"><span class="glyph">&#9677;</span>DISCOVER</div>
+          <div class="tab"><span class="glyph">&#9671;</span>YOU</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== DISCOVER + PLAYS ==================== -->
+<section>
+  <div class="wrap">
+    <h2>Screen 3</h2>
+    <h3>Discover &mdash; Goodreads for Plays</h3>
+    <p>Search by title, playwright, theater, neighborhood, or <em>feeling</em>. Type "doll house" and find the play. Type "ibsen" and see every Ibsen play. Type "unsettled" and find shows that make people feel that way.</p>
+    <p>The key insight: a <em>play</em> is the written work. A <em>production</em> is a specific staging. You track productions, but you <em>discover</em> plays. Add a play to "want to see" and we'll tell you when a Chicago theater announces it.</p>
+
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="status-bar"><span>7:38</span><span style="letter-spacing:.1em">&#9602;&#9604;&#9606; LTE &#9646;</span></div>
+        <div class="header-bar">
+          <span class="app-title">The Art of Art</span>
+        </div>
+
+        <div class="scroll-area">
+          <!-- search -->
+          <div style="padding:12px;border-bottom:1px solid #2b2720">
+            <div style="position:relative">
+              <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#4f4a3e;font-size:14px">&#8981;</span>
+              <div style="width:100%;background:#141109;color:#ebe5d6;border:1px solid oklch(0.42 0.09 55);border-radius:3px;padding:10px 16px 10px 34px;font-family:'Courier Prime',monospace;font-size:16px">doll house</div>
+            </div>
+          </div>
+
+          <div style="padding:12px">
+            <!-- play results -->
+            <div style="font-family:'Courier Prime',monospace;font-size:9px;color:#4f4a3e;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">1 PLAY</div>
+            <div style="background:#141109;border:1px solid #2b2720;border-radius:2px;padding:12px 14px;margin-bottom:16px;cursor:pointer">
+              <div style="font-style:italic;font-size:16px;color:#ebe5d6;line-height:1.3">A Doll's House</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c;letter-spacing:0.04em;text-transform:uppercase;margin-top:2px">HENRIK IBSEN &middot; 1879</div>
+              <div style="font-size:12px;color:#4f4a3e;line-height:1.4;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Nora Helmer discovers that her comfortable marriage is built on secrets and lies, and must choose between domestic obligation and personal freedom.</div>
+            </div>
+
+            <!-- scene news -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.18em;color:#625b4c">THE SCENE RIGHT NOW</span>
+              <span style="width:6px;height:6px;border-radius:50%;background:oklch(0.74 0.16 145)"></span>
+            </div>
+
+            <div style="border-bottom:1px solid #211d17;padding-bottom:14px;margin-bottom:14px">
+              <div style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.12em;color:oklch(0.80 0.14 55);margin-bottom:4px">SEASON DROP</div>
+              <div style="font-style:italic;font-size:18px;line-height:1.2;margin-bottom:4px">Steppenwolf announces 2026-27: five world premieres</div>
+              <div style="font-size:14px;color:#9c9586;line-height:1.4">Including a new Tracy Letts and an adaptation of <span style="font-style:italic">There There</span>.</div>
+            </div>
+
+            <div style="border-bottom:1px solid #211d17;padding-bottom:14px;margin-bottom:14px">
+              <div style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.12em;color:oklch(0.68 0.13 150);margin-bottom:4px">FREE</div>
+              <div style="font-style:italic;font-size:18px;line-height:1.2;margin-bottom:4px">Chicago Park District outdoor season starts Saturday</div>
+              <div style="font-size:14px;color:#9c9586;line-height:1.4">Free Shakespeare in the parks. No tickets needed.</div>
+            </div>
+
+            <div style="padding-bottom:14px">
+              <div style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.12em;color:oklch(0.58 0.16 300);margin-bottom:4px">CLOSING SOON</div>
+              <div style="font-style:italic;font-size:18px;line-height:1.2;margin-bottom:4px">Stereophonic closes August 10 at Goodman</div>
+              <div style="font-size:14px;color:#9c9586;line-height:1.4">The 2024 Pulitzer winner. Last chance.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab"><span class="glyph">&#9673;</span>TONIGHT</div>
+          <div class="tab"><span class="glyph">&#9637;</span>MAP</div>
+          <div class="tab" style="position:relative"><div class="fab">&#10022;</div></div>
+          <div class="tab active"><span class="glyph">&#9677;</span>DISCOVER</div>
+          <div class="tab"><span class="glyph">&#9671;</span>YOU</div>
+        </div>
+      </div>
+
+      <div class="phone-note">
+        <h3>The play, not the poster</h3>
+        <p>When you search for a play, you find the <em>work itself</em> &mdash; title, playwright, year, synopsis, awards. Tap it to see every production tracked in Chicago.</p>
+        <p>This is the <strong>"Goodreads for plays"</strong> moment. Goodreads tracks the <em>book</em> separately from the <em>edition</em>. We track the <em>play</em> separately from the <em>production</em>.</p>
+        <div class="insight" style="margin-top:20px">
+          <p style="font-size:14px"><strong>The magic:</strong> Add <em>A Doll's House</em> to "want to see." Our AI scraper monitors 100+ Chicago theater websites weekly. When Writers Theatre or Court announces <em>A Doll's House</em>, you get notified: <strong>"A Doll's House is coming to Writers Theatre in January."</strong></p>
+        </div>
+        <div class="detail" style="margin-top:16px">
+          <span>&#9673; 45 canonical plays seeded today</span>
+          <span>&#9673; AI scraper runs weekly, extracts playwright</span>
+          <span>&#9673; Fuzzy matches productions to plays automatically</span>
+          <span>&#9673; "Want to see" a play = notification when staged</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== LOG A SHOW ==================== -->
+<section>
+  <div class="wrap">
+    <h2>Screen 4</h2>
+    <h3>Log a Show &mdash; The Emotion Wheel</h3>
+    <p>No stars. No thumbs. Twelve feelings arranged in a wheel. You pick one to three, in order. That's your review &mdash; and it tells future audiences more than any number ever could.</p>
+
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="status-bar"><span>9:47</span><span style="letter-spacing:.1em">&#9602;&#9604;&#9606; LTE &#9646;</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid #2b2720">
+          <span style="font-family:'Courier Prime',monospace;font-size:11px;color:#9c9586">CANCEL</span>
+          <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.16em;color:#625b4c">STEP 1 OF 2</span>
+        </div>
+
+        <div class="scroll-area" style="padding:16px 20px;display:flex;flex-direction:column;align-items:center">
+          <div style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;color:oklch(0.80 0.14 55);margin-bottom:6px">TONIGHT, 8:00 &middot; STEPPENWOLF</div>
+          <div style="font-style:italic;font-size:27px;text-align:center;margin-bottom:6px">Leopoldstadt</div>
+          <div style="font-size:15px;color:#9c9586;margin-bottom:20px">So. What did it do to you?</div>
+
+          <!-- emotion wheel -->
+          <div class="wheel">
+            <div class="wnode" style="left:118px;top:6px;color:oklch(0.82 0.15 90)">Delighted</div>
+            <div class="wnode" style="left:174px;top:21px;color:oklch(0.80 0.15 60);font-size:9.5px">Electri-<br>fied</div>
+            <div class="wnode" style="left:215px;top:62px;color:oklch(0.66 0.19 35)">Furious</div>
+            <div class="wnode sel" style="left:230px;top:118px;color:oklch(0.74 0.16 18);border-color:oklch(0.62 0.19 18);background:oklch(0.21 0.057 18)">Gutted</div>
+            <div class="wnode" style="left:215px;top:174px;color:oklch(0.58 0.12 330)">Aching</div>
+            <div class="wnode" style="left:174px;top:215px;color:oklch(0.64 0.18 350);font-size:9.5px">Cracked<br>open</div>
+            <div class="wnode sel" style="left:118px;top:230px;color:oklch(0.70 0.13 300);border-color:oklch(0.58 0.16 300);background:oklch(0.21 0.048 300)">Unsettled</div>
+            <div class="wnode" style="left:62px;top:215px;color:oklch(0.60 0.14 255);font-size:9.5px">Trans-<br>ported</div>
+            <div class="wnode" style="left:21px;top:174px;color:oklch(0.66 0.12 195)">Seen</div>
+            <div class="wnode sel" style="left:6px;top:118px;color:oklch(0.80 0.10 150);border-color:oklch(0.68 0.13 150);background:oklch(0.21 0.039 150)">Held</div>
+            <div class="wnode" style="left:21px;top:62px;color:oklch(0.76 0.16 120)">Buzzing</div>
+            <div class="wnode" style="left:62px;top:21px;color:#625b4c">Bored</div>
+            <!-- center label -->
+            <div style="position:absolute;left:96px;top:112px;width:108px;font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.1em;color:#4f4a3e;line-height:1.5;text-align:center">PICK UP<br>TO THREE</div>
+          </div>
+
+          <!-- selected dots -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;color:#4f4a3e;letter-spacing:0.1em">SELECTED</span>
+            <span class="edot" style="background:oklch(0.62 0.19 18)"></span>
+            <span class="edot" style="background:oklch(0.58 0.16 300)"></span>
+            <span class="edot" style="background:oklch(0.68 0.13 150)"></span>
+          </div>
+
+          <!-- room volume -->
+          <div class="label" style="margin-bottom:8px;align-self:flex-start">HOW LOUD WAS THE ROOM?</div>
+          <div style="display:flex;gap:8px;width:100%;margin-bottom:20px">
+            <button style="flex:1;height:46px;font-family:'Courier Prime',monospace;font-size:10.5px;color:#9c9586;background:none;border:1px solid #2b2720;border-radius:3px;cursor:pointer">A MURMUR</button>
+            <button style="flex:1;height:46px;font-family:'Courier Prime',monospace;font-size:10.5px;color:#9c9586;background:none;border:1px solid #2b2720;border-radius:3px;cursor:pointer">REAL APPLAUSE</button>
+            <button style="flex:1;height:46px;font-family:'Courier Prime',monospace;font-size:10.5px;color:oklch(0.80 0.14 55);background:oklch(0.20 0.04 55);border:1.5px solid oklch(0.80 0.14 55);border-radius:3px;cursor:pointer">EVERYONE STOOD</button>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #2b2720;padding:14px 20px 26px">
+          <button style="width:100%;height:50px;font-family:'Newsreader',serif;font-style:italic;font-size:16px;color:#0c0a05;background:oklch(0.80 0.14 55);border:none;border-radius:3px;cursor:pointer">Next &mdash; say a little more &#8594;</button>
+        </div>
+      </div>
+
+      <div class="phone-note">
+        <h3>Feelings, not stars</h3>
+        <p>A five-star average tells you a show is a 3.8 and tells you nothing about whether <em>you</em> should go.</p>
+        <p><strong>"31% unsettled, 24% held, 18% gutted"</strong> tells you exactly what kind of night it is.</p>
+        <p>It also lets a person be honest without being cruel. <span class="edot" style="background:#807b70"></span> <em>Bored</em> is a color, not a one-star review of somebody's year of work. That matters in a small scene where the actors read everything.</p>
+        <div class="detail" style="margin-top:16px">
+          <span>&#9673; 12 feelings, fixed, not user-extensible</span>
+          <span>&#9673; Pick 1-3, order preserved everywhere</span>
+          <span>&#9673; Optional room volume: murmur/applause/standing</span>
+          <span>&#9673; Step 2 (writing) is always skippable</span>
+          <span>&#9673; Share-of-picks aggregation = percentages sum to 100</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MY SHOWS ==================== -->
+<section>
+  <div class="wrap">
+    <h2>Screen 5</h2>
+    <h3>My Shows &mdash; Your Record</h3>
+    <p>Three shelves. <em>Want to See</em> is your wishlist. <em>Tickets Booked</em> is your upcoming schedule. <em>Seen</em> is your history, with your emotional palette rendered as a color bar.</p>
+
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="status-bar"><span>7:38</span><span style="letter-spacing:.1em">&#9602;&#9604;&#9606; LTE &#9646;</span></div>
+        <div style="padding:8px 20px 14px;border-bottom:1px solid #2b2720;display:flex;align-items:baseline;justify-content:space-between">
+          <span style="font-style:italic;font-size:26px">My Shows</span>
+          <span style="font-family:'Courier Prime',monospace;font-size:10.5px;color:#625b4c">+ ADD A SHOW</span>
+        </div>
+
+        <div class="scroll-area" style="padding:18px 20px">
+          <!-- want to see -->
+          <div style="background:#141109;border:1px solid #2b2720;border-radius:3px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
+              <span style="font-style:italic;font-size:22px">Want to See</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:oklch(0.80 0.14 55)">12</span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="width:62px;height:84px;border-radius:2px;border:1px solid #2b2720;background:#1a1610;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:oklch(0.82 0.15 250)"></div></div>
+              <div style="width:62px;height:84px;border-radius:2px;border:1px solid #2b2720;background:#1a1610;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:oklch(0.82 0.15 90)"></div></div>
+              <div style="width:62px;height:84px;border-radius:2px;border:1px solid #2b2720;background:#1a1610;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:oklch(0.82 0.15 300)"></div></div>
+              <div style="flex:1;height:84px;border:1px dashed #2b2720;border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:'Courier Prime',monospace;font-size:11px;color:#4f4a3e">+9</div>
+            </div>
+          </div>
+
+          <!-- tickets booked -->
+          <div style="background:linear-gradient(180deg, oklch(0.18 0.04 55), #141109);border:1px solid oklch(0.42 0.09 55);border-radius:3px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
+              <span style="font-style:italic;font-size:22px">Tickets Booked</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:oklch(0.80 0.14 55)">3</span>
+            </div>
+            <!-- booking row -->
+            <div style="display:flex;gap:12px;align-items:center;padding-bottom:10px;border-bottom:1px dotted #2b2720;margin-bottom:10px">
+              <div style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.1em;border:1px solid oklch(0.80 0.14 55);border-radius:2px;padding:5px 7px;color:oklch(0.80 0.14 55);text-align:center;line-height:1.4"><div>FRI</div><div>8:00</div></div>
+              <div><div style="font-style:italic;font-size:17px">Leopoldstadt</div><div style="font-family:'Courier Prime',monospace;font-size:10px;color:#9c9586">WRITERS &middot; ROW J, SEAT 12</div></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.1em;border:1px solid #2b2720;border-radius:2px;padding:5px 7px;color:#9c9586;text-align:center;line-height:1.4"><div>SAT</div><div>7:30</div></div>
+              <div><div style="font-style:italic;font-size:17px">Stereophonic</div><div style="font-family:'Courier Prime',monospace;font-size:10px;color:#9c9586">GOODMAN &middot; THE LOOP</div></div>
+            </div>
+          </div>
+
+          <!-- seen -->
+          <div style="background:#141109;border:1px solid #2b2720;border-radius:3px;padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+              <span style="font-style:italic;font-size:22px">Seen</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:oklch(0.80 0.14 55)">87</span>
+            </div>
+            <div style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;color:#625b4c;margin-bottom:12px">24 VENUES &middot; 31 REFLECTIONS &middot; 4 USHERED</div>
+            <div class="label" style="margin-bottom:4px">YOUR PALETTE, ALL 87</div>
+            <div class="spectrum" style="height:26px">
+              <div style="width:22%;background:oklch(0.58 0.16 300)"></div>
+              <div style="width:19%;background:oklch(0.68 0.13 150)"></div>
+              <div style="width:16%;background:oklch(0.62 0.19 18)"></div>
+              <div style="width:14%;background:oklch(0.82 0.15 90)"></div>
+              <div style="width:11%;background:oklch(0.60 0.14 255)"></div>
+              <div style="width:9%;background:oklch(0.76 0.16 120)"></div>
+              <div style="width:5%;background:oklch(0.66 0.12 195)"></div>
+              <div style="width:4%;background:oklch(0.55 0.02 80)"></div>
+            </div>
+            <p style="font-size:14px;color:#9c9586;line-height:1.45;margin:8px 0 0;max-width:none">You are, statistically, a person who likes to be <span style="font-style:italic;color:oklch(0.58 0.16 300)">unsettled</span> and then <span style="font-style:italic;color:oklch(0.68 0.13 150)">held</span>.</p>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab"><span class="glyph">&#9673;</span>TONIGHT</div>
+          <div class="tab"><span class="glyph">&#9637;</span>MAP</div>
+          <div class="tab" style="position:relative"><div class="fab">&#10022;</div></div>
+          <div class="tab"><span class="glyph">&#9677;</span>DISCOVER</div>
+          <div class="tab active"><span class="glyph">&#9671;</span>YOU</div>
+        </div>
+      </div>
+
+      <div class="phone-note">
+        <h3>Your personal record</h3>
+        <p>The palette bar is <em>your</em> emotional fingerprint across 87 shows. No one else's looks the same.</p>
+        <p>The insight sentence is warm and observational: <em>"You are, statistically, a person who likes to be unsettled and then held."</em> Never prescriptive, never a score.</p>
+        <p><strong>Tickets Booked</strong> is emphasized with a gold border and gradient &mdash; your next night out.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== PROFILE / THE HOUSE ==================== -->
+<section>
+  <div class="wrap">
+    <h2>Screen 6</h2>
+    <h3>You &mdash; The House</h3>
+    <p>Progression without gamification. You move from the back of the house toward the stage &mdash; <em>Standing Room</em> to <em>Company</em>. It's theater's own vocabulary, and it says what AoA wants to say: <strong>you are getting closer to the work.</strong></p>
+
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="status-bar"><span>7:38</span><span style="letter-spacing:.1em">&#9602;&#9604;&#9606; LTE &#9646;</span></div>
+
+        <div class="scroll-area">
+          <!-- profile header on gold gradient -->
+          <div style="background:linear-gradient(180deg, oklch(0.16 0.04 55), #0c0a05);padding:14px 20px 18px;border-bottom:1px solid #2b2720">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+              <div style="width:54px;height:54px;border-radius:50%;background:oklch(0.45 0.10 55);display:flex;align-items:center;justify-content:center;font-family:'Newsreader',serif;font-style:italic;font-size:22px;color:oklch(0.80 0.14 55)">D</div>
+              <div>
+                <div style="font-style:italic;font-size:23px">Deric</div>
+                <div style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.08em;color:#625b4c">CHICAGO &middot; SINCE MARCH 2026</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+              <div><span class="label">YOUR SEAT</span></div>
+              <span style="font-family:'Courier Prime',monospace;font-size:9.5px;color:#4f4a3e">4 OF 7</span>
+            </div>
+            <div style="font-style:italic;font-size:20px;color:oklch(0.84 0.13 55);margin-bottom:12px">Front Row</div>
+
+            <!-- seating chart -->
+            <div class="seat-chart">
+              <div style="font-family:'Courier Prime',monospace;font-size:8.5px;letter-spacing:0.3em;color:#4f4a3e">STAGE</div>
+              <div style="width:180px;height:2px;background:oklch(0.42 0.09 55);margin-bottom:8px"></div>
+              <div class="seat-row">
+                <div class="seat" style="background:oklch(0.55 0.11 55)"></div><div class="seat" style="background:oklch(0.55 0.11 55)"></div><div class="seat" style="background:oklch(0.55 0.11 55)"></div><div class="seat" style="background:oklch(0.55 0.11 55)"></div><div class="seat" style="background:oklch(0.55 0.11 55)"></div><div class="seat" style="background:oklch(0.55 0.11 55)"></div><div class="seat" style="background:oklch(0.55 0.11 55)"></div><div class="seat" style="background:oklch(0.55 0.11 55)"></div>
+              </div>
+              <div class="seat-row">
+                <div class="seat" style="background:oklch(0.45 0.09 55)"></div><div class="seat" style="background:oklch(0.45 0.09 55)"></div><div class="seat" style="background:oklch(0.45 0.09 55)"></div><div class="seat lit"></div><div class="seat" style="background:oklch(0.45 0.09 55)"></div><div class="seat" style="background:oklch(0.45 0.09 55)"></div><div class="seat" style="background:oklch(0.45 0.09 55)"></div><div class="seat" style="background:oklch(0.45 0.09 55)"></div>
+              </div>
+              <div class="seat-row">
+                <div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div>
+              </div>
+              <div class="seat-row">
+                <div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div><div class="seat" style="background:#2b2720"></div>
+              </div>
+              <div style="font-family:'Courier Prime',monospace;font-size:8.5px;letter-spacing:0.2em;color:#4f4a3e;margin-top:6px">STANDING ROOM</div>
+            </div>
+            <p style="font-size:14.5px;color:#9c9586;line-height:1.45;margin:0;max-width:none">Five more reviews and you're in the <span style="font-style:italic;color:#ebe5d6">Green Room</span> &mdash; which unlocks public curated lists and invitations.</p>
+          </div>
+
+          <!-- stat strip -->
+          <div style="display:flex;border-bottom:1px solid #2b2720">
+            <div style="flex:1;padding:14px 0;text-align:center;border-right:1px solid #2b2720">
+              <div style="font-style:italic;font-size:24px">87</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#625b4c">SHOWS</div>
+            </div>
+            <div style="flex:1;padding:14px 0;text-align:center;border-right:1px solid #2b2720">
+              <div style="font-style:italic;font-size:24px">24</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#625b4c">VENUES</div>
+            </div>
+            <div style="flex:1;padding:14px 0;text-align:center;border-right:1px solid #2b2720">
+              <div style="font-style:italic;font-size:24px">31</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#625b4c">WROTE</div>
+            </div>
+            <div style="flex:1;padding:14px 0;text-align:center">
+              <div style="font-style:italic;font-size:24px;color:oklch(0.68 0.13 150)">4</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#625b4c">USHERED</div>
+            </div>
+          </div>
+
+          <!-- house chips -->
+          <div style="padding:16px 20px">
+            <div class="label" style="margin-bottom:10px">THE HOUSE</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <span class="chip done">STANDING ROOM</span>
+              <span class="chip done">BALCONY</span>
+              <span class="chip done">MEZZANINE</span>
+              <span class="chip done">ORCHESTRA</span>
+              <span class="chip current">FRONT ROW</span>
+              <span class="chip future">GREEN ROOM</span>
+              <span class="chip future">COMPANY</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab"><span class="glyph">&#9673;</span>TONIGHT</div>
+          <div class="tab"><span class="glyph">&#9637;</span>MAP</div>
+          <div class="tab" style="position:relative"><div class="fab">&#10022;</div></div>
+          <div class="tab"><span class="glyph">&#9677;</span>DISCOVER</div>
+          <div class="tab active"><span class="glyph">&#9671;</span>YOU</div>
+        </div>
+      </div>
+
+      <div class="phone-note">
+        <h3>Getting closer to the work</h3>
+        <p>Seven ranks. All free. <strong>Ushering counts double</strong> &mdash; it's the cheapest door into the scene and it puts a newcomer inside a building with the company.</p>
+        <p>The seating chart is a literal visualization: your lit seat moves toward the stage as you advance. The next rank is always phrased as an <em>invitation</em>, never a requirement.</p>
+
+        <div style="margin-top:20px">
+          <div class="label" style="margin-bottom:10px">THE SEVEN RANKS</div>
+          <div class="timeline">
+            <div class="entry"><div class="label" style="color:#4f4a3e">STANDING ROOM</div><div style="font-size:14px;color:#625b4c">Sign up, finish onboarding</div></div>
+            <div class="entry"><div class="label" style="color:#4f4a3e">BALCONY</div><div style="font-size:14px;color:#625b4c">Log 1 show with feelings</div></div>
+            <div class="entry"><div class="label" style="color:#4f4a3e">MEZZANINE</div><div style="font-size:14px;color:#625b4c">3 shows across 2+ venues</div></div>
+            <div class="entry"><div class="label" style="color:#4f4a3e">ORCHESTRA</div><div style="font-size:14px;color:#625b4c">6 shows, 3+ venues, 3 reflections</div></div>
+            <div class="entry now"><div class="label" style="color:oklch(0.80 0.14 55)">FRONT ROW</div><div style="font-size:14px;color:#9c9586">12 shows in one season, 2+ room kinds, 1 opening or 1 usher shift</div></div>
+            <div class="entry"><div class="label">GREEN ROOM</div><div style="font-size:14px;color:#625b4c">5+ reviews, ushered twice, 2 friends who logged</div></div>
+            <div class="entry"><div class="label">COMPANY</div><div style="font-size:14px;color:#625b4c">25+ shows over 2+ seasons, 8+ venues, sustained contribution</div></div>
+          </div>
+        </div>
+
+        <div class="insight" style="margin-top:12px">
+          <p style="font-size:14px"><strong>Non-negotiable:</strong> No criterion costs money. No leaderboards. No comparison. No streaks. No decay. Ranks never go down. Social criteria don't start until rank 5.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== THE PLAY PAGE ==================== -->
+<section>
+  <div class="wrap">
+    <h2>Screen 7</h2>
+    <h3>The Play Page</h3>
+    <p>Every play has its own page. <em>Hamlet</em> the work, separate from <em>Hamlet at Court Theatre 2024</em> the production. See every Chicago staging, who carried it, and what the audiences felt &mdash; across all productions.</p>
+
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="status-bar"><span>7:38</span><span style="letter-spacing:.1em">&#9602;&#9604;&#9606; LTE &#9646;</span></div>
+        <div style="padding:8px 20px;border-bottom:1px solid #2b2720;display:flex;align-items:center;gap:12px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#ebe5d6">&larr;</span>
+          <span class="label">THE PLAY</span>
+        </div>
+
+        <div class="scroll-area" style="padding:20px">
+          <div style="font-style:italic;font-size:28px;line-height:1.08;margin-bottom:6px">A Doll's House</div>
+          <div style="font-size:16px;color:#9c9586;margin-bottom:4px">by <span style="font-style:italic;color:#ebe5d6">Henrik Ibsen</span> &middot; 1879</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:9px;color:#4f4a3e;letter-spacing:0.06em;margin-bottom:16px">No awards on record</div>
+
+          <p style="font-size:15px;color:#9c9586;line-height:1.45;margin-bottom:20px;max-width:none">Nora Helmer discovers that her comfortable marriage is built on secrets and lies, and must choose between domestic obligation and personal freedom.</p>
+
+          <button style="width:100%;height:46px;font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#0c0a05;background:oklch(0.80 0.14 55);border:none;border-radius:3px;cursor:pointer;margin-bottom:24px">Want to see this play</button>
+
+          <!-- aggregate spectrum -->
+          <div class="label" style="margin-bottom:6px">EVERY ROOM, EVERY PRODUCTION</div>
+          <div class="spectrum" style="height:11px;margin-bottom:6px">
+            <div style="width:28%;background:oklch(0.66 0.12 195)"></div>
+            <div style="width:22%;background:oklch(0.68 0.13 150)"></div>
+            <div style="width:20%;background:oklch(0.58 0.16 300)"></div>
+            <div style="width:15%;background:oklch(0.62 0.19 18)"></div>
+            <div style="width:15%;background:oklch(0.82 0.15 90)"></div>
+          </div>
+          <div style="font-size:14px;color:#9c9586;line-height:1.4;margin-bottom:24px">Across all productions, audiences most often leave feeling <span style="font-style:italic;color:oklch(0.66 0.12 195)">seen</span> and <span style="font-style:italic;color:oklch(0.68 0.13 150)">held</span>.</div>
+
+          <!-- productions timeline -->
+          <div class="label" style="margin-bottom:12px">IN CHICAGO</div>
+
+          <div style="border-bottom:1px dotted #2b2720;padding-bottom:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline">
+            <div>
+              <div style="font-style:italic;font-size:17px;margin-bottom:2px">Writers Theatre</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c">DIR. ROBIN WITT &middot; GLENCOE</div>
+            </div>
+            <div style="font-family:'Courier Prime',monospace;font-size:10px;color:oklch(0.80 0.14 55)">2027</div>
+          </div>
+
+          <div style="border-bottom:1px dotted #2b2720;padding-bottom:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline">
+            <div>
+              <div style="font-style:italic;font-size:17px;margin-bottom:2px">Court Theatre</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c">DIR. CHARLES NEWELL</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c">2019</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:9px;color:#4f4a3e;margin-top:2px">YOU SAW THIS</div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <div>
+              <div style="font-style:italic;font-size:17px;margin-bottom:2px">Steppenwolf</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c">DIR. ANNA D. SHAPIRO</div>
+            </div>
+            <div style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c">2014</div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab"><span class="glyph">&#9673;</span>TONIGHT</div>
+          <div class="tab"><span class="glyph">&#9637;</span>MAP</div>
+          <div class="tab" style="position:relative"><div class="fab">&#10022;</div></div>
+          <div class="tab active"><span class="glyph">&#9677;</span>DISCOVER</div>
+          <div class="tab"><span class="glyph">&#9671;</span>YOU</div>
+        </div>
+      </div>
+
+      <div class="phone-note">
+        <h3>The work, above any one staging</h3>
+        <p><strong>"Want to see this play"</strong> &mdash; the Goodreads "Want to Read" button, but for plays. Our AI scraper monitors Chicago theater schedules weekly. When a venue announces this play, every user who wants it gets notified.</p>
+        <p>The aggregate spectrum shows how audiences felt <em>across all productions</em>. The timeline shows every Chicago staging we've tracked, with <em>"YOU SAW THIS"</em> for productions in your record.</p>
+        <div class="insight" style="margin-top:16px">
+          <p style="font-size:14px">This is the data model that makes AoA different from every competitor. <strong>Letterboxd</strong> treats each film as one entity. <strong>Goodreads</strong> separates work from edition. Theater needs the Goodreads model &mdash; the same play gets staged a hundred different ways.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== HOW IT WORKS ==================== -->
+<section>
+  <div class="wrap">
+    <h2>Under the hood</h2>
+    <h3>How the AI scraper works</h3>
+    <p>A weekly automated job visits 100+ Chicago theater websites, sends the HTML to an AI model, and extracts structured event data: title, dates, prices, cast, playwright. It then fuzzy-matches each event against our plays database.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:32px 0">
+      <div style="padding:16px;border:1px solid #2b2720;border-radius:3px;text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">&#127760;</div>
+        <div class="label" style="margin-bottom:6px">SCRAPE</div>
+        <p style="font-size:13px;color:#625b4c;margin:0">Visit 100+ theater websites weekly</p>
+      </div>
+      <div style="padding:16px;border:1px solid #2b2720;border-radius:3px;text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">&#129302;</div>
+        <div class="label" style="margin-bottom:6px">EXTRACT</div>
+        <p style="font-size:13px;color:#625b4c;margin:0">AI reads HTML, returns structured JSON</p>
+      </div>
+      <div style="padding:16px;border:1px solid #2b2720;border-radius:3px;text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">&#128279;</div>
+        <div class="label" style="margin-bottom:6px">MATCH</div>
+        <p style="font-size:13px;color:#625b4c;margin:0">Fuzzy-match titles to the plays database</p>
+      </div>
+      <div style="padding:16px;border:1px solid #2b2720;border-radius:3px;text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">&#128276;</div>
+        <div class="label" style="margin-bottom:6px">NOTIFY</div>
+        <p style="font-size:13px;color:#625b4c;margin:0">Alert users when a wanted play is announced</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CLOSING ==================== -->
+<section style="text-align:center;padding:120px 0">
+  <div class="wrap">
+    <h2>The vision</h2>
+    <h1 style="max-width:700px;margin:0 auto 24px">Make theater feel as enterable as a movie</h1>
+    <p style="margin:0 auto 24px;text-align:center;max-width:560px">Not by dumbing it down. By building the map, the social layer, and the on-ramp that movies already have and theater doesn't.</p>
+    <p style="margin:0 auto;text-align:center;max-width:560px;color:#625b4c;font-size:15px">A map that shows you what's on. A record that remembers how you felt. A scraper that finds the play your teacher told you about. A community that doesn't care how many shows you've seen &mdash; just that you went.</p>
+
+    <div style="margin-top:48px;display:flex;justify-content:center;gap:24px;flex-wrap:wrap">
+      <div style="padding:12px 20px;border:1px solid #2b2720;border-radius:3px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:24px;color:oklch(0.80 0.14 55)">250+</div>
+        <div class="label">Chicago theaters</div>
+      </div>
+      <div style="padding:12px 20px;border:1px solid #2b2720;border-radius:3px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:24px;color:oklch(0.80 0.14 55)">45</div>
+        <div class="label">Plays seeded today</div>
+      </div>
+      <div style="padding:12px 20px;border:1px solid #2b2720;border-radius:3px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:24px;color:oklch(0.68 0.13 150)">$0</div>
+        <div class="label">Cost to progress</div>
+      </div>
+      <div style="padding:12px 20px;border:1px solid #2b2720;border-radius:3px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:24px;color:#9c9586">0</div>
+        <div class="label">Competitors doing this</div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px;font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.1em;color:#4f4a3e">
+      THE ART OF ART &middot; v0.4.22 &middot; CHICAGO &middot; 2026
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

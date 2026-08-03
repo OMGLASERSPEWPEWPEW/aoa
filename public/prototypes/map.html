@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Art of Art — Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Courier+Prime:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#08070a;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Newsreader',Georgia,serif}
+  .phone{width:390px;height:844px;background:#0c0a05;border:1px solid #2b2720;border-radius:38px;overflow:hidden;display:flex;flex-direction:column;color:#ebe5d6;box-shadow:0 24px 60px -20px rgba(0,0,0,.8);position:relative}
+
+  /* warm night basemap */
+  .leaflet-container{background:#0c0a05}
+  .leaflet-tile-pane{filter:grayscale(1) invert(1) brightness(.62) contrast(1.08) sepia(.55) hue-rotate(-8deg)}
+  .leaflet-control-attribution{background:rgba(12,10,5,.82)!important;color:#4f4a3e!important;font-family:'Courier Prime',monospace;font-size:8.5px}
+  .leaflet-control-attribution a{color:#625b4c!important}
+  .leaflet-bar a{background:#141109;color:#9c9586;border-bottom-color:#2b2720}
+  .leaflet-bar a:hover{background:#1c1811;color:#ebe5d6}
+
+  /* markers */
+  .vm{position:relative;width:34px;height:40px;cursor:pointer}
+  .vm .chip{width:30px;height:30px;border-radius:4px;background:#141109;border:1.5px solid #2b2720;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9c9586;box-shadow:0 3px 8px rgba(0,0,0,.7);transition:transform .12s}
+  .vm .tail{position:absolute;left:12px;top:29px;width:6px;height:6px;background:#141109;border-right:1.5px solid #2b2720;border-bottom:1.5px solid #2b2720;transform:rotate(45deg)}
+  .vm.booked .chip{background:oklch(.80 .14 55);border-color:oklch(.80 .14 55);color:#0c0a05}
+  .vm.booked .tail{background:oklch(.80 .14 55);border-color:oklch(.80 .14 55)}
+  .vm.want .chip{border-color:oklch(.80 .14 55);border-style:dashed;color:oklch(.80 .14 55)}
+  .vm.want .tail{border-color:oklch(.80 .14 55)}
+  .vm.seen .chip{border-color:var(--seen);color:var(--seen)}
+  .vm.seen .tail{border-color:var(--seen)}
+  .vm .live{position:absolute;right:0;top:-2px;width:9px;height:9px;border-radius:50%;background:oklch(.74 .16 145);border:2px solid #0c0a05;animation:lp 1.8s ease-in-out infinite}
+  @keyframes lp{0%,100%{opacity:1}50%{opacity:.45}}
+  .vm.on .chip{transform:scale(1.18);box-shadow:0 0 0 5px rgba(212,164,86,.18),0 4px 12px rgba(0,0,0,.8)}
+  .vm.dim{opacity:.22}
+  .vm .seendot{position:absolute;left:-2px;top:-2px;width:8px;height:8px;border-radius:50%;background:var(--seen);border:2px solid #0c0a05}
+
+  .chiprow::-webkit-scrollbar{display:none}
+  .sheet{position:absolute;left:0;right:0;bottom:79px;background:#0c0a05;border-top:1px solid #2b2720;border-radius:16px 16px 0 0;box-shadow:0 -14px 44px rgba(0,0,0,.75);z-index:1100}
+  .grab{width:38px;height:4px;border-radius:2px;background:#2b2720;margin:9px auto 0}
+  .lbl{font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:.18em;color:#625b4c}
+  .btn-g{height:46px;font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#0c0a05;background:oklch(.80 .14 55);border:none;border-radius:3px;cursor:pointer}
+  .btn-o{height:46px;font-family:'Courier Prime',monospace;font-size:10.5px;letter-spacing:.06em;color:#9c9586;background:none;border:1px solid #2b2720;border-radius:3px;cursor:pointer}
+  .fchip{font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.06em;color:#9c9586;border:1px solid #2b2720;background:rgba(12,10,5,.9);padding:7px 12px;border-radius:15px;white-space:nowrap;cursor:pointer;backdrop-filter:blur(6px)}
+  .fchip.on{color:#0c0a05;background:oklch(.80 .14 55);border-color:oklch(.80 .14 55)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 26px 6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#9c9586;flex:0 0 auto"><span>7:38</span><span style="letter-spacing:.1em">▂▄▆ LTE ▮</span></div>
+
+  <div style="display:flex;align-items:baseline;justify-content:space-between;padding:8px 20px 12px;border-bottom:1px solid #2b2720;flex:0 0 auto">
+    <div style="display:flex;align-items:baseline;gap:8px">
+      <span style="font-family:'Courier Prime',monospace;font-weight:700;font-size:19px">The Art of Art</span>
+      <span style="font-family:'Courier Prime',monospace;font-size:10px;color:#625b4c">· tonight</span>
+    </div>
+    <span style="font-family:'Courier Prime',monospace;font-size:10px;color:oklch(.80 .14 55)" id="count">14 UP</span>
+  </div>
+
+  <div style="position:relative;flex:1;min-height:0">
+    <div id="map" style="position:absolute;inset:0"></div>
+
+    <div class="chiprow" style="position:absolute;left:0;right:0;top:10px;z-index:800;display:flex;gap:6px;padding:0 14px;overflow-x:auto">
+      <span class="fchip on" data-f="tonight">TONIGHT</span>
+      <span class="fchip" data-f="cheap">UNDER $20</span>
+      <span class="fchip" data-f="storefront">STOREFRONT</span>
+      <span class="fchip" data-f="usher">USHER SLOTS</span>
+      <span class="fchip" data-f="new">NEVER BEEN</span>
+    </div>
+
+    <div style="position:absolute;left:14px;bottom:14px;z-index:800;background:rgba(12,10,5,.9);border:1px solid #2b2720;border-radius:3px;padding:9px 11px;backdrop-filter:blur(6px)" id="legend">
+      <div class="lbl" style="margin-bottom:7px">THE KEY</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-family:'Courier Prime',monospace;font-size:9.5px;color:#9c9586">
+        <span style="display:flex;align-items:center;gap:7px"><b style="width:15px;height:15px;border-radius:3px;background:oklch(.80 .14 55);display:inline-flex;align-items:center;justify-content:center;color:#0c0a05;font-size:9px">▣</b> you have tickets</span>
+        <span style="display:flex;align-items:center;gap:7px"><b style="width:15px;height:15px;border-radius:3px;border:1.5px dashed oklch(.80 .14 55);display:inline-block"></b> want to see</span>
+        <span style="display:flex;align-items:center;gap:7px"><b style="width:15px;height:15px;border-radius:3px;border:1.5px solid oklch(.58 .16 300);display:inline-block"></b> been — your colour</span>
+        <span style="display:flex;align-items:center;gap:7px"><b style="width:9px;height:9px;border-radius:50%;background:oklch(.74 .16 145);display:inline-block;margin:0 3px"></b> curtain up tonight</span>
+        <span style="display:flex;align-items:center;gap:7px;color:#625b4c">▣ house · ▨ storefront · ◈ devised</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET -->
+  <div class="sheet" id="sheet">
+    <div style="position:relative"><div class="grab"></div><span style="position:absolute;right:14px;top:6px;font-family:'Courier Prime',monospace;font-size:8px;color:#3f3a31">© OpenStreetMap contributors</span></div>
+
+    <!-- peek row -->
+    <div id="peek" style="padding:12px 20px 14px;display:flex;align-items:center;gap:12px;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <p style="margin:0;font-style:italic;font-size:19px;line-height:1.15" id="peekTitle">14 curtains up within three miles</p>
+        <p style="margin:3px 0 0" class="lbl" id="peekSub">TAP A THEATER · 4 UNDER $20 · 2 PAY-WHAT-YOU-CAN</p>
+      </div>
+      <span style="font-family:'Courier Prime',monospace;font-size:14px;color:#625b4c">↑</span>
+    </div>
+
+    <!-- detail -->
+    <div id="detail" style="display:none;padding:0 0 26px">
+      <div style="display:flex;gap:12px;padding:0 20px 12px">
+        <div style="width:88px;height:66px;border-radius:2px;border:1px solid #2b2720;flex:0 0 auto;background:repeating-linear-gradient(135deg,#141109,#141109 5px,#1a1610 5px,#1a1610 10px);display:flex;align-items:center;justify-content:center;font-family:'Courier Prime',monospace;font-size:8.5px;letter-spacing:.1em;color:#4f4a3e;text-align:center;line-height:1.4">VENUE<br>PHOTO</div>
+        <div style="min-width:0;flex:1">
+          <h2 style="margin:0;font-style:italic;font-weight:400;font-size:22px;line-height:1.1" id="dName">—</h2>
+          <p style="margin:3px 0 0" class="lbl" id="dMeta">—</p>
+          <p style="margin:5px 0 0;font-family:'Courier Prime',monospace;font-size:10px;color:#4f4a3e" id="dYou">—</p>
+        </div>
+      </div>
+
+      <div style="margin:0 20px 12px;border:1px solid #2b2720;border-radius:3px;background:#141109;padding:13px 14px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+          <span style="width:6px;height:6px;border-radius:50%;background:oklch(.74 .16 145)" id="dLiveDot"></span>
+          <span class="lbl" id="dNowLbl">ON STAGE TONIGHT, 7:30</span>
+        </div>
+        <p style="margin:0;font-style:italic;font-size:19px;line-height:1.15" id="dShow">—</p>
+        <p style="margin:3px 0 10px;font-size:14px;color:#9c9586" id="dShowSub">—</p>
+        <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:1px" id="dBar"></div>
+        <p style="margin:7px 0 0;font-family:'Courier Prime',monospace;font-size:10.5px" id="dFelt">—</p>
+      </div>
+
+      <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 20px 13px" id="dTags"></div>
+
+      <div style="display:flex;gap:9px;padding:0 20px 14px">
+        <button class="btn-g" style="flex:1" id="dCta">I'm going</button>
+        <button class="btn-o" style="flex:1">WANT TO SEE</button>
+        <button class="btn-o" style="width:56px">↗</button>
+      </div>
+
+      <div style="border-top:1px dotted #2b2720;margin:0 20px;padding-top:12px">
+        <div class="lbl" style="margin-bottom:8px">ALSO WITHIN A TEN-MINUTE WALK</div>
+        <div id="dNear" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;border-top:1px solid #2b2720;padding:8px 6px 22px;flex:0 0 auto;background:#0c0a05">
+    <div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#625b4c"><span style="font-size:15px">◉</span><span style="font-family:'Courier Prime',monospace;font-size:9px">TONIGHT</span></div>
+    <div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:oklch(.80 .14 55)"><span style="font-size:15px">⌖</span><span style="font-family:'Courier Prime',monospace;font-size:9px">MAP</span></div>
+    <div style="flex:1;height:48px;display:flex;align-items:center;justify-content:center"><span style="width:44px;height:44px;border-radius:50%;background:oklch(.80 .14 55);color:#0c0a05;display:flex;align-items:center;justify-content:center;font-style:italic;font-size:19px">✦</span></div>
+    <div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#625b4c"><span style="font-size:15px">▤</span><span style="font-family:'Courier Prime',monospace;font-size:9px">MY SHOWS</span></div>
+    <div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#625b4c"><span style="font-size:15px">◇</span><span style="font-family:'Courier Prime',monospace;font-size:9px">YOU</span></div>
+  </div>
+</div>
+
+<script>
+const E = {unsettled:'oklch(.58 .16 300)',held:'oklch(.68 .13 150)',gutted:'oklch(.62 .19 18)',delighted:'oklch(.82 .15 90)',buzzing:'oklch(.76 .16 120)',transported:'oklch(.60 .14 255)',cracked:'oklch(.64 .18 350)',bored:'oklch(.55 .02 80)',seen:'oklch(.66 .12 195)',electrified:'oklch(.80 .15 60)'};
+const SIGIL = {house:'▣',storefront:'▨',devised:'◈'};
+
+const V = [
+ {n:'Steppenwolf Theatre',ll:[41.9128,-87.6470],hood:'Lincoln Park',kind:'house',price:'$$$',rel:'seen',seen:E.unsettled,tonight:1,show:'Catch as Catch Can',sub:'Mia Chung · dir. Amy Morton · thru Jul 12',bar:[[31,E.unsettled],[24,E.held],[18,E.gutted],[14,E.bored],[13,E.cracked]],felt:[['Unsettled 31%',E.unsettled],['Held 24%',E.held]],tags:['PAY-WHAT-YOU-CAN TUE','ASL JUL 9','2H NO INTERMISSION'],you:'YOU\'VE BEEN 9 TIMES · LAST: JUL 3',cheap:0,usher:0},
+ {n:'Goodman Theatre',ll:[41.8846,-87.6288],hood:'The Loop',kind:'house',price:'$$',rel:'booked',tonight:1,show:'Iceboy! The Musical',sub:'dir. Kathleen Marshall · thru Jul 26',bar:[[34,E.delighted],[26,E.buzzing],[17,E.transported],[12,E.electrified],[11,E.bored]],felt:[['Delighted 34%',E.delighted],['Buzzing 26%',E.buzzing]],tags:['YOU HAVE ROW H, SEAT 4','HOTTIX $25','TOUCH TOUR JUL 20'],you:'YOU\'VE BEEN 14 TIMES',cheap:1,usher:0},
+ {n:'Lookingglass Theatre',ll:[41.8977,-87.6244],hood:'Streeterville',kind:'devised',price:'$$',rel:'want',tonight:1,show:'Untitled Vampire Play',sub:'Kevin Douglas · world premiere',bar:[[38,E.delighted],[22,E.unsettled],[18,E.buzzing],[12,E.cracked],[10,E.bored]],felt:[['Delighted 38%',E.delighted],['Unsettled 22%',E.unsettled]],tags:['MARA SAW IT TUESDAY','USHER SLOTS OPEN','90 MIN'],you:'NEVER BEEN — GOOD FIRST ONE',cheap:0,usher:1},
+ {n:'Chopin Theatre',ll:[41.9030,-87.6672],hood:'Wicker Park',kind:'storefront',price:'$',rel:'booked',tonight:1,show:'Hair',sub:'Kokandy Productions · non-Equity',bar:[[30,E.buzzing],[28,E.delighted],[16,E.electrified],[14,E.cracked],[12,E.bored]],felt:[['Buzzing 30%',E.buzzing],['Delighted 28%',E.delighted]],tags:['YOU HAVE SAT 7:30','$18','BAR STAYS OPEN AFTER'],you:'YOU\'VE BEEN 3 TIMES',cheap:1,usher:0},
+ {n:'The Neo-Futurists',ll:[41.9689,-87.6690],hood:'Andersonville',kind:'devised',price:'$',rel:'seen',seen:E.buzzing,tonight:1,show:'The Infinite Wrench',sub:'30 plays in 60 minutes · every weekend',bar:[[41,E.buzzing],[23,E.delighted],[15,E.cracked],[11,E.unsettled],[10,E.bored]],felt:[['Buzzing 41%',E.buzzing],['Delighted 23%',E.delighted]],tags:['ROLL OF THE DICE PRICING','NO TWO SHOWS ALIKE','USHER SLOTS OPEN'],you:'YOU\'VE BEEN 6 TIMES · YOUR HOME BASE',cheap:1,usher:1},
+ {n:'Court Theatre',ll:[41.7897,-87.5988],hood:'Hyde Park',kind:'house',price:'$$',rel:'seen',seen:E.gutted,tonight:0,show:'Dark tonight',sub:'Next: The Island · opens Sep 4',bar:[[33,E.gutted],[25,E.held],[17,E.transported],[13,E.unsettled],[12,E.bored]],felt:[['Gutted 33%',E.gutted],['Held 25%',E.held]],tags:['U OF C AFFILIATED','STUDENT RUSH $15'],you:'YOU SAW TOPDOG/UNDERDOG HERE IN 2019',cheap:1,usher:0},
+ {n:'Chicago Shakespeare',ll:[41.8917,-87.6086],hood:'Navy Pier',kind:'house',price:'$$$',rel:'seen',seen:E.transported,tonight:1,show:'Hamlet',sub:'in the Courtyard · thru Aug 16',bar:[[29,E.transported],[24,E.held],[18,E.gutted],[16,E.bored],[13,E.cracked]],felt:[['Transported 29%',E.transported],['Held 24%',E.held]],tags:['YOU USHERED HERE JUL 11','ASL AUG 2','RELAXED PERFORMANCE'],you:'YOU\'VE BEEN 5 TIMES · USHERED ONCE',cheap:0,usher:1},
+ {n:'Victory Gardens',ll:[41.9251,-87.6531],hood:'Lincoln Park',kind:'house',price:'$$',rel:'none',tonight:0,show:'Dark tonight',sub:'Biograph Theater · season announcing soon',bar:[[27,E.held],[24,E.unsettled],[20,E.cracked],[15,E.gutted],[14,E.bored]],felt:[['Held 27%',E.held],['Unsettled 24%',E.unsettled]],tags:['THE OLD BIOGRAPH','ACCESSIBLE ENTRANCE'],you:'NEVER BEEN',cheap:0,usher:0},
+ {n:'Raven Theatre',ll:[41.9930,-87.6690],hood:'Edgewater',kind:'storefront',price:'$',rel:'none',tonight:1,show:'The Luckiest',sub:'Melissa Ross · thru Aug 9',bar:[[34,E.gutted],[26,E.held],[16,E.cracked],[13,E.transported],[11,E.bored]],felt:[['Gutted 34%',E.gutted],['Held 26%',E.held]],tags:['$20 UNDER 30','USHER SLOTS OPEN','75 SEATS'],you:'NEVER BEEN',cheap:1,usher:1},
+ {n:'Steep Theatre',ll:[41.9686,-87.6595],hood:'Edgewater',kind:'storefront',price:'$',rel:'want',tonight:1,show:'Br\u00edd',sub:'Chicago premiere · thru Aug 23',bar:[[36,E.unsettled],[22,E.held],[17,E.gutted],[14,E.cracked],[11,E.bored]],felt:[['Unsettled 36%',E.unsettled],['Held 22%',E.held]],tags:['NEW SPACE','$15 INDUSTRY NIGHT','54 SEATS'],you:'NEVER BEEN — ON YOUR LIST',cheap:1,usher:0},
+ {n:'The Second City',ll:[41.9110,-87.6340],hood:'Old Town',kind:'devised',price:'$$',rel:'seen',seen:E.delighted,tonight:1,show:'Mainstage Revue 113',sub:'improv set follows, free with ticket',bar:[[44,E.delighted],[25,E.buzzing],[12,E.bored],[10,E.electrified],[9,E.cracked]],felt:[['Delighted 44%',E.delighted],['Buzzing 25%',E.buzzing]],tags:['FREE IMPROV SET AFTER','STUDENT $20'],you:'YOU\'VE BEEN 4 TIMES',cheap:1,usher:0},
+ {n:'iO Theater',ll:[41.9107,-87.6493],hood:'Near North',kind:'devised',price:'$',rel:'none',tonight:1,show:'The Harold Night',sub:'long-form improv · Wednesdays',bar:[[39,E.delighted],[27,E.buzzing],[13,E.bored],[11,E.electrified],[10,E.cracked]],felt:[['Delighted 39%',E.delighted],['Buzzing 27%',E.buzzing]],tags:['$12','21+ AFTER 9PM'],you:'NEVER BEEN',cheap:1,usher:0}
+];
+
+const map = L.map('map',{zoomControl:false,attributionControl:false}).setView([41.905,-87.640],12);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(map);
+L.control.zoom({position:'topright'}).addTo(map);
+
+const sheet=document.getElementById('sheet'), peek=document.getElementById('peek'), detail=document.getElementById('detail');
+let active=null, markers=[];
+
+V.forEach((v,i)=>{
+  const cls=['vm',v.rel];
+  const html=`<div class="${cls.join(' ')}" style="--seen:${v.seen||'#2b2720'}">
+    <div class="chip">${SIGIL[v.kind]}</div><div class="tail"></div>
+    ${v.tonight?'<span class="live"></span>':''}
+    ${v.rel==='seen'?'<span class="seendot"></span>':''}
+  </div>`;
+  const m=L.marker(v.ll,{icon:L.divIcon({html,className:'',iconSize:[34,40],iconAnchor:[17,38]})}).addTo(map);
+  markers.push({m,v,i});
+  m.on('click',()=>select(i));
+});
+
+function select(i){
+  const v=V[i];
+  active=i;
+  markers.forEach(o=>o.m.getElement()&&o.m.getElement().firstChild.classList.toggle('on',o.i===i));
+  document.getElementById('dName').textContent=v.n;
+  document.getElementById('dMeta').textContent=`${v.hood.toUpperCase()} · ${v.kind==='house'?'INSTITUTIONAL':v.kind==='storefront'?'STOREFRONT':'DEVISED'} · ${v.price}`;
+  document.getElementById('dYou').textContent=v.you;
+  document.getElementById('dShow').textContent=v.show;
+  document.getElementById('dShowSub').textContent=v.sub;
+  document.getElementById('dNowLbl').textContent=v.tonight?'ON STAGE TONIGHT, 7:30':'DARK TONIGHT';
+  document.getElementById('dLiveDot').style.background=v.tonight?'oklch(.74 .16 145)':'#4f4a3e';
+  document.getElementById('dCta').textContent=v.rel==='booked'?'You\u2019re going ✓':v.tonight?'Get a ticket':'See the calendar';
+  document.getElementById('dBar').innerHTML=v.bar.map(b=>`<span style="flex:${b[0]};background:${b[1]}"></span>`).join('');
+  document.getElementById('dFelt').innerHTML=v.felt.map(f=>`<span style="color:${f[1]};margin-right:12px">${f[0]}</span>`).join('')+'<span style="color:#4f4a3e">the house</span>';
+  document.getElementById('dTags').innerHTML=v.tags.map((t,k)=>`<span style="font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:.1em;padding:3px 8px;border-radius:2px;${k===0?'color:oklch(.80 .14 55);border:1px solid oklch(.42 .09 55);background:oklch(.20 .04 55)':'color:#9c9586;border:1px solid #2b2720'}">${t}</span>`).join('');
+
+  const near=V.map((o,j)=>({o,j,d:Math.hypot(o.ll[0]-v.ll[0],(o.ll[1]-v.ll[1])*.74)})).filter(x=>x.j!==i).sort((a,b)=>a.d-b.d).slice(0,2);
+  document.getElementById('dNear').innerHTML=near.map(x=>`<div style="display:flex;align-items:baseline;gap:9px;cursor:pointer" onclick="window.__sel(${x.j})">
+      <span style="font-family:'Courier Prime',monospace;font-size:10px;color:${x.o.tonight?'oklch(.74 .16 145)':'#4f4a3e'}">${x.o.tonight?'UP':'DARK'}</span>
+      <span style="font-style:italic;font-size:15px">${x.o.show}</span>
+      <span style="font-family:'Courier Prime',monospace;font-size:9.5px;color:#625b4c;margin-left:auto">${x.o.n.toUpperCase()}</span>
+    </div>`).join('');
+
+  peek.style.display='none'; detail.style.display='block';
+  map.panTo(v.ll,{animate:true});
+}
+window.__sel=select;
+
+function collapse(){
+  peek.style.display='flex'; detail.style.display='none';
+  markers.forEach(o=>o.m.getElement()&&o.m.getElement().firstChild.classList.remove('on'));
+  active=null;
+}
+map.on('click',collapse);
+peek.addEventListener('click',()=>select(active??1));
+
+document.querySelectorAll('.fchip').forEach(c=>c.addEventListener('click',()=>{
+  c.classList.toggle('on');
+  const on=[...document.querySelectorAll('.fchip.on')].map(x=>x.dataset.f);
+  let n=0;
+  markers.forEach(o=>{
+    const v=o.v;
+    const ok=on.every(f=>f==='tonight'?v.tonight:f==='cheap'?v.cheap:f==='storefront'?v.kind!=='house':f==='usher'?v.usher:f==='new'?v.rel==='none':true);
+    const el=o.m.getElement(); if(el) el.firstChild.classList.toggle('dim',!ok);
+    if(ok) n++;
+  });
+  document.getElementById('count').textContent=n+' UP';
+  document.getElementById('peekTitle').textContent=n+' theaters match';
+}));
+</script>
+</body>
+</html>
