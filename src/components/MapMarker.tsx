@@ -29,11 +29,9 @@ export function createMarkerElement({
   const el = document.createElement('div')
   el.style.width = '34px'
   el.style.height = '40px'
-  el.style.position = 'relative'
   el.style.cursor = 'pointer'
   el.style.transition = 'opacity 120ms'
   el.style.opacity = dimmed ? '0.22' : '1'
-  el.style.transform = isSelected ? 'scale(1.18)' : 'scale(1)'
 
   const chip = document.createElement('div')
   chip.style.width = '30px'
@@ -72,6 +70,9 @@ export function createMarkerElement({
     chip.textContent = glyph
     chip.style.color = isTonight ? 'oklch(0.74 0.16 145)' : '#9c9586'
   }
+
+  chip.style.transition = 'transform 120ms'
+  chip.style.transform = isSelected ? 'scale(1.18)' : 'scale(1)'
 
   el.appendChild(chip)
 

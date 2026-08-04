@@ -175,9 +175,9 @@ export function MapView() {
   useEffect(() => {
     for (const [id, { el }] of markersRef.current) {
       const selected = selectedVenue?.id === id
-      el.style.transform = selected ? 'scale(1.18)' : 'scale(1)'
       const chip = el.firstElementChild as HTMLElement | null
       if (chip) {
+        chip.style.transform = selected ? 'scale(1.18)' : 'scale(1)'
         chip.style.boxShadow = selected
           ? '0 3px 8px rgba(0,0,0,.7), 0 0 12px oklch(0.80 0.14 55)'
           : '0 3px 8px rgba(0,0,0,.7)'
