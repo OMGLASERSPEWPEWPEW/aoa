@@ -27,6 +27,9 @@ export function createMarkerElement({
   onClick,
 }: Props): HTMLDivElement {
   const el = document.createElement('div')
+  el.style.position = 'absolute'
+  el.style.top = '0'
+  el.style.left = '0'
   el.style.width = '34px'
   el.style.height = '40px'
   el.style.cursor = 'pointer'

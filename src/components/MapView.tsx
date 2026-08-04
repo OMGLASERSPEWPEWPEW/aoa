@@ -159,12 +159,12 @@ export function MapView() {
         onClick: () => {
           markerClickedRef.current = true
           setSelectedVenue(prev => prev?.id === venue.id ? null : venue)
-          map.flyTo({ center: [venue.longitude!, venue.latitude!], zoom: 14, duration: 600 })
+          map.flyTo({ center: [Number(venue.longitude!), Number(venue.latitude!)], zoom: 14, duration: 600 })
         },
       })
 
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([venue.longitude, venue.latitude])
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([Number(venue.longitude), Number(venue.latitude)])
         .addTo(map)
 
       markersRef.current.set(venue.id, { marker, el, venue })
