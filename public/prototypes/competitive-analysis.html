@@ -47,18 +47,46 @@ p strong{color:oklch(0.80 0.14 55);font-weight:400}
 .tab-panel.active{display:block}
 
 /* competitor cards */
-.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:24px 0 48px}
-.comp-card{background:#141109;border:1px solid #2b2720;border-radius:3px;padding:18px 20px;transition:border-color 0.15s}
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin:24px 0 48px}
+.comp-card{background:#141109;border:1px solid #2b2720;border-radius:3px;transition:border-color 0.15s;cursor:pointer}
 .comp-card:hover{border-color:oklch(0.30 0.06 55)}
-.comp-card .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
-.comp-card h4{font-family:'Newsreader',serif;font-style:italic;font-size:18px;color:#ebe5d6;font-weight:400}
-.comp-card .scale-badge{font-family:'JetBrains Mono',monospace;font-size:10px;color:oklch(0.80 0.14 55);white-space:nowrap;padding:2px 7px;border:1px solid oklch(0.30 0.06 55);border-radius:2px;flex-shrink:0;margin-left:8px}
+.comp-card.open{grid-column:1/-1;border-color:oklch(0.30 0.06 55);cursor:default}
+.card-summary{padding:18px 20px}
+.comp-card .card-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.comp-card .favicon{width:20px;height:20px;border-radius:3px;flex-shrink:0;background:#2b2720}
+.comp-card h4{font-family:'Newsreader',serif;font-style:italic;font-size:18px;color:#ebe5d6;font-weight:400;flex:1}
+.comp-card .scale-badge{font-family:'JetBrains Mono',monospace;font-size:10px;color:oklch(0.80 0.14 55);white-space:nowrap;padding:2px 7px;border:1px solid oklch(0.30 0.06 55);border-radius:2px;flex-shrink:0}
+.comp-card .expand-icon{font-family:'JetBrains Mono',monospace;font-size:14px;color:#625b4c;flex-shrink:0;transition:transform 0.2s}
+.comp-card.open .expand-icon{transform:rotate(45deg);color:oklch(0.80 0.14 55)}
 .comp-card .comp-type{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.12em;color:#625b4c;text-transform:uppercase;margin-bottom:8px}
 .comp-card p{font-size:14px;color:#625b4c;line-height:1.45;margin:0 0 8px}
 .comp-card .verdict{font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;color:oklch(0.80 0.14 55)}
 
+.card-detail{display:none;border-top:1px solid #2b2720;padding:20px}
+.comp-card.open .card-detail{display:block}
+.detail-grid{display:grid;grid-template-columns:320px 1fr;gap:24px}
+.screenshot-wrap{flex-shrink:0}
+.screenshot-wrap img{width:100%;border-radius:3px;border:1px solid #2b2720;background:#0c0a05;display:block;min-height:200px;object-fit:cover;object-position:top}
+.site-link{display:inline-block;font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:0.06em;color:oklch(0.80 0.14 55);text-decoration:none;margin-top:8px;padding:4px 0;border-bottom:1px solid oklch(0.30 0.06 55);transition:border-color 0.15s}
+.site-link:hover{border-color:oklch(0.80 0.14 55)}
+.detail-body .meta-row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px}
+.detail-body .dl{display:flex;flex-direction:column;gap:2px}
+.detail-body .dt{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.12em;color:#625b4c;text-transform:uppercase}
+.detail-body .dd{font-size:14px;color:#9c9586}
+.detail-section{margin-top:14px}
+.detail-section ul{list-style:none;padding:0;margin:4px 0 0}
+.detail-section li{font-size:13px;color:#9c9586;line-height:1.5;padding:3px 0;padding-left:14px;position:relative}
+.detail-section li::before{content:'';position:absolute;left:0;top:10px;width:5px;height:5px;border-radius:50%;background:#2b2720}
+.detail-section.steal li::before{background:oklch(0.80 0.14 55)}
+.detail-section li strong{color:#ebe5d6;font-weight:400}
+
 .cat-label{font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:0.14em;color:#9c9586;text-transform:uppercase;margin-top:40px;margin-bottom:4px;padding-bottom:8px;border-bottom:1px solid #1a1610}
 .cat-label:first-child{margin-top:0}
+
+@media(max-width:860px){
+  .detail-grid{grid-template-columns:1fr}
+  .screenshot-wrap img{max-height:240px}
+}
 
 /* insight boxes */
 .insight{background:#141109;border:1px solid #2b2720;border-radius:3px;padding:22px 26px;margin:20px 0}
@@ -167,139 +195,515 @@ p strong{color:oklch(0.80 0.14 55);font-weight:400}
   <section>
     <div class="wrap">
 
+      <p style="font-size:14px;color:#4f4a3e;margin-bottom:32px">Click any card to expand &mdash; see screenshots, website links, features, and what AoA can steal.</p>
+
       <div class="cat-label">Theater Discovery + Ticketing &mdash; 8 products</div>
       <div class="comp-grid">
-        <div class="comp-card">
-          <div class="card-head"><h4>BroadwayWorld</h4><span class="scale-badge">Largest theater site</span></div>
-          <div class="comp-type">News + Database + Community</div>
-          <p>Dominant theater media platform with news, reviews, grosses, forums, and the new "My Shows" tracking feature.</p>
-          <div class="verdict">MISSING: map, AI, progression, newcomer pathway</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=broadwayworld.com&sz=64" alt=""><h4>BroadwayWorld</h4><span class="scale-badge">Largest theater site</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">News + Database + Community</div>
+            <p>Dominant theater media platform with news, reviews, grosses, forums, and the new "My Shows" tracking feature.</p>
+            <div class="verdict">MISSING: map, AI, progression, newcomer pathway</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.broadwayworld.com" loading="lazy" alt="BroadwayWorld screenshot">
+                <a href="https://www.broadwayworld.com" target="_blank" class="site-link" onclick="event.stopPropagation()">broadwayworld.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">2003</span></div>
+                  <div class="dl"><span class="dt">Model</span><span class="dd">Ad-supported media</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Target Audience</div><ul><li>Theater enthusiasts following Broadway news, reviews, and industry gossip</li><li>Regional theater fans &mdash; city-specific pages for markets beyond NYC</li></ul></div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>News articles, interviews, video, reviews, critics' ratings</li><li><strong>My Shows</strong> tracking &mdash; personal show log with ratings, reviews, stats</li><li>Box office grosses and analytics by season</li><li>Active forums with Broadway/touring/awards discussion</li><li>Regional coverage across many US cities</li></ul></div>
+                <div class="detail-section"><div class="dt">Weaknesses</div><ul><li>Information overload &mdash; dense, cluttered, overwhelming for casual users</li><li>Not beginner-friendly &mdash; assumes deep theater knowledge</li><li>Ad-heavy &mdash; advertising overwhelms reading experience</li><li>My Shows tracking is new/underdeveloped</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>My Shows validates demand</strong> &mdash; the largest theater site adding personal tracking proves the market</li><li>Regional coverage model &mdash; city-specific pages for local theater ecosystems</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>TodayTix</h4><span class="scale-badge">10M+ downloads</span></div>
-          <div class="comp-type">Rush / Lottery Tickets</div>
-          <p>Mobile-first theater ticketing focused on discounted day-of inventory. Strong scarcity mechanics create habitual morning check-ins.</p>
-          <div class="verdict">MISSING: social, tracking, map, education, progression</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=todaytix.com&sz=64" alt=""><h4>TodayTix</h4><span class="scale-badge">10M+ downloads</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Rush / Lottery Tickets</div>
+            <p>Mobile-first theater ticketing focused on discounted day-of inventory. Strong scarcity mechanics create habitual morning check-ins.</p>
+            <div class="verdict">MISSING: social, tracking, map, education, progression</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.todaytix.com" loading="lazy" alt="TodayTix screenshot">
+                <a href="https://www.todaytix.com" target="_blank" class="site-link" onclick="event.stopPropagation()">todaytix.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">iOS, Android, Web</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">2013</span></div>
+                  <div class="dl"><span class="dt">Status</span><span class="dd">Acquired by MARI (Oct 2025)</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Target Audience</div><ul><li>Deal-seeking theatergoers who want Broadway/West End tickets at reduced prices</li><li>Last-minute planners who decide same-day</li></ul></div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li><strong>Rush tickets</strong> &mdash; deeply discounted same-day seats, first-come first-served</li><li><strong>Lottery tickets</strong> &mdash; random draw, short claim window</li><li><strong>TodayTix Rewards</strong> &mdash; Bronze &rarr; Silver &rarr; Gold loyalty tiers</li><li>Watchlist with deal alerts</li><li>Genre/mood filters, SeatPlan integration</li><li>Coverage: NYC, London, Chicago, LA, DC, Bay Area, Australia</li></ul></div>
+                <div class="detail-section"><div class="dt">Weaknesses</div><ul><li><strong>1.9/5 customer service rating</strong> &mdash; unreachable support, refund disputes</li><li>Scarcity frustration &mdash; most users lose Rush/Lottery</li><li>No social features &mdash; purely transactional</li><li>No personalization &mdash; doesn't learn your taste</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Daily engagement mechanic</strong> &mdash; morning Rush check-ins create habit. AoA needs a "daily recommendation" hook</li><li>Rewards progression tiers mirror AoA's belt system</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>ChicagoPlays</h4><span class="scale-badge">200+ theaters</span></div>
-          <div class="comp-type">Official Chicago Directory</div>
-          <p>League of Chicago Theatres' show finder. Canonical local source with the only accessibility calendar in the landscape.</p>
-          <div class="verdict">MISSING: map, social, tracking, AI, personalization</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=chicagoplays.com&sz=64" alt=""><h4>ChicagoPlays</h4><span class="scale-badge">200+ theaters</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Official Chicago Directory</div>
+            <p>League of Chicago Theatres' show finder. Canonical local source with the only accessibility calendar in the landscape.</p>
+            <div class="verdict">MISSING: map, social, tracking, AI, personalization</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://chicagoplays.com" loading="lazy" alt="ChicagoPlays screenshot">
+                <a href="https://chicagoplays.com" target="_blank" class="site-link" onclick="event.stopPropagation()">chicagoplays.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web (responsive)</span></div>
+                  <div class="dl"><span class="dt">Operator</span><span class="dd">League of Chicago Theatres</span></div>
+                  <div class="dl"><span class="dt">Model</span><span class="dd">Nonprofit member service</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>Show search by date, neighborhood, genre</li><li><strong>Accessibility calendar</strong> &mdash; ASL, audio-described, sensory-friendly, open-captioned</li><li>1,000+ productions indexed &mdash; theaters self-manage listings</li><li>Member theater pages with current/upcoming shows</li></ul></div>
+                <div class="detail-section"><div class="dt">Weaknesses</div><ul><li>Just a directory &mdash; no curation, no recommendations</li><li>No map &mdash; neighborhoods are text filters, not visual</li><li>Purchase happens elsewhere &mdash; links out to individual theater ticketing</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Accessibility calendar</strong> &mdash; AoA should surface accessible performances prominently</li><li><strong>Potential data partnership</strong> &mdash; ChicagoPlays is the canonical listing source</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Playbill</h4><span class="scale-badge">140+ year brand</span></div>
-          <div class="comp-type">Theater Media + Programs</div>
-          <p>Iconic theater media brand. Physical programs at every Broadway show. Passport app adds light show tracking.</p>
-          <div class="verdict">MISSING: map, AI, social, progression, discovery</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=playbill.com&sz=64" alt=""><h4>Playbill</h4><span class="scale-badge">140+ year brand</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Theater Media + Programs</div>
+            <p>Iconic theater media brand. Physical programs at every Broadway show. Passport app adds light show tracking.</p>
+            <div class="verdict">MISSING: map, AI, social, progression, discovery</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.playbill.com" loading="lazy" alt="Playbill screenshot">
+                <a href="https://www.playbill.com" target="_blank" class="site-link" onclick="event.stopPropagation()">playbill.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web, iOS (Passport)</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">1884</span></div>
+                  <div class="dl"><span class="dt">Model</span><span class="dd">Ads, sponsorship</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>Theater news, show calendars, box office grosses</li><li>Playbill Passport &mdash; in-theater companion, show memory scrapbook</li><li>Jobs/casting listings for industry</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>"I was there" keepsake</strong> &mdash; Passport captures the memory feeling. AoA show entries should feel like mementos</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>HotTix</h4><span class="scale-badge">150+ theaters</span></div>
-          <div class="comp-type">Half-Price Chicago Tickets</div>
-          <p>40+ year Chicago institution offering half-price same-week tickets. Nonprofit League service. No physical locations anymore.</p>
-          <div class="verdict">MISSING: discovery, social, tracking, map, everything beyond deals</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=hottix.org&sz=64" alt=""><h4>HotTix</h4><span class="scale-badge">150+ theaters</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Half-Price Chicago Tickets</div>
+            <p>40+ year Chicago institution offering half-price same-week tickets. Nonprofit League service. No physical locations anymore.</p>
+            <div class="verdict">MISSING: discovery, social, tracking, map, everything beyond deals</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.hottix.org" loading="lazy" alt="HotTix screenshot">
+                <a href="https://www.hottix.org" target="_blank" class="site-link" onclick="event.stopPropagation()">hottix.org &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web, Phone</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">~1984 (40+ years)</span></div>
+                  <div class="dl"><span class="dt">Model</span><span class="dd">5% commission, nonprofit</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>Half-price same-week theater tickets across Chicago</li><li>Multi-genre: theater, dance, comedy, improv, sketch</li><li>Continuously updated inventory during business hours</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Deal integration</strong> &mdash; AoA could surface HotTix availability within mentor recommendations</li><li>Multi-genre coverage &mdash; AoA should include improv, comedy, dance</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>TheaterMania</h4></div>
-          <div class="comp-type">Listings + Reviews + Deals</div>
-          <p>Theater listings and editorial with discount deals. Practical planning tool, less news-focused than BroadwayWorld.</p>
-          <div class="verdict">MISSING: map, social, tracking, AI, differentiation</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=theatermania.com&sz=64" alt=""><h4>TheaterMania</h4><span class="expand-icon">+</span></div>
+            <div class="comp-type">Listings + Reviews + Deals</div>
+            <p>Theater listings and editorial with discount deals. Practical planning tool, less news-focused than BroadwayWorld.</p>
+            <div class="verdict">MISSING: map, social, tracking, AI, differentiation</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.theatermania.com" loading="lazy" alt="TheaterMania screenshot">
+                <a href="https://www.theatermania.com" target="_blank" class="site-link" onclick="event.stopPropagation()">theatermania.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">1999</span></div>
+                  <div class="dl"><span class="dt">Model</span><span class="dd">Ads, ticket referrals</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>Show listings, reviews, discount deals</li><li>Practical planning: reviews alongside deals</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li>Show reviews at the point of discovery, not in a separate section</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Show-Score</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">Likely defunct</span></div>
-          <div class="comp-type">Ratings Aggregator</div>
-          <p>Consolidated critic + audience scores into one number. Rotten Tomatoes for theater. Appears inactive.</p>
-          <div class="verdict">MISSING: everything &mdash; single-feature products don't survive</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=show-score.com&sz=64" alt=""><h4>Show-Score</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">Likely defunct</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Ratings Aggregator</div>
+            <p>Consolidated critic + audience scores into one number. Rotten Tomatoes for theater. Appears inactive.</p>
+            <div class="verdict">LESSON: single-feature products don't survive</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap"><a href="https://www.show-score.com" target="_blank" class="site-link" onclick="event.stopPropagation()">show-score.com &rarr;</a></div>
+              <div class="detail-body">
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Aggregate community score</strong> &mdash; a single "87% loved this" number on show cards helps quick decisions</li></ul></div>
+                <div class="detail-section"><div class="dt">Lesson</div><ul><li>Single-metric products are fragile. AoA must be a platform, not a feature</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Theater.Guide</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">Low traction</span></div>
-          <div class="comp-type">National Directory</div>
-          <p>National US theater discovery directory. Broad but shallow &mdash; jack of all cities, master of none.</p>
-          <div class="verdict">MISSING: depth, curation, social, AI, everything that creates loyalty</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=theater.guide&sz=64" alt=""><h4>Theater.Guide</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">Low traction</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">National Directory</div>
+            <p>National US theater discovery directory. Broad but shallow &mdash; jack of all cities, master of none.</p>
+            <div class="verdict">LESSON: breadth without depth creates nothing worth returning to</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://theater.guide" loading="lazy" alt="Theater.Guide screenshot">
+                <a href="https://theater.guide" target="_blank" class="site-link" onclick="event.stopPropagation()">theater.guide &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="detail-section steal"><div class="dt">Lesson</div><ul><li>AoA should dominate Chicago before expanding. A thin national layer is worse than a deep local one</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="cat-label">Tracking + Social &mdash; 5 products</div>
       <div class="comp-grid">
-        <div class="comp-card">
-          <div class="card-head"><h4>Goodreads</h4><span class="scale-badge">150M users</span></div>
-          <div class="comp-type">Book Tracking (Cautionary Tale)</div>
-          <p>Dominant book-tracking social network. Massive scale, zero innovation since Amazon acquisition (2013). The definitive example of what not to become.</p>
-          <div class="verdict">LESSON: never stop iterating. No half-stars, no dark mode, no AI, in 2026</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=goodreads.com&sz=64" alt=""><h4>Goodreads</h4><span class="scale-badge">150M users</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Book Tracking (Cautionary Tale)</div>
+            <p>Dominant book-tracking social network. Massive scale, zero innovation since Amazon acquisition (2013). The definitive example of what not to become.</p>
+            <div class="verdict">LESSON: never stop iterating. No half-stars, no dark mode, no AI, in 2026</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.goodreads.com" loading="lazy" alt="Goodreads screenshot">
+                <a href="https://www.goodreads.com" target="_blank" class="site-link" onclick="event.stopPropagation()">goodreads.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web, iOS, Android</span></div>
+                  <div class="dl"><span class="dt">Acquired</span><span class="dd">Amazon, 2013</span></div>
+                  <div class="dl"><span class="dt">Scale</span><span class="dd">90-150M users, 3B+ ratings</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>"Read / Currently Reading / Want to Read" shelves + custom tags</li><li>Ratings, reviews, reading challenges, groups, lists</li><li>Social feed, friend activity, author tools</li></ul></div>
+                <div class="detail-section"><div class="dt">Weaknesses (The Cautionary Tale)</div><ul><li><strong>Stagnant since 2013</strong> &mdash; Amazon stopped investing</li><li>No half-star ratings, no dark mode, no AI &mdash; in 2026</li><li>Outdated, cluttered UI &mdash; navigation is confusing</li><li>Review bombing, weak moderation, pre-publication abuse</li><li>Weak recommendations despite billions of data points</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Annual challenge</strong> &mdash; reading challenges are their stickiest feature. AoA should add "2026 Theater Challenge"</li><li><strong>Year in Review</strong> &mdash; "Your Year in Theater" shareable recap</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Bandsintown</h4><span class="scale-badge">100M fans</span></div>
-          <div class="comp-type">Concert Tracking + Discovery</div>
-          <p>Follow artists, get alerts, discover nearby shows, buy tickets. Recently added AI assistant. 700K artists, 65K venues.</p>
-          <div class="verdict">ANALOG: right model (follow &rarr; alert &rarr; discover), wrong medium</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=bandsintown.com&sz=64" alt=""><h4>Bandsintown</h4><span class="scale-badge">100M fans</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Concert Tracking + Discovery</div>
+            <p>Follow artists, get alerts, discover nearby shows, buy tickets. Recently added AI assistant. 700K artists, 65K venues.</p>
+            <div class="verdict">ANALOG: right model (follow &rarr; alert &rarr; discover), wrong medium</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.bandsintown.com" loading="lazy" alt="Bandsintown screenshot">
+                <a href="https://www.bandsintown.com" target="_blank" class="site-link" onclick="event.stopPropagation()">bandsintown.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web, iOS, Android + Spotify, Apple Music</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">2007</span></div>
+                  <div class="dl"><span class="dt">Scale</span><span class="dd">100M fans, 700K artists, 40M MAU</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li><strong>Follow-to-alert loop</strong> &mdash; follow artists, get notified on new shows</li><li>Location-first discovery &mdash; nearby shows by taste + geography</li><li>AI assistant for "find me something tonight"</li><li>Distribution into Spotify, Apple Music, YouTube, Google, Shazam</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Follow-to-alert loop</strong> &mdash; follow theater companies, get notified when they announce shows. The killer engagement mechanic</li><li>Location + taste + time &mdash; the three-signal recommendation model</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Letterboxd</h4><span class="scale-badge">30M users</span></div>
-          <div class="comp-type">Film Tracking + Social (Gold Standard)</div>
-          <p>The gold standard for media tracking. Log, rate, review, list, follow. Proves the model works at scale. AoA's primary UX inspiration.</p>
-          <div class="verdict">ANALOG: perfect model, needs map + AI + progression + live events</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=letterboxd.com&sz=64" alt=""><h4>Letterboxd</h4><span class="scale-badge">30M users</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Film Tracking + Social (Gold Standard)</div>
+            <p>The gold standard for media tracking. Log, rate, review, list, follow. Proves the model works at scale. AoA's primary UX inspiration.</p>
+            <div class="verdict">ANALOG: perfect model, needs map + AI + progression + live events</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://letterboxd.com" loading="lazy" alt="Letterboxd screenshot">
+                <a href="https://letterboxd.com" target="_blank" class="site-link" onclick="event.stopPropagation()">letterboxd.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web, iOS, Android, Apple TV</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">2011 (Auckland, NZ)</span></div>
+                  <div class="dl"><span class="dt">Pricing</span><span class="dd">Free / Pro $19/yr / Patron $49/yr</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>Film logging with diary, half-star ratings, reviews</li><li>Lists &mdash; user-created curated collections (go viral on social media)</li><li>Social following, activity feed, profile as taste identity</li><li>Stats (hours watched, favorite directors, rating distributions)</li><li>Video Store &mdash; transactional rentals (launched Dec 2025)</li></ul></div>
+                <div class="detail-section"><div class="dt">Growth</div><ul><li>3M users (2020) &rarr; 14M (2024) &rarr; <strong>30M+ (2026)</strong></li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Diary as identity</strong> &mdash; tracking becomes self-expression</li><li><strong>Lists as viral content</strong> &mdash; "Best storefront shows 2026" lists shared on social</li><li><strong>Free tier generosity</strong> &mdash; don't cripple the free experience</li><li><strong>Half-star ratings</strong> &mdash; more expressive than 1-5 integers</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Theatregoer</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">~7 ratings</span></div>
-          <div class="comp-type">Theater Tracker (UK, iOS Only)</div>
-          <p>Closest direct competitor. Personal theater log with ratings, notes, widgets, ticket attachment. 4.9/5 rating but tiny user base.</p>
-          <div class="verdict">MISSING: map, AI, social feed, progression, discovery, cross-platform</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=apps.apple.com&sz=64" alt=""><h4>Theatregoer</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">~7 ratings</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Theater Tracker (UK, iOS Only)</div>
+            <p>Closest direct competitor. Personal theater log with ratings, notes, widgets, ticket attachment. 4.9/5 rating but tiny user base.</p>
+            <div class="verdict">MISSING: map, AI, social feed, progression, discovery, cross-platform</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <a href="https://apps.apple.com/us/app/theatregoer-theatre-tracker/id1540656306" target="_blank" class="site-link" onclick="event.stopPropagation()">App Store listing &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">iOS only (iPhone, iPad, Mac, Vision Pro)</span></div>
+                  <div class="dl"><span class="dt">Pricing</span><span class="dd">Free</span></div>
+                  <div class="dl"><span class="dt">Rating</span><span class="dd">4.9/5 (7 ratings)</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>Show tracking with time, theater, seats, notes, ratings</li><li>Ticket attachment from email</li><li><strong>"On This Day" widget</strong> &mdash; nostalgia memories on home screen</li><li>Stats, search, wishlist, iCloud sync, spreadsheet import</li></ul></div>
+                <div class="detail-section"><div class="dt">Weaknesses</div><ul><li>Apple-only &mdash; no Android, no web</li><li>No discovery &mdash; purely a log</li><li>No business model &mdash; sustainability questionable</li><li>UK-focused, tiny user base</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>"On This Day" memories</strong> &mdash; "1 year ago you saw A Doll's House at Steppenwolf"</li><li>Spreadsheet import for early adopters with existing logs</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Seen It</h4></div>
-          <div class="comp-type">Movie/TV Tracker</div>
-          <p>Simple movie/TV tracking. Seen / want to see / rate. Competes with Letterboxd but smaller. Screen media only.</p>
-          <div class="verdict">MISSING: live events, map, social, education &mdash; wrong medium</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=seenit.co&sz=64" alt=""><h4>Seen It</h4><span class="expand-icon">+</span></div>
+            <div class="comp-type">Movie/TV Tracker</div>
+            <p>Simple movie/TV tracking. Seen / want to see / rate. Competes with Letterboxd but smaller. Screen media only.</p>
+            <div class="verdict">DIFFERENT: wrong medium &mdash; no live events, no venues</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap"></div>
+              <div class="detail-body">
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Simplicity</strong> &mdash; the core seen/want-to-see/rate mechanic should be dead simple. Never more than 2 taps</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="cat-label">Art / Culture Discovery &mdash; 4 products</div>
       <div class="comp-grid">
-        <div class="comp-card">
-          <div class="card-head"><h4>Google Arts &amp; Culture</h4><span class="scale-badge">Google scale</span></div>
-          <div class="comp-type">Virtual Museum Exploration</div>
-          <p>Massive digital cultural platform. Virtual tours, AI-powered discovery, curated collections. But entirely virtual &mdash; no live events, no local discovery.</p>
-          <div class="verdict">DIFFERENT: digital/virtual vs. AoA's physical/local/live</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=artsandculture.google.com&sz=64" alt=""><h4>Google Arts &amp; Culture</h4><span class="scale-badge">Google scale</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Virtual Museum Exploration</div>
+            <p>Massive digital cultural platform. Virtual tours, AI-powered discovery, curated collections. But entirely virtual &mdash; no live events, no local discovery.</p>
+            <div class="verdict">DIFFERENT: digital/virtual vs. AoA's physical/local/live</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://artsandculture.google.com" loading="lazy" alt="Google Arts & Culture screenshot">
+                <a href="https://artsandculture.google.com" target="_blank" class="site-link" onclick="event.stopPropagation()">artsandculture.google.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>AI-powered cultural discovery</strong> &mdash; proves AI can guide cultural exploration. AoA's mentor is the live-theater equivalent</li><li>Educational storytelling format for learning content</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Street Art Cities</h4><span class="scale-badge">65K artworks</span></div>
-          <div class="comp-type">Map-Based Street Art (Benchmark)</div>
-          <p>Best-in-class map cultural discovery at scale. 1,800+ cities, walking routes, community submissions. The benchmark for AoA's map UX.</p>
-          <div class="verdict">BENCHMARK: map UX, routes, seen/unseen filtering, clustering</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=streetartcities.com&sz=64" alt=""><h4>Street Art Cities</h4><span class="scale-badge">65K artworks</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Map-Based Street Art (Benchmark)</div>
+            <p>Best-in-class map cultural discovery at scale. 1,800+ cities, walking routes, community submissions. The benchmark for AoA's map UX.</p>
+            <div class="verdict">BENCHMARK: map UX, routes, seen/unseen filtering, clustering</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://streetartcities.com" loading="lazy" alt="Street Art Cities screenshot">
+                <a href="https://streetartcities.com" target="_blank" class="site-link" onclick="event.stopPropagation()">streetartcities.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web, iOS, Android</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">2016 (Netherlands)</span></div>
+                  <div class="dl"><span class="dt">Scale</span><span class="dd">65K+ artworks, 1,800+ cities, 100+ countries</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li><strong>Clustered map markers</strong> &mdash; grouped in dense areas with counts</li><li>Walking/cycling routes with route builder</li><li><strong>Seen/unseen filtering</strong> &mdash; hide already-visited works</li><li>Artist profiles, wall timeline (history of a single wall)</li><li>Community "hunters" contribute content</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Clustered markers</strong> for Chicago's 200+ theaters</li><li><strong>Seen/unseen filtering</strong> on the map</li><li><strong>Theater walks</strong> &mdash; "See 3 storefronts in Wicker Park tonight"</li><li>Venue timeline &mdash; production history at a venue</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Artwrld</h4><span class="scale-badge">NYC + LA</span></div>
-          <div class="comp-type">Map-Based Art Discovery</div>
-          <p>"AllTrails for art." Map-first gallery/exhibition discovery. 1,100+ galleries. Launched July 2025. Closest map UX to AoA.</p>
-          <div class="verdict">MISSING: tracking, social, AI, progression &mdash; discovery only</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=artwrld.com&sz=64" alt=""><h4>Artwrld</h4><span class="scale-badge">NYC + LA</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Map-Based Art Discovery</div>
+            <p>"AllTrails for art." Map-first gallery/exhibition discovery. 1,100+ galleries. Launched July 2025. Closest map UX to AoA.</p>
+            <div class="verdict">MISSING: tracking, social, AI, progression &mdash; discovery only</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.artwrld.com" loading="lazy" alt="Artwrld screenshot">
+                <a href="https://www.artwrld.com" target="_blank" class="site-link" onclick="event.stopPropagation()">artwrld.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">iOS, Web</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">July 2025</span></div>
+                  <div class="dl"><span class="dt">Founder</span><span class="dd">Josh Goldblum (ex-Smithsonian)</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li>Map-based gallery/museum/event discovery</li><li>"Exhibition of the Day" featured daily pick</li><li>Personalized art walks &mdash; route-based exploration</li><li>Editor's picks and curated recommendations</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>"Show of the Day"</strong> on app open &mdash; daily engagement without user effort</li><li>Art walks &rarr; <strong>"Theater walks"</strong> through neighborhoods</li><li>Anti-gatekeeping messaging &mdash; "open invitation, not gated institution"</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>ArtRabbit</h4><span class="scale-badge">UK/Europe</span></div>
-          <div class="comp-type">Exhibition Discovery</div>
-          <p>Contemporary art discovery with editorial curation, follow/save tools, "closing soon" filters. UK-focused. Artist subscriptions (&#163;10/mo).</p>
-          <div class="verdict">MISSING: AI, progression, social tracking &mdash; visual art only</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=artrabbit.com&sz=64" alt=""><h4>ArtRabbit</h4><span class="scale-badge">UK/Europe</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Exhibition Discovery</div>
+            <p>Contemporary art discovery with editorial curation, follow/save tools, "closing soon" filters. UK-focused. Artist subscriptions (&#163;10/mo).</p>
+            <div class="verdict">MISSING: AI, progression, social tracking &mdash; visual art only</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.artrabbit.com" loading="lazy" alt="ArtRabbit screenshot">
+                <a href="https://www.artrabbit.com" target="_blank" class="site-link" onclick="event.stopPropagation()">artrabbit.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web, iOS, Android</span></div>
+                  <div class="dl"><span class="dt">Focus</span><span class="dd">UK/Europe contemporary art</span></div>
+                  <div class="dl"><span class="dt">Model</span><span class="dd">Freemium + artist subs &#163;10/mo</span></div>
+                </div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>"Closing soon" urgency filter</strong> &mdash; surface shows about to close</li><li>Artist subscription model &mdash; AoA could offer paid theater company profiles</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="cat-label">Deal / Ticketing Platforms &mdash; 3 products</div>
       <div class="comp-grid">
-        <div class="comp-card">
-          <div class="card-head"><h4>Fever</h4><span class="scale-badge">125M users</span></div>
-          <div class="comp-type">Experience Discovery + Original Content</div>
-          <p>$1.8B valuation. Creates its own events (Candlelight concerts). Discovery + ticketing across 40+ countries. Theater is a minor category.</p>
-          <div class="verdict">MISSING: tracking, social, progression, education &mdash; too broad</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=feverup.com&sz=64" alt=""><h4>Fever</h4><span class="scale-badge">125M users</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Experience Discovery + Original Content</div>
+            <p>$1.8B valuation. Creates its own events (Candlelight concerts). Discovery + ticketing across 40+ countries. Theater is a minor category.</p>
+            <div class="verdict">MISSING: tracking, social, progression, education &mdash; too broad</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://feverup.com" loading="lazy" alt="Fever screenshot">
+                <a href="https://feverup.com" target="_blank" class="site-link" onclick="event.stopPropagation()">feverup.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">iOS, Android, Web</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">2014</span></div>
+                  <div class="dl"><span class="dt">Funding</span><span class="dd">$527M raised, $1.8B valuation</span></div>
+                </div>
+                <div class="detail-section"><div class="dt">Key Features</div><ul><li><strong>Original content</strong> &mdash; Candlelight concerts, immersive exhibitions</li><li>Personalized discovery &mdash; city specialists + data scientists curate</li><li>Two-click checkout, mobile ticketing</li><li>B2B software for venues (ticketing, analytics)</li></ul></div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Original content as moat</strong> &mdash; AoA's belt curriculum is its "Candlelight"</li><li>FOMO mechanics &mdash; "closing this weekend" urgency cues</li><li><strong>Two-tap path to action</strong> &mdash; watchlist or mentor chat in 2 taps</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>Goldstar</h4><span class="scale-badge">10M members</span></div>
-          <div class="comp-type">Discounted Event Tickets</div>
-          <p>Half-price+ tickets across theater, comedy, concerts, sports. Acquired by TodayTix Group in 2022. 6,000 venue partners.</p>
-          <div class="verdict">MISSING: curation, personality, social, tracking &mdash; a deal bin</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=goldstar.com&sz=64" alt=""><h4>Goldstar</h4><span class="scale-badge">10M members</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">Discounted Event Tickets</div>
+            <p>Half-price+ tickets across theater, comedy, concerts, sports. Acquired by TodayTix Group in 2022. 6,000 venue partners.</p>
+            <div class="verdict">MISSING: curation, personality, social, tracking &mdash; a deal bin</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.goldstar.com" loading="lazy" alt="Goldstar screenshot">
+                <a href="https://www.goldstar.com" target="_blank" class="site-link" onclick="event.stopPropagation()">goldstar.com &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Platforms</span><span class="dd">Web, iOS, Android</span></div>
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">2002</span></div>
+                  <div class="dl"><span class="dt">Owner</span><span class="dd">TodayTix Group (since 2022)</span></div>
+                </div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>Multi-category coverage</strong> &mdash; comedy, improv, dance alongside theater</li><li>Complimentary ticket partnerships &mdash; free tickets for first-timers as onboarding tool</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="comp-card">
-          <div class="card-head"><h4>TDF</h4><span class="scale-badge">55+ years</span></div>
-          <div class="comp-type">NYC Theater Access (Nonprofit)</div>
-          <p>TKTS discount booths in Times Square. 20-50% off same-day Broadway tickets. Nonprofit mission aligned with AoA's values.</p>
-          <div class="verdict">DIFFERENT: NYC-only, physical-first, ticket discounting</div>
+
+        <div class="comp-card" onclick="toggleCard(this)">
+          <div class="card-summary">
+            <div class="card-head"><img class="favicon" src="https://www.google.com/s2/favicons?domain=tdf.org&sz=64" alt=""><h4>TDF</h4><span class="scale-badge">55+ years</span><span class="expand-icon">+</span></div>
+            <div class="comp-type">NYC Theater Access (Nonprofit)</div>
+            <p>TKTS discount booths in Times Square. 20-50% off same-day Broadway tickets. Nonprofit mission aligned with AoA's values.</p>
+            <div class="verdict">DIFFERENT: NYC-only, physical-first, ticket discounting</div>
+          </div>
+          <div class="card-detail">
+            <div class="detail-grid">
+              <div class="screenshot-wrap">
+                <img src="https://image.thum.io/get/width/640/crop/400/https://www.tdf.org" loading="lazy" alt="TDF screenshot">
+                <a href="https://www.tdf.org" target="_blank" class="site-link" onclick="event.stopPropagation()">tdf.org &rarr;</a>
+              </div>
+              <div class="detail-body">
+                <div class="meta-row">
+                  <div class="dl"><span class="dt">Founded</span><span class="dd">1968</span></div>
+                  <div class="dl"><span class="dt">Model</span><span class="dd">Nonprofit</span></div>
+                </div>
+                <div class="detail-section steal"><div class="dt">Steal This</div><ul><li><strong>"Expanding access" framing</strong> &mdash; AoA's mission is similar: making theater less intimidating for newcomers</li></ul></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -757,6 +1161,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     window.scrollTo({ top: document.querySelector('.tab-nav').offsetTop, behavior: 'smooth' });
   });
 });
+function toggleCard(el) {
+  const wasOpen = el.classList.contains('open');
+  el.classList.toggle('open');
+  if (!wasOpen) {
+    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+}
 </script>
 </body>
 </html>
