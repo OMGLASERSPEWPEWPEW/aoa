@@ -518,3 +518,27 @@ Sign in as either account and you'll see "DOCS" next to the date in the header.
 
 ---
 
+## 2026-08-08_11-34-53 (session 9b8761c3)
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: All 20 individual competitor docs are done. Now writing the master README.md with comparison tables, feature gap matrix, and cross-cutting insights.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now let me update the existing `landscape.md` with a pointer to the new docs, and verify everything is in place.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 21 files (20 competitors + README.md) in place. Let me add the pointer to the existing landscape.md.
+
+**assistant**: [tool: Edit]
+
+---
+

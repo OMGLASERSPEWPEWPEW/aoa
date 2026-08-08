@@ -643,3 +643,108 @@ Sign in as either account and you'll see "DOCS" next to the date in the header.
 
 ---
 
+## 2026-08-04_15-46-48 (session 9789009e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good. Now let me analyze and propose commits.
+
+**Proposed commits (2):**
+
+---
+
+**1. `fix(ui): stop overriding Mapbox marker positioning with inline CSS`**
+
+> Why: Inline `position: relative` and `transform: scale()` on the marker
+> element overrode Mapbox's `.mapboxgl-marker` class, causing all pins to
+> stack in document flow and appear as a vertical line instead of at their
+> geographic coordinates.
+> Files: MapMarker.tsx, MapView.tsx
+
+**2. `chore(infra): update journals and memory heaps`**
+
+>...
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both commits landed. Pushing now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-04_16-44-27 (session 9789009e)
+
+**assistant**: Clean build. Here's the summary of all changes:
+
+**`MapMarker.tsx`** — Added explicit `position: absolute; top: 0; left: 0` inline on the marker element so it's correctly positioned even if Mapbox's CSS class doesn't load.
+
+**`main.tsx`** — Added `import 'mapbox-gl/dist/mapbox-gl.css'` at the app entry point so Mapbox styles load before any component renders (not code-split with MapView).
+
+**`MapView.tsx`** — Set `anchor: 'bottom'` on markers (tail tip = geographic point) and added `Number()` ca...
+
+**user**: service worker isn't updating did you push to git? the sw should auto update usually i dont have to do anything?
+
+**assistant**: You're right, I didn't push yet. Let me do that now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_12-06-29 (session b9154454)
+
+**assistant**: Only `.mcp.json` is gitignored. The design files are not — let me exclude those from the commits. Here's my proposal:
+
+---
+
+**Proposed commits (2):**
+
+**1. `feat(ui): add dark/light/system theme with warm parchment light palette`**
+
+All source files — the ThemeContext, settings storage, CSS token restructuring, flash prevention, theme toggle on Settings, color migration across 49 components, and Mapbox style switching.
+
+```
+Why: App was dark-only. Ported GlyffitiMobile's ThemeContext pattern —
+ ...
+
+**user**: <command-message>cap</command-message>
+<command-name>/cap</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+---
+

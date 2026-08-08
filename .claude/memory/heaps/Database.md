@@ -946,3 +946,100 @@ It's a clean index page with cards linking to all three prototypes — the pitch
 
 ---
 
+## 2026-08-08_11-45-37 (session 9b8761c3)
+
+**assistant**: [tool: Write]
+
+**assistant**: Now copy to `public/prototypes/` and update the index page.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me verify everything by checking the dev server and opening it in a browser.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All files are in place. Let me check if the dev server is running so we can preview it.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_11-49-08 (session b9154454)
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: Light mode is working. Warm parchment background, dark text, deeper gold accent on the button — the theater aesthetic carries through beautifully. Let me also verify dark mode still works by switching back.
+
+**assistant**: [tool: mcp__chrome-devtools__evaluate_script]
+
+**assistant**: [tool: mcp__chrome-devtools__wait_for]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: Both modes confirmed working:
+- **Light mode**: warm parchment `#f6f1e3` background, dark `#1c1814` ink, deeper gold button
+- **Dark mode**: original dark `#0c0a05` background, light `#ebe5d6` ink, bright gold button
+
+I couldn't log in via headless to test the Settings toggle and inner pages (don't know your password). Could you test the Settings page toggle yourself? Log in at `localhost:5204`, go to Settings, and try the Light / Dark / System buttons.
+
+Let me also check the landing page in lig...
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: [tool: mcp__chrome-devtools__evaluate_script]
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+---
+
+## 2026-08-08_12-06-29 (session b9154454)
+
+**assistant**: Only `.mcp.json` is gitignored. The design files are not — let me exclude those from the commits. Here's my proposal:
+
+---
+
+**Proposed commits (2):**
+
+**1. `feat(ui): add dark/light/system theme with warm parchment light palette`**
+
+All source files — the ThemeContext, settings storage, CSS token restructuring, flash prevention, theme toggle on Settings, color migration across 49 components, and Mapbox style switching.
+
+```
+Why: App was dark-only. Ported GlyffitiMobile's ThemeContext pattern —
+ ...
+
+**user**: <command-message>cap</command-message>
+<command-name>/cap</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+---
+
