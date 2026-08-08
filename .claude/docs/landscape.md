@@ -1,5 +1,7 @@
 # Landscape Analysis: The Art of Art
 
+> **Superseded by detailed analysis at [docs/comp/README.md](../../docs/comp/README.md)** — 20 individual competitor deep dives with feature gap matrix and cross-cutting insights (2026-08-08).
+
 **Date:** 2026-07-30
 
 ---

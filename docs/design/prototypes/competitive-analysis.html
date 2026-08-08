@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Art of Art — Competitive Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Courier+Prime:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#08070a;color:#ebe5d6;font-family:'Newsreader',Georgia,serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+::selection{background:oklch(0.80 0.14 55);color:#0c0a05}
+
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+section{padding:80px 0}
+section+section{border-top:1px solid #2b2720}
+
+h1{font-size:clamp(32px,5vw,56px);font-weight:400;font-style:italic;line-height:1.05;letter-spacing:-0.02em;margin-bottom:20px}
+h2{font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.18em;color:#625b4c;text-transform:uppercase;margin-bottom:14px}
+h3{font-size:26px;font-weight:400;font-style:italic;line-height:1.15;margin-bottom:16px}
+p{font-size:17px;color:#9c9586;line-height:1.55;margin-bottom:16px;max-width:640px}
+p em{color:#ebe5d6;font-style:italic}
+p strong{color:oklch(0.80 0.14 55);font-weight:400}
+
+.label{font-family:'Courier Prime',monospace;font-size:9.5px;letter-spacing:0.18em;color:#625b4c;text-transform:uppercase}
+.gold{color:oklch(0.80 0.14 55)}
+.green{color:oklch(0.68 0.13 150)}
+
+/* hero */
+.hero{padding:120px 0 60px;text-align:center;background:linear-gradient(180deg, oklch(0.16 0.04 55) 0%, #08070a 70%)}
+.hero h1{margin:0 auto 20px;max-width:800px}
+.hero p{margin:0 auto 16px;text-align:center;max-width:600px}
+.hero .tagline{font-family:'Courier Prime',monospace;font-size:12px;letter-spacing:0.14em;color:oklch(0.80 0.14 55);text-transform:uppercase;margin-bottom:28px}
+.hero .stat-row{display:flex;justify-content:center;gap:48px;margin-top:36px;flex-wrap:wrap}
+.hero .stat{text-align:center}
+.hero .stat .num{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:500;color:oklch(0.80 0.14 55);display:block}
+.hero .stat .desc{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.14em;color:#625b4c;text-transform:uppercase;margin-top:4px;display:block}
+
+/* tabs */
+.tab-nav{display:flex;gap:0;border-bottom:1px solid #2b2720;padding:0 32px;position:sticky;top:0;z-index:100;background:#08070a}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:#625b4c;font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;padding:16px 20px 14px;cursor:pointer;transition:all 0.15s}
+.tab-btn:hover{color:#9c9586}
+.tab-btn.active{color:oklch(0.80 0.14 55);border-bottom-color:oklch(0.80 0.14 55)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* competitor cards */
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:24px 0 48px}
+.comp-card{background:#141109;border:1px solid #2b2720;border-radius:3px;padding:18px 20px;transition:border-color 0.15s}
+.comp-card:hover{border-color:oklch(0.30 0.06 55)}
+.comp-card .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.comp-card h4{font-family:'Newsreader',serif;font-style:italic;font-size:18px;color:#ebe5d6;font-weight:400}
+.comp-card .scale-badge{font-family:'JetBrains Mono',monospace;font-size:10px;color:oklch(0.80 0.14 55);white-space:nowrap;padding:2px 7px;border:1px solid oklch(0.30 0.06 55);border-radius:2px;flex-shrink:0;margin-left:8px}
+.comp-card .comp-type{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.12em;color:#625b4c;text-transform:uppercase;margin-bottom:8px}
+.comp-card p{font-size:14px;color:#625b4c;line-height:1.45;margin:0 0 8px}
+.comp-card .verdict{font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;color:oklch(0.80 0.14 55)}
+
+.cat-label{font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:0.14em;color:#9c9586;text-transform:uppercase;margin-top:40px;margin-bottom:4px;padding-bottom:8px;border-bottom:1px solid #1a1610}
+.cat-label:first-child{margin-top:0}
+
+/* insight boxes */
+.insight{background:#141109;border:1px solid #2b2720;border-radius:3px;padding:22px 26px;margin:20px 0}
+.insight p{font-size:15px;margin:0;max-width:none}
+.insight .insight-label{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.14em;color:oklch(0.80 0.14 55);text-transform:uppercase;margin-bottom:8px;display:block}
+.insight ul{list-style:none;padding:0;margin:8px 0 0}
+.insight li{font-size:15px;color:#9c9586;line-height:1.55;padding:6px 0;border-bottom:1px solid #1a1610}
+.insight li:last-child{border-bottom:none}
+.insight li strong{color:#ebe5d6;font-weight:400}
+.insight li em{color:oklch(0.80 0.14 55);font-style:normal}
+
+/* gap matrix */
+.matrix-wrap{overflow-x:auto;margin:24px 0;-webkit-overflow-scrolling:touch}
+.matrix{border-collapse:collapse;width:100%;min-width:800px}
+.matrix th,.matrix td{padding:10px 8px;text-align:center;border-bottom:1px solid #1a1610;font-size:13px}
+.matrix th{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.08em;color:#625b4c;text-transform:uppercase;padding:8px 6px;position:sticky;top:50px;background:#08070a;z-index:10;white-space:nowrap}
+.matrix th.aoa{color:oklch(0.80 0.14 55);border-bottom:2px solid oklch(0.80 0.14 55)}
+.matrix td.feature{text-align:left;font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;color:#9c9586;white-space:nowrap;padding-left:0}
+.matrix td.aoa-col{background:oklch(0.14 0.02 55)}
+.matrix .dot{display:inline-block;width:14px;height:14px;border-radius:50%}
+.matrix .dot.yes{background:oklch(0.80 0.14 55)}
+.matrix .dot.partial{background:none;border:1.5px dashed oklch(0.50 0.08 55)}
+.matrix .dot.no{background:#1a1610}
+.matrix .count-row td{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;border-top:2px solid #2b2720;border-bottom:none}
+.matrix .count-row td.aoa-col{color:oklch(0.80 0.14 55)}
+
+/* scale bars */
+.scale-chart{margin:32px 0}
+.scale-row{display:flex;align-items:center;gap:16px;margin-bottom:10px}
+.scale-label{font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.06em;color:#9c9586;width:140px;text-align:right;flex-shrink:0;white-space:nowrap}
+.scale-bar-wrap{flex:1;height:28px;background:#141109;border:1px solid #1a1610;border-radius:2px;position:relative;overflow:hidden}
+.scale-bar{height:100%;border-radius:1px;transition:width 1s ease-out;display:flex;align-items:center;padding-left:10px}
+.scale-bar.theater{background:oklch(0.80 0.14 55)}
+.scale-bar.social{background:oklch(0.60 0.10 55)}
+.scale-bar.culture{background:oklch(0.50 0.08 55)}
+.scale-bar.deal{background:oklch(0.45 0.06 55)}
+.scale-bar.aoa{background:oklch(0.80 0.14 55);animation:pulse-bar 2s ease-in-out infinite}
+@keyframes pulse-bar{0%,100%{opacity:1}50%{opacity:0.7}}
+.scale-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:#0c0a05;font-weight:500;white-space:nowrap}
+.scale-val.outside{position:absolute;right:-8px;transform:translateX(100%);color:#625b4c}
+.scale-markers{display:flex;justify-content:space-between;margin:4px 156px 0 156px;padding:0}
+.scale-markers span{font-family:'JetBrains Mono',monospace;font-size:9px;color:#3f3a31}
+.scale-callout{display:inline-block;background:#141109;border:1px solid #2b2720;border-radius:3px;padding:12px 18px;margin:6px 8px;text-align:center}
+.scale-callout .sc-name{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#625b4c;text-transform:uppercase;display:block}
+.scale-callout .sc-val{font-family:'JetBrains Mono',monospace;font-size:20px;color:oklch(0.80 0.14 55);display:block;margin-top:4px}
+.scale-callout .sc-desc{font-family:'Courier Prime',monospace;font-size:9px;color:#4f4a3e;display:block;margin-top:2px}
+
+/* steal-this grid */
+.steal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin:24px 0}
+.steal-card{background:#141109;border:1px solid #2b2720;border-radius:3px;padding:16px 20px}
+.steal-card .source{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:oklch(0.80 0.14 55);text-transform:uppercase;margin-bottom:6px;display:block}
+.steal-card p{font-size:14px;color:#9c9586;line-height:1.45;margin:0}
+
+/* footer */
+.footer{text-align:center;padding:60px 0;font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#3f3a31}
+
+/* responsive */
+@media(max-width:860px){
+  .tab-nav{overflow-x:auto;padding:0 16px}
+  .tab-btn{padding:14px 14px 12px;font-size:10px}
+  .hero .stat-row{gap:24px}
+  .hero .stat .num{font-size:28px}
+  .comp-grid{grid-template-columns:1fr}
+  .scale-label{width:100px;font-size:9px}
+  .scale-markers{margin-left:116px}
+  .steal-grid{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+  .wrap{padding:0 16px}
+  .hero{padding:80px 0 40px}
+  h1{font-size:28px}
+  .hero .stat-row{flex-direction:column;gap:16px}
+  .scale-row{flex-direction:column;align-items:stretch;gap:4px}
+  .scale-label{text-align:left;width:auto}
+  .scale-markers{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+  <div class="wrap">
+    <div class="tagline">Competitive Intelligence, 2026</div>
+    <h1>20 Products. Zero Do What AoA Does.</h1>
+    <p>We researched every theater app, every tracking platform, every cultural discovery tool, and every deal marketplace in the space. Nobody combines <em>map-based discovery + AI mentorship + social tracking + gamified progression + educational content + newcomer onboarding</em>.</p>
+    <div class="stat-row">
+      <div class="stat"><span class="num">20</span><span class="desc">Competitors analyzed</span></div>
+      <div class="stat"><span class="num">4</span><span class="desc">Categories mapped</span></div>
+      <div class="stat"><span class="num">16</span><span class="desc">Features compared</span></div>
+      <div class="stat"><span class="num">0</span><span class="desc">Do all six</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TAB NAV ==================== -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="landscape">Landscape</button>
+  <button class="tab-btn" data-tab="matrix">Gap Matrix</button>
+  <button class="tab-btn" data-tab="scale">Scale</button>
+  <button class="tab-btn" data-tab="insights">Insights</button>
+</nav>
+
+<!-- ==================== TAB 1: LANDSCAPE ==================== -->
+<div class="tab-panel active" id="landscape">
+  <section>
+    <div class="wrap">
+
+      <div class="cat-label">Theater Discovery + Ticketing &mdash; 8 products</div>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="card-head"><h4>BroadwayWorld</h4><span class="scale-badge">Largest theater site</span></div>
+          <div class="comp-type">News + Database + Community</div>
+          <p>Dominant theater media platform with news, reviews, grosses, forums, and the new "My Shows" tracking feature.</p>
+          <div class="verdict">MISSING: map, AI, progression, newcomer pathway</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>TodayTix</h4><span class="scale-badge">10M+ downloads</span></div>
+          <div class="comp-type">Rush / Lottery Tickets</div>
+          <p>Mobile-first theater ticketing focused on discounted day-of inventory. Strong scarcity mechanics create habitual morning check-ins.</p>
+          <div class="verdict">MISSING: social, tracking, map, education, progression</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>ChicagoPlays</h4><span class="scale-badge">200+ theaters</span></div>
+          <div class="comp-type">Official Chicago Directory</div>
+          <p>League of Chicago Theatres' show finder. Canonical local source with the only accessibility calendar in the landscape.</p>
+          <div class="verdict">MISSING: map, social, tracking, AI, personalization</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Playbill</h4><span class="scale-badge">140+ year brand</span></div>
+          <div class="comp-type">Theater Media + Programs</div>
+          <p>Iconic theater media brand. Physical programs at every Broadway show. Passport app adds light show tracking.</p>
+          <div class="verdict">MISSING: map, AI, social, progression, discovery</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>HotTix</h4><span class="scale-badge">150+ theaters</span></div>
+          <div class="comp-type">Half-Price Chicago Tickets</div>
+          <p>40+ year Chicago institution offering half-price same-week tickets. Nonprofit League service. No physical locations anymore.</p>
+          <div class="verdict">MISSING: discovery, social, tracking, map, everything beyond deals</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>TheaterMania</h4></div>
+          <div class="comp-type">Listings + Reviews + Deals</div>
+          <p>Theater listings and editorial with discount deals. Practical planning tool, less news-focused than BroadwayWorld.</p>
+          <div class="verdict">MISSING: map, social, tracking, AI, differentiation</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Show-Score</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">Likely defunct</span></div>
+          <div class="comp-type">Ratings Aggregator</div>
+          <p>Consolidated critic + audience scores into one number. Rotten Tomatoes for theater. Appears inactive.</p>
+          <div class="verdict">MISSING: everything &mdash; single-feature products don't survive</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Theater.Guide</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">Low traction</span></div>
+          <div class="comp-type">National Directory</div>
+          <p>National US theater discovery directory. Broad but shallow &mdash; jack of all cities, master of none.</p>
+          <div class="verdict">MISSING: depth, curation, social, AI, everything that creates loyalty</div>
+        </div>
+      </div>
+
+      <div class="cat-label">Tracking + Social &mdash; 5 products</div>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="card-head"><h4>Goodreads</h4><span class="scale-badge">150M users</span></div>
+          <div class="comp-type">Book Tracking (Cautionary Tale)</div>
+          <p>Dominant book-tracking social network. Massive scale, zero innovation since Amazon acquisition (2013). The definitive example of what not to become.</p>
+          <div class="verdict">LESSON: never stop iterating. No half-stars, no dark mode, no AI, in 2026</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Bandsintown</h4><span class="scale-badge">100M fans</span></div>
+          <div class="comp-type">Concert Tracking + Discovery</div>
+          <p>Follow artists, get alerts, discover nearby shows, buy tickets. Recently added AI assistant. 700K artists, 65K venues.</p>
+          <div class="verdict">ANALOG: right model (follow &rarr; alert &rarr; discover), wrong medium</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Letterboxd</h4><span class="scale-badge">30M users</span></div>
+          <div class="comp-type">Film Tracking + Social (Gold Standard)</div>
+          <p>The gold standard for media tracking. Log, rate, review, list, follow. Proves the model works at scale. AoA's primary UX inspiration.</p>
+          <div class="verdict">ANALOG: perfect model, needs map + AI + progression + live events</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Theatregoer</h4><span class="scale-badge" style="color:#625b4c;border-color:#2b2720">~7 ratings</span></div>
+          <div class="comp-type">Theater Tracker (UK, iOS Only)</div>
+          <p>Closest direct competitor. Personal theater log with ratings, notes, widgets, ticket attachment. 4.9/5 rating but tiny user base.</p>
+          <div class="verdict">MISSING: map, AI, social feed, progression, discovery, cross-platform</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Seen It</h4></div>
+          <div class="comp-type">Movie/TV Tracker</div>
+          <p>Simple movie/TV tracking. Seen / want to see / rate. Competes with Letterboxd but smaller. Screen media only.</p>
+          <div class="verdict">MISSING: live events, map, social, education &mdash; wrong medium</div>
+        </div>
+      </div>
+
+      <div class="cat-label">Art / Culture Discovery &mdash; 4 products</div>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="card-head"><h4>Google Arts &amp; Culture</h4><span class="scale-badge">Google scale</span></div>
+          <div class="comp-type">Virtual Museum Exploration</div>
+          <p>Massive digital cultural platform. Virtual tours, AI-powered discovery, curated collections. But entirely virtual &mdash; no live events, no local discovery.</p>
+          <div class="verdict">DIFFERENT: digital/virtual vs. AoA's physical/local/live</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Street Art Cities</h4><span class="scale-badge">65K artworks</span></div>
+          <div class="comp-type">Map-Based Street Art (Benchmark)</div>
+          <p>Best-in-class map cultural discovery at scale. 1,800+ cities, walking routes, community submissions. The benchmark for AoA's map UX.</p>
+          <div class="verdict">BENCHMARK: map UX, routes, seen/unseen filtering, clustering</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Artwrld</h4><span class="scale-badge">NYC + LA</span></div>
+          <div class="comp-type">Map-Based Art Discovery</div>
+          <p>"AllTrails for art." Map-first gallery/exhibition discovery. 1,100+ galleries. Launched July 2025. Closest map UX to AoA.</p>
+          <div class="verdict">MISSING: tracking, social, AI, progression &mdash; discovery only</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>ArtRabbit</h4><span class="scale-badge">UK/Europe</span></div>
+          <div class="comp-type">Exhibition Discovery</div>
+          <p>Contemporary art discovery with editorial curation, follow/save tools, "closing soon" filters. UK-focused. Artist subscriptions (&#163;10/mo).</p>
+          <div class="verdict">MISSING: AI, progression, social tracking &mdash; visual art only</div>
+        </div>
+      </div>
+
+      <div class="cat-label">Deal / Ticketing Platforms &mdash; 3 products</div>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="card-head"><h4>Fever</h4><span class="scale-badge">125M users</span></div>
+          <div class="comp-type">Experience Discovery + Original Content</div>
+          <p>$1.8B valuation. Creates its own events (Candlelight concerts). Discovery + ticketing across 40+ countries. Theater is a minor category.</p>
+          <div class="verdict">MISSING: tracking, social, progression, education &mdash; too broad</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>Goldstar</h4><span class="scale-badge">10M members</span></div>
+          <div class="comp-type">Discounted Event Tickets</div>
+          <p>Half-price+ tickets across theater, comedy, concerts, sports. Acquired by TodayTix Group in 2022. 6,000 venue partners.</p>
+          <div class="verdict">MISSING: curation, personality, social, tracking &mdash; a deal bin</div>
+        </div>
+        <div class="comp-card">
+          <div class="card-head"><h4>TDF</h4><span class="scale-badge">55+ years</span></div>
+          <div class="comp-type">NYC Theater Access (Nonprofit)</div>
+          <p>TKTS discount booths in Times Square. 20-50% off same-day Broadway tickets. Nonprofit mission aligned with AoA's values.</p>
+          <div class="verdict">DIFFERENT: NYC-only, physical-first, ticket discounting</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- ==================== TAB 2: GAP MATRIX ==================== -->
+<div class="tab-panel" id="matrix">
+  <section>
+    <div class="wrap">
+      <h2>Feature Gap Matrix</h2>
+      <h3>AoA is the only product that checks every box</h3>
+      <p>Rows are AoA's core features. Columns are the most relevant competitors. <strong>Gold</strong> = has the feature. <em style="color:#625b4c">Dashed</em> = partial. Dark = missing.</p>
+
+      <div class="matrix-wrap">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th style="text-align:left">Feature</th>
+              <th>TodayTix</th>
+              <th>Letterboxd</th>
+              <th>Theatregoer</th>
+              <th>Artwrld</th>
+              <th>St. Art Cities</th>
+              <th>Bandsintown</th>
+              <th>Fever</th>
+              <th>Chicago&shy;Plays</th>
+              <th class="aoa">AoA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="feature">Map-based discovery</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">AI mentor / assistant</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Belt / progression system</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Social tracking (friends)</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Show / event logging</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Community reviews</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Watchlist</td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Educational content</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Newcomer onboarding</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Ticket purchasing</td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td class="aoa-col"><span class="dot no"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Rush / lottery deals</td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot no"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Walking routes</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot partial"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Stats / analytics</td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Venue profiles</td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Theater-specific</td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr>
+              <td class="feature">Chicago-specific</td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot no"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot partial"></span></td>
+              <td><span class="dot yes"></span></td>
+              <td class="aoa-col"><span class="dot yes"></span></td>
+            </tr>
+            <tr class="count-row">
+              <td class="feature" style="color:oklch(0.80 0.14 55)">FEATURE COUNT</td>
+              <td>4</td>
+              <td>5</td>
+              <td>4</td>
+              <td>4</td>
+              <td>5</td>
+              <td>3</td>
+              <td>2</td>
+              <td>3</td>
+              <td class="aoa-col">14</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="insight">
+        <span class="insight-label">The gap</span>
+        <p>The best competitor manages <strong>5 of 16</strong> features. AoA has <strong>14</strong>. No product in the landscape combines map discovery, AI mentorship, belt progression, social tracking, community reviews, and educational content. The two features AoA deliberately omits &mdash; ticket purchasing and rush/lottery deals &mdash; are partnership opportunities, not gaps.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== TAB 3: SCALE ==================== -->
+<div class="tab-panel" id="scale">
+  <section>
+    <div class="wrap">
+      <h2>Market Scale</h2>
+      <h3>Where the users are &mdash; and where AoA starts</h3>
+      <p>Competitors ranked by user base. The gap between Day 1 and 150M users is the <em>opportunity</em>, not the obstacle. Every one of these started at zero.</p>
+
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:32px 0">
+        <div class="scale-callout"><span class="sc-name">Fever</span><span class="sc-val">$1.8B</span><span class="sc-desc">Valuation</span></div>
+        <div class="scale-callout"><span class="sc-name">Fever</span><span class="sc-val">$527M</span><span class="sc-desc">Total Funding</span></div>
+        <div class="scale-callout"><span class="sc-name">TodayTix</span><span class="sc-val">$73M</span><span class="sc-desc">Funding (pre-MARI)</span></div>
+        <div class="scale-callout"><span class="sc-name">Letterboxd</span><span class="sc-val">30M&rarr;</span><span class="sc-desc">3M in 2020</span></div>
+      </div>
+
+      <div class="scale-chart">
+        <div class="scale-row">
+          <div class="scale-label">Goodreads</div>
+          <div class="scale-bar-wrap"><div class="scale-bar social" style="width:100%"><span class="scale-val">150M</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">Fever</div>
+          <div class="scale-bar-wrap"><div class="scale-bar deal" style="width:83%"><span class="scale-val">125M</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">Bandsintown</div>
+          <div class="scale-bar-wrap"><div class="scale-bar social" style="width:67%"><span class="scale-val">100M</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">Letterboxd</div>
+          <div class="scale-bar-wrap"><div class="scale-bar social" style="width:20%"><span class="scale-val">30M</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">Goldstar</div>
+          <div class="scale-bar-wrap"><div class="scale-bar deal" style="width:6.7%"><span class="scale-val">10M</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">TodayTix</div>
+          <div class="scale-bar-wrap"><div class="scale-bar theater" style="width:6.7%"><span class="scale-val">10M+</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">St. Art Cities</div>
+          <div class="scale-bar-wrap"><div class="scale-bar culture" style="width:1.5%;min-width:36px"><span class="scale-val" style="color:#9c9586">65K art</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">Artwrld</div>
+          <div class="scale-bar-wrap"><div class="scale-bar culture" style="width:1%;min-width:32px"><span class="scale-val" style="color:#9c9586">1.1K gal</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">ChicagoPlays</div>
+          <div class="scale-bar-wrap"><div class="scale-bar theater" style="width:1%;min-width:28px"><span class="scale-val" style="color:#9c9586">200+ th</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">HotTix</div>
+          <div class="scale-bar-wrap"><div class="scale-bar deal" style="width:1%;min-width:28px"><span class="scale-val" style="color:#9c9586">150+ th</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label">Theatregoer</div>
+          <div class="scale-bar-wrap"><div class="scale-bar social" style="width:0.5%;min-width:24px"><span class="scale-val" style="color:#625b4c">~7</span></div></div>
+        </div>
+        <div class="scale-row">
+          <div class="scale-label" style="color:oklch(0.80 0.14 55)">The Art of Art</div>
+          <div class="scale-bar-wrap"><div class="scale-bar aoa" style="width:0.3%;min-width:4px"></div><span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.1em;color:oklch(0.80 0.14 55);position:absolute;left:20px;top:50%;transform:translateY(-50%)">DAY 1</span></div>
+        </div>
+      </div>
+
+      <div class="scale-markers">
+        <span>0</span><span>30M</span><span>60M</span><span>90M</span><span>120M</span><span>150M</span>
+      </div>
+
+      <div style="display:flex;gap:16px;margin-top:40px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div class="insight">
+            <span class="insight-label">Bar Color Key</span>
+            <p><span style="display:inline-block;width:12px;height:12px;background:oklch(0.80 0.14 55);border-radius:2px;vertical-align:middle;margin-right:6px"></span> Theater-specific<br>
+            <span style="display:inline-block;width:12px;height:12px;background:oklch(0.60 0.10 55);border-radius:2px;vertical-align:middle;margin-right:6px"></span> Tracking / Social<br>
+            <span style="display:inline-block;width:12px;height:12px;background:oklch(0.50 0.08 55);border-radius:2px;vertical-align:middle;margin-right:6px"></span> Art / Culture<br>
+            <span style="display:inline-block;width:12px;height:12px;background:oklch(0.45 0.06 55);border-radius:2px;vertical-align:middle;margin-right:6px"></span> Deal / Ticketing</p>
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="insight">
+            <span class="insight-label">What this means</span>
+            <p>The largest theater-specific product has <strong>10M downloads</strong>. The tracking model (Letterboxd) has <strong>30M users</strong>. Nobody has built the combination &mdash; theater + tracking + map + social + AI + progression &mdash; at any scale. The market isn't saturated. It's <em>empty</em>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== TAB 4: INSIGHTS ==================== -->
+<div class="tab-panel" id="insights">
+  <section>
+    <div class="wrap">
+      <h2>Patterns Across Competitors</h2>
+      <h3>Five things we noticed in twenty products</h3>
+
+      <div class="insight">
+        <span class="insight-label">1 &mdash; The "Letterboxd for Theater" opportunity is real but unexecuted</span>
+        <p>Letterboxd (30M users) and Goodreads (150M users) prove that <strong>tracking + social + reviews</strong> works for media consumption. Theatregoer proves demand exists for theater tracking (4.9/5 rating) but executes poorly (Apple-only, tiny user base, no discovery). The gap is wide open.</p>
+      </div>
+      <div class="insight">
+        <span class="insight-label">2 &mdash; Map-centric discovery works for culture</span>
+        <p>Street Art Cities (65K artworks, 1,800 cities) and Artwrld ("AllTrails for art") validate that <strong>map-first is the right navigation model</strong> for geographically distributed cultural experiences. No theater product uses a map as its primary navigation.</p>
+      </div>
+      <div class="insight">
+        <span class="insight-label">3 &mdash; Deal platforms dominate but don't build relationships</span>
+        <p>TodayTix, HotTix, Goldstar, and Fever are all <strong>transactional</strong> &mdash; buy ticket, attend, forget. None tracks your history, none has social features, none helps newcomers learn. They serve people who already know they want to go.</p>
+      </div>
+      <div class="insight">
+        <span class="insight-label">4 &mdash; The newcomer is completely unserved</span>
+        <p>Every competitor assumes the user <em>already knows theater</em>. ChicagoPlays assumes you know what dates you want. TodayTix assumes you know what shows exist. BroadwayWorld assumes insider knowledge. <strong>No product asks "have you ever seen a play?" and takes it from there.</strong></p>
+      </div>
+      <div class="insight">
+        <span class="insight-label">5 &mdash; AI mentorship and gamification are absent from every competitor</span>
+        <p>Bandsintown just added a generic AI assistant. No product has a <strong>named AI character with personality</strong> who guides you through a domain. And not one product in this landscape has a <strong>progression system</strong> tied to engagement depth. These are AoA's most novel features.</p>
+      </div>
+
+      <h2 style="margin-top:60px">Biggest Opportunities</h2>
+      <h3>Where AoA wins</h3>
+
+      <div class="insight">
+        <ul>
+          <li><strong>"Letterboxd for theater, but better"</strong> &mdash; Take the core (log, rate, review, social) and add <em>map, AI, progression, location, newcomer pathway</em></li>
+          <li><strong>Chicago storefront theater is invisible</strong> &mdash; 200+ small companies are not discoverable on any platform except ChicagoPlays' flat directory. AoA's map makes them visible</li>
+          <li><strong>Deal integration without being a deal platform</strong> &mdash; Surface HotTix/TodayTix deals within recommendations: <em>"your mentor suggests X, and it's half-price this week"</em></li>
+          <li><strong>Accessibility as differentiator</strong> &mdash; ChicagoPlays has the only accessibility calendar. AoA should surface ASL, audio-described, and sensory-friendly performances prominently</li>
+          <li><strong>"Theater walks" as killer feature</strong> &mdash; Street Art Cities and Artwrld prove planned routes drive engagement. <em>"See 3 storefront theaters in Wicker Park tonight"</em> is a feature no one offers</li>
+        </ul>
+      </div>
+
+      <h2 style="margin-top:60px">Threats to Watch</h2>
+      <h3>Three competitors that could evolve</h3>
+
+      <div class="insight">
+        <ul>
+          <li><strong>TodayTix Group</strong> &mdash; They own TodayTix + Goldstar and were acquired by MARI (Oct 2025). If they add tracking/social features, they become more complete. Resources and theater focus make them the most likely to encroach</li>
+          <li><strong>BroadwayWorld "My Shows"</strong> &mdash; The largest theater media site adding personal tracking is significant. Their existing community could make it the default tracker if they invest in the feature</li>
+          <li><strong>Fever</strong> &mdash; $1.8B valuation, $527M funding, 40+ countries. If they go deep into traditional theater (currently minor), their resources are formidable</li>
+        </ul>
+      </div>
+
+      <h2 style="margin-top:60px">Steal This</h2>
+      <h3>The ten best ideas from twenty products</h3>
+
+      <div class="steal-grid">
+        <div class="steal-card">
+          <span class="source">From Letterboxd</span>
+          <p><strong>The diary as identity.</strong> Tracking what you experience becomes self-expression. AoA's show log should feel like building an identity, not checking boxes.</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From Bandsintown</span>
+          <p><strong>Follow-to-alert loop.</strong> Follow theater companies, get notified when they announce shows. The killer engagement mechanic for live events.</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From Street Art Cities</span>
+          <p><strong>Seen/unseen map filtering.</strong> Let users filter the map to show only venues and shows they haven't visited yet. Drives completionist exploration.</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From Artwrld</span>
+          <p><strong>"Show of the Day" on app open.</strong> A daily featured recommendation creates habitual app opens without requiring user effort.</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From TodayTix</span>
+          <p><strong>Same-day urgency.</strong> "What's playing tonight?" is a powerful use case. Create scarcity + proximity + time-sensitivity in recommendations.</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From Goodreads</span>
+          <p><strong>Annual challenge + Year in Review.</strong> "Your Year in Theater" recap for sharing. Belt progression + explicit "see X shows in 2026" goal.</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From Theatregoer</span>
+          <p><strong>"On This Day" memories.</strong> "1 year ago you saw A Doll's House at Steppenwolf." Nostalgia-driven re-engagement through widgets and push.</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From ArtRabbit</span>
+          <p><strong>"Closing soon" urgency filter.</strong> Surface shows about to close. Creates urgency without selling tickets. "Last 3 performances this weekend."</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From ChicagoPlays</span>
+          <p><strong>Accessibility calendar.</strong> Surface ASL, audio-described, sensory-friendly performances. Both a moral good and a competitive differentiator.</p>
+        </div>
+        <div class="steal-card">
+          <span class="source">From Fever</span>
+          <p><strong>Two-tap path to action.</strong> Whatever AoA's key action is (add to watchlist, start mentor chat), make it two taps from discovery. Never more.</p>
+        </div>
+      </div>
+
+      <div class="insight" style="margin-top:48px;border-color:oklch(0.30 0.06 55)">
+        <span class="insight-label">Final Positioning</span>
+        <p style="font-size:18px;color:#ebe5d6">Unlike TodayTix (a ticket vending machine), Letterboxd (film-only), Theatregoer (Apple-only, no discovery), or ChicagoPlays (a flat directory), <strong>The Art of Art</strong> is a map-based PWA with a named AI mentor who personally guides newcomers into the theater scene, tracks their journey with progression, and builds a social layer where friends share what they've seen and want to see &mdash; starting with Chicago's unmatched storefront ecosystem.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="footer">THE ART OF ART &middot; COMPETITIVE INTELLIGENCE &middot; AUGUST 2026</div>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    window.scrollTo({ top: document.querySelector('.tab-nav').offsetTop, behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
