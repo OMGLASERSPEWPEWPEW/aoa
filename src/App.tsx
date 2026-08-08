@@ -29,15 +29,12 @@ import { LogShow } from './pages/LogShow'
 import { WriteReview } from './pages/WriteReview'
 import { ProductionDetail } from './pages/ProductionDetail'
 import { PlayDetail } from './pages/PlayDetail'
-import { UpdateBanner } from './components/UpdateBanner'
-
 export default function App() {
   return (
     <ThemeProvider>
     <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
-        <UpdateBanner />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
