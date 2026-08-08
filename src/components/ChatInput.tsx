@@ -23,7 +23,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       className="flex gap-2"
       style={{
         padding: 12,
-        borderTop: '1px solid #2b2720',
+        borderTop: '1px solid var(--rule)',
         backgroundColor: 'var(--bg)',
       }}
     >
@@ -35,9 +35,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         disabled={disabled}
         style={{
           flex: 1,
-          backgroundColor: '#141109',
+          backgroundColor: 'var(--bg-card)',
           color: 'var(--ink)',
-          border: '1px solid #2b2720',
+          border: '1px solid var(--rule)',
           borderRadius: 20,
           padding: '10px 16px',
           fontFamily: "'Courier Prime', monospace",
@@ -50,8 +50,8 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         type="submit"
         disabled={disabled || !text.trim()}
         style={{
-          backgroundColor: 'oklch(0.80 0.14 55)',
-          color: '#0c0a05',
+          backgroundColor: 'var(--accent)',
+          color: 'var(--accent-on)',
           borderRadius: '50%',
           width: 40,
           height: 40,

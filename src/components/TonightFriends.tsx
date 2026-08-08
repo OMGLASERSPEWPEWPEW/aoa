@@ -13,7 +13,7 @@ export function TonightFriends() {
           fontFamily: "'Courier Prime', monospace",
           fontSize: 9,
           letterSpacing: '0.1em',
-          color: '#625b4c',
+          color: 'var(--ink-faint)',
           marginBottom: 12,
         }}
       >
@@ -26,7 +26,7 @@ export function TonightFriends() {
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 14.5,
-              color: '#9c9586',
+              color: 'var(--ink-dim)',
               fontStyle: 'italic',
             }}
           >
@@ -36,7 +36,7 @@ export function TonightFriends() {
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 13.5,
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
               marginTop: 4,
             }}
           >
@@ -53,7 +53,7 @@ export function TonightFriends() {
                   width: 40,
                   height: 40,
                   borderRadius: '50%',
-                  backgroundColor: '#2b2720',
+                  backgroundColor: 'var(--rule)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -64,7 +64,7 @@ export function TonightFriends() {
                 {a.avatarUrl ? (
                   <img src={a.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <span style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 16, color: '#625b4c' }}>
+                  <span style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 16, color: 'var(--ink-faint)' }}>
                     {a.friendName[0]?.toUpperCase()}
                   </span>
                 )}
@@ -77,7 +77,7 @@ export function TonightFriends() {
                     fontFamily: "'Newsreader', Georgia, serif",
                     fontSize: 14.5,
                     lineHeight: 1.35,
-                    color: '#9c9586',
+                    color: 'var(--ink-dim)',
                     margin: 0,
                   }}
                 >
@@ -102,8 +102,8 @@ export function TonightFriends() {
                       fontFamily: "'Newsreader', Georgia, serif",
                       fontStyle: 'italic',
                       fontSize: 13.5,
-                      color: '#9c9586',
-                      borderLeft: '2px solid #2b2720',
+                      color: 'var(--ink-dim)',
+                      borderLeft: '2px solid var(--rule)',
                       paddingLeft: 10,
                       marginTop: 6,
                       marginBottom: 0,

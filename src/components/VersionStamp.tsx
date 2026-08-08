@@ -75,7 +75,7 @@ export function VersionStamp() {
       >
         {unread && (
           <svg viewBox="0 0 24 24" width={10} height={10} style={{ flexShrink: 0 }}>
-            <path d={starPath} fill="oklch(0.80 0.14 55)" />
+            <path d={starPath} fill="var(--accent)" />
           </svg>
         )}
         <span
@@ -83,7 +83,7 @@ export function VersionStamp() {
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.06em',
-            color: unread ? 'oklch(0.80 0.14 55)' : '#4f4a3e',
+            color: unread ? 'var(--accent)' : 'var(--ink-ghost)',
           }}
         >
           {versionText}
@@ -103,8 +103,8 @@ export function VersionStamp() {
             maxHeight: '60vh',
             overflowY: 'auto',
             borderRadius: 3,
-            border: '1px solid #2b2720',
-            background: '#0c0a05',
+            border: '1px solid var(--rule)',
+            background: 'var(--bg)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
             zIndex: 200,
           }}
@@ -113,8 +113,8 @@ export function VersionStamp() {
             style={{
               position: 'sticky',
               top: 0,
-              background: '#0c0a05',
-              borderBottom: '1px solid #2b2720',
+              background: 'var(--bg)',
+              borderBottom: '1px solid var(--rule)',
               padding: '10px 14px',
               display: 'flex',
               alignItems: 'center',
@@ -126,7 +126,7 @@ export function VersionStamp() {
                 fontFamily: "'Newsreader', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: 14,
-                color: '#ebe5d6',
+                color: 'var(--ink)',
               }}
             >
               Changelog
@@ -135,7 +135,7 @@ export function VersionStamp() {
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 9,
-                color: '#4f4a3e',
+                color: 'var(--ink-ghost)',
               }}
             >
               LATEST {Math.min(3, CHANGELOG.length)}
@@ -148,7 +148,7 @@ export function VersionStamp() {
                 key={note.version}
                 style={{
                   padding: '10px 0',
-                  borderBottom: i < 2 ? '1px solid #2b2720' : 'none',
+                  borderBottom: i < 2 ? '1px solid var(--rule)' : 'none',
                 }}
               >
                 <div className="flex items-center gap-2" style={{ marginBottom: 4 }}>
@@ -156,7 +156,7 @@ export function VersionStamp() {
                     style={{
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: 10,
-                      color: 'oklch(0.80 0.14 55)',
+                      color: 'var(--accent)',
                       letterSpacing: '0.06em',
                     }}
                   >
@@ -166,7 +166,7 @@ export function VersionStamp() {
                     style={{
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: 9,
-                      color: '#4f4a3e',
+                      color: 'var(--ink-ghost)',
                     }}
                   >
                     {note.date}
@@ -177,8 +177,8 @@ export function VersionStamp() {
                         fontFamily: "'Courier Prime', monospace",
                         fontSize: 8,
                         letterSpacing: '0.1em',
-                        color: 'oklch(0.80 0.14 55)',
-                        border: '1px solid oklch(0.42 0.09 55)',
+                        color: 'var(--accent)',
+                        border: '1px solid var(--accent-border)',
                         padding: '1px 5px',
                         borderRadius: 2,
                       }}
@@ -193,7 +193,7 @@ export function VersionStamp() {
                     fontFamily: "'Newsreader', Georgia, serif",
                     fontStyle: 'italic',
                     fontSize: 13,
-                    color: '#ebe5d6',
+                    color: 'var(--ink)',
                   }}
                 >
                   {note.title}
@@ -203,7 +203,7 @@ export function VersionStamp() {
                     margin: 0,
                     fontFamily: "'Newsreader', Georgia, serif",
                     fontSize: 12,
-                    color: '#9c9586',
+                    color: 'var(--ink-dim)',
                     lineHeight: 1.5,
                   }}
                 >
@@ -217,7 +217,7 @@ export function VersionStamp() {
                         style={{
                           fontFamily: "'Courier Prime', monospace",
                           fontSize: 10,
-                          color: '#625b4c',
+                          color: 'var(--ink-faint)',
                           display: 'flex',
                           gap: 5,
                           marginBottom: 2,

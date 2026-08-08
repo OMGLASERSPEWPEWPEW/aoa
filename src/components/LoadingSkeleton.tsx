@@ -12,7 +12,7 @@ export function LoadingSkeleton({ width = '100%', height = 16, borderRadius = 2 
         width,
         height,
         borderRadius,
-        backgroundColor: '#141109',
+        backgroundColor: 'var(--bg-card)',
         overflow: 'hidden',
         position: 'relative',
       }}

@@ -9,7 +9,7 @@ export function Social() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
       </div>
     )
@@ -19,14 +19,14 @@ export function Social() {
     <div className="flex flex-col h-full">
       <div
         className="flex items-center justify-between"
-        style={{ padding: 12, borderBottom: '1px solid #2b2720' }}
+        style={{ padding: 12, borderBottom: '1px solid var(--rule)' }}
       >
         <span
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontSize: 9,
             letterSpacing: '0.1em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
           }}
         >
           YOUR PEOPLE
@@ -37,7 +37,7 @@ export function Social() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
             letterSpacing: '0.06em',
-            color: 'oklch(0.80 0.14 55)',
+            color: 'var(--accent)',
             background: 'none',
             border: 'none',
             cursor: 'pointer',

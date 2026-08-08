@@ -92,7 +92,7 @@ export function Discover() {
 
   if (loading && playsLoading) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
       </div>
     )
@@ -100,7 +100,7 @@ export function Discover() {
 
   return (
     <div className="flex flex-col h-full">
-      <div style={{ padding: 12, borderBottom: '1px solid #2b2720' }}>
+      <div style={{ padding: 12, borderBottom: '1px solid var(--rule)' }}>
         <div style={{ position: 'relative' }}>
           <span
             style={{
@@ -108,7 +108,7 @@ export function Discover() {
               left: 12,
               top: '50%',
               transform: 'translateY(-50%)',
-              color: '#4f4a3e',
+              color: 'var(--ink-ghost)',
               fontSize: 14,
             }}
           >
@@ -121,9 +121,9 @@ export function Discover() {
             placeholder="A play, a theater, a feeling…"
             style={{
               width: '100%',
-              backgroundColor: '#141109',
+              backgroundColor: 'var(--bg-card)',
               color: 'var(--ink)',
-              border: '1px solid #2b2720',
+              border: '1px solid var(--rule)',
               borderRadius: 3,
               paddingLeft: 34,
               paddingRight: 16,
@@ -147,9 +147,9 @@ export function Discover() {
                 letterSpacing: '0.06em',
                 padding: '5px 10px',
                 borderRadius: 2,
-                border: typeFilter === type ? '1px solid oklch(0.80 0.14 55)' : '1px solid #2b2720',
-                backgroundColor: typeFilter === type ? 'oklch(0.20 0.04 55)' : 'transparent',
-                color: typeFilter === type ? 'oklch(0.80 0.14 55)' : '#625b4c',
+                border: typeFilter === type ? '1px solid var(--accent)' : '1px solid var(--rule)',
+                backgroundColor: typeFilter === type ? 'var(--accent-bg)' : 'transparent',
+                color: typeFilter === type ? 'var(--accent)' : 'var(--ink-faint)',
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
@@ -171,9 +171,9 @@ export function Discover() {
                 letterSpacing: '0.06em',
                 padding: '5px 10px',
                 borderRadius: 2,
-                border: venueTypeFilter === type ? '1px solid oklch(0.80 0.14 55)' : '1px solid #2b2720',
-                backgroundColor: venueTypeFilter === type ? 'oklch(0.20 0.04 55)' : 'transparent',
-                color: venueTypeFilter === type ? 'oklch(0.80 0.14 55)' : '#625b4c',
+                border: venueTypeFilter === type ? '1px solid var(--accent)' : '1px solid var(--rule)',
+                backgroundColor: venueTypeFilter === type ? 'var(--accent-bg)' : 'transparent',
+                color: venueTypeFilter === type ? 'var(--accent)' : 'var(--ink-faint)',
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
@@ -190,7 +190,7 @@ export function Discover() {
         <div style={{ padding: 12 }}>
         {filteredPlays.length > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: '#4f4a3e', letterSpacing: '0.06em', marginBottom: 8, textTransform: 'uppercase' }}>
+            <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: 'var(--ink-ghost)', letterSpacing: '0.06em', marginBottom: 8, textTransform: 'uppercase' }}>
               {filteredPlays.length} Play{filteredPlays.length !== 1 ? 's' : ''}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -204,8 +204,8 @@ export function Discover() {
                     gap: 2,
                     width: '100%',
                     textAlign: 'left',
-                    backgroundColor: '#141109',
-                    border: '1px solid #2b2720',
+                    backgroundColor: 'var(--bg-card)',
+                    border: '1px solid var(--rule)',
                     borderRadius: 2,
                     padding: '12px 14px',
                     cursor: 'pointer',
@@ -223,7 +223,7 @@ export function Discover() {
                   <span style={{
                     fontFamily: "'Courier Prime', monospace",
                     fontSize: 10,
-                    color: '#625b4c',
+                    color: 'var(--ink-faint)',
                     letterSpacing: '0.04em',
                     textTransform: 'uppercase',
                   }}>
@@ -233,7 +233,7 @@ export function Discover() {
                     <span style={{
                       fontFamily: "'Newsreader', Georgia, serif",
                       fontSize: 12,
-                      color: '#4f4a3e',
+                      color: 'var(--ink-ghost)',
                       lineHeight: 1.4,
                       marginTop: 4,
                       display: '-webkit-box',
@@ -248,7 +248,7 @@ export function Discover() {
                     <span style={{
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: 9,
-                      color: 'oklch(0.80 0.14 55)',
+                      color: 'var(--accent)',
                       letterSpacing: '0.04em',
                       marginTop: 2,
                     }}>
@@ -261,7 +261,7 @@ export function Discover() {
           </div>
         )}
         {filtered.length === 0 && filteredPlays.length === 0 ? (
-          <div className="flex flex-col items-center justify-center" style={{ height: 160, color: '#625b4c' }}>
+          <div className="flex flex-col items-center justify-center" style={{ height: 160, color: 'var(--ink-faint)' }}>
             <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 14 }}>
               {search ? 'No plays or events match your search' : 'No events match your filters'}
             </p>
@@ -271,13 +271,13 @@ export function Discover() {
         ) : (
           <>
             <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
-              <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: '#4f4a3e', letterSpacing: '0.06em' }}>
+              <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: 'var(--ink-ghost)', letterSpacing: '0.06em' }}>
                 {filtered.length} EVENT{filtered.length !== 1 ? 'S' : ''}
               </p>
               {matchedEmotion && (
                 <div className="flex items-center gap-1">
                   <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: base(EMOTIONS.find(e => e.slug === matchedEmotion)!) }} />
-                  <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: '#4f4a3e' }}>
+                  <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: 'var(--ink-ghost)' }}>
                     {matchedEmotion.toUpperCase()}
                   </span>
                 </div>

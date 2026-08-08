@@ -43,18 +43,18 @@ export function MyShows() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--bg, #0c0a05)' }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--bg)' }}>
       {/* Header */}
       <div
         className="flex items-baseline justify-between"
-        style={{ padding: '8px 20px 14px', borderBottom: '1px solid #2b2720' }}
+        style={{ padding: '8px 20px 14px', borderBottom: '1px solid var(--rule)' }}
       >
         <h1
           style={{
@@ -63,7 +63,7 @@ export function MyShows() {
             fontSize: 26,
             fontWeight: 400,
             lineHeight: 1.04,
-            color: 'var(--ink, #ebe5d6)',
+            color: 'var(--ink)',
           }}
         >
           My Shows
@@ -75,7 +75,7 @@ export function MyShows() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
               letterSpacing: '0.06em',
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -103,7 +103,7 @@ export function MyShows() {
       ) : (
         <>
           {/* Tabs */}
-          <div className="flex" style={{ gap: 24, padding: '0 20px', borderBottom: '1px solid #2b2720' }}>
+          <div className="flex" style={{ gap: 24, padding: '0 20px', borderBottom: '1px solid var(--rule)' }}>
             {TABS.map(t => {
               const active = tab === t.key
               return (
@@ -114,15 +114,15 @@ export function MyShows() {
                     fontFamily: "'Courier Prime', monospace",
                     fontSize: 12,
                     padding: '8px 0 12px',
-                    borderBottom: active ? '2px solid oklch(0.80 0.14 55)' : '2px solid transparent',
-                    color: active ? '#ebe5d6' : '#625b4c',
+                    borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent',
+                    color: active ? 'var(--ink)' : 'var(--ink-faint)',
                     letterSpacing: '0.04em',
                     background: 'none',
                     transition: 'color 150ms',
                   }}
                 >
                   {t.label}{' '}
-                  <span style={{ color: active ? 'oklch(0.80 0.14 55)' : '#4f4a3e' }}>
+                  <span style={{ color: active ? 'var(--accent)' : 'var(--ink-ghost)' }}>
                     {counts[t.key]}
                   </span>
                 </button>
@@ -133,13 +133,13 @@ export function MyShows() {
           {/* Content */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
             {tab === 'seen' && paletteSlices.length > 0 && (
-              <div style={{ padding: '14px 20px', borderBottom: '1px solid #2b2720' }}>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--rule)' }}>
                 <div
                   style={{
                     fontFamily: "'Courier Prime', monospace",
                     fontSize: 9,
                     letterSpacing: '0.1em',
-                    color: '#625b4c',
+                    color: 'var(--ink-faint)',
                     marginBottom: 8,
                   }}
                 >
@@ -150,7 +150,7 @@ export function MyShows() {
                   style={{
                     fontFamily: "'Newsreader', Georgia, serif",
                     fontSize: 14,
-                    color: '#9c9586',
+                    color: 'var(--ink-dim)',
                     lineHeight: 1.45,
                     marginTop: 8,
                   }}
@@ -221,9 +221,9 @@ function MarqueeView({
         {/* Want to See card */}
         <div
           style={{
-            border: '1px solid #2b2720',
+            border: '1px solid var(--rule)',
             borderRadius: 3,
-            background: '#141109',
+            background: 'var(--bg-card)',
             padding: '16px 16px 14px',
           }}
         >
@@ -233,7 +233,7 @@ function MarqueeView({
                 fontFamily: "'Newsreader', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: 22,
-                color: 'var(--ink, #ebe5d6)',
+                color: 'var(--ink)',
               }}
             >
               Want to See
@@ -242,14 +242,14 @@ function MarqueeView({
               style={{
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 12,
-                color: 'oklch(0.80 0.14 55)',
+                color: 'var(--accent)',
               }}
             >
               {counts.want_to_see}
             </span>
           </div>
           {wantItems.length === 0 ? (
-            <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#9c9586', fontStyle: 'italic' }}>
+            <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: 'var(--ink-dim)', fontStyle: 'italic' }}>
               Nothing on the list yet.
             </p>
           ) : (
@@ -266,7 +266,7 @@ function MarqueeView({
                   style={{
                     flex: 1,
                     height: 84,
-                    border: '1px dashed #2b2720',
+                    border: '1px dashed var(--rule)',
                     borderRadius: 2,
                     display: 'flex',
                     alignItems: 'center',
@@ -277,7 +277,7 @@ function MarqueeView({
                     style={{
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: 11,
-                      color: '#4f4a3e',
+                      color: 'var(--ink-ghost)',
                     }}
                   >
                     +{wantItems.length - 3}
@@ -291,9 +291,9 @@ function MarqueeView({
         {/* Tickets Booked card */}
         <div
           style={{
-            border: '1px solid oklch(0.42 0.09 55)',
+            border: '1px solid var(--accent-border)',
             borderRadius: 3,
-            background: 'linear-gradient(180deg, oklch(0.18 0.04 55), #141109)',
+            background: 'linear-gradient(180deg, oklch(0.18 0.04 55), var(--bg-card))',
             padding: '16px 16px 14px',
           }}
         >
@@ -303,7 +303,7 @@ function MarqueeView({
                 fontFamily: "'Newsreader', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: 22,
-                color: 'var(--ink, #ebe5d6)',
+                color: 'var(--ink)',
               }}
             >
               Tickets Booked
@@ -312,14 +312,14 @@ function MarqueeView({
               style={{
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 12,
-                color: 'oklch(0.80 0.14 55)',
+                color: 'var(--accent)',
               }}
             >
               {counts.booked}
             </span>
           </div>
           {bookedItems.length === 0 ? (
-            <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#9c9586', fontStyle: 'italic' }}>
+            <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: 'var(--ink-dim)', fontStyle: 'italic' }}>
               Nothing here yet.
             </p>
           ) : (
@@ -334,9 +334,9 @@ function MarqueeView({
         {/* Seen card */}
         <div
           style={{
-            border: '1px solid #2b2720',
+            border: '1px solid var(--rule)',
             borderRadius: 3,
-            background: '#141109',
+            background: 'var(--bg-card)',
             padding: '16px 16px 14px',
           }}
         >
@@ -346,7 +346,7 @@ function MarqueeView({
                 fontFamily: "'Newsreader', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: 22,
-                color: 'var(--ink, #ebe5d6)',
+                color: 'var(--ink)',
               }}
             >
               Seen
@@ -355,7 +355,7 @@ function MarqueeView({
               style={{
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 12,
-                color: 'oklch(0.80 0.14 55)',
+                color: 'var(--accent)',
               }}
             >
               {counts.seen}
@@ -363,7 +363,7 @@ function MarqueeView({
           </div>
 
           {counts.seen === 0 ? (
-            <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#9c9586', fontStyle: 'italic', marginTop: 8 }}>
+            <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: 'var(--ink-dim)', fontStyle: 'italic', marginTop: 8 }}>
               Your record starts whenever you say it does.
             </p>
           ) : (
@@ -373,7 +373,7 @@ function MarqueeView({
                   fontFamily: "'Courier Prime', monospace",
                   fontSize: 10,
                   letterSpacing: '0.06em',
-                  color: '#625b4c',
+                  color: 'var(--ink-faint)',
                   marginBottom: 12,
                 }}
               >
@@ -386,7 +386,7 @@ function MarqueeView({
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: 9,
                       letterSpacing: '0.1em',
-                      color: '#625b4c',
+                      color: 'var(--ink-faint)',
                       marginBottom: 8,
                     }}
                   >
@@ -397,7 +397,7 @@ function MarqueeView({
                     style={{
                       fontFamily: "'Newsreader', Georgia, serif",
                       fontSize: 14,
-                      color: '#9c9586',
+                      color: 'var(--ink-dim)',
                       lineHeight: 1.45,
                       marginTop: 8,
                     }}
@@ -428,12 +428,12 @@ function PosterThumb({ item, onClick }: { item: WatchlistItem; onClick: () => vo
         width: 62,
         height: 84,
         borderRadius: 2,
-        border: '1px solid #2b2720',
+        border: '1px solid var(--rule)',
         overflow: 'hidden',
         position: 'relative',
         cursor: 'pointer',
         padding: 0,
-        background: '#0c0a05',
+        background: 'var(--bg)',
         flexShrink: 0,
       }}
     >
@@ -465,7 +465,7 @@ function PosterThumb({ item, onClick }: { item: WatchlistItem; onClick: () => vo
               fontFamily: "'Newsreader', Georgia, serif",
               fontStyle: 'italic',
               fontSize: 10,
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
               textAlign: 'center',
               padding: 4,
               lineHeight: 1.2,
@@ -508,8 +508,8 @@ function BookingRow({
     ? perfDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).replace(' ', '')
     : null
 
-  const borderColor = isNext ? 'oklch(0.80 0.14 55)' : '#2b2720'
-  const textColor = isNext ? 'oklch(0.80 0.14 55)' : '#9c9586'
+  const borderColor = isNext ? 'var(--accent)' : 'var(--rule)'
+  const textColor = isNext ? 'var(--accent)' : 'var(--ink-dim)'
 
   return (
     <div>
@@ -560,7 +560,7 @@ function BookingRow({
               fontFamily: "'Newsreader', Georgia, serif",
               fontStyle: 'italic',
               fontSize: 17,
-              color: 'var(--ink, #ebe5d6)',
+              color: 'var(--ink)',
               lineHeight: 1.2,
             }}
           >
@@ -571,7 +571,7 @@ function BookingRow({
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 10,
-                color: '#9c9586',
+                color: 'var(--ink-dim)',
                 marginTop: 2,
               }}
             >
@@ -580,7 +580,7 @@ function BookingRow({
           )}
         </div>
       </div>
-      {!isLast && <div style={{ borderTop: '1px dotted #2b2720', margin: '2px 0' }} />}
+      {!isLast && <div style={{ borderTop: '1px dotted var(--rule)', margin: '2px 0' }} />}
     </div>
   )
 }
@@ -603,10 +603,10 @@ function EmptyState({ shelf }: { shelf: WatchlistStatus }) {
 
   return (
     <div className="flex flex-col items-center justify-center h-40 px-8 text-center">
-      <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: '#ebe5d6', marginBottom: 6 }}>
+      <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: 'var(--ink)', marginBottom: 6 }}>
         {copy.line1}
       </p>
-      <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#9c9586' }}>
+      <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: 'var(--ink-dim)' }}>
         {copy.line2}
       </p>
     </div>
@@ -620,7 +620,7 @@ function MonthDivider({ label, count }: { label: string; count: number }) {
         style={{
           fontFamily: "'Courier Prime', monospace",
           fontSize: 10.5,
-          color: '#625b4c',
+          color: 'var(--ink-faint)',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
           whiteSpace: 'nowrap',
@@ -628,12 +628,12 @@ function MonthDivider({ label, count }: { label: string; count: number }) {
       >
         {label}
       </span>
-      <div style={{ flex: 1, height: 1, backgroundColor: '#2b2720' }} />
+      <div style={{ flex: 1, height: 1, backgroundColor: 'var(--rule)' }} />
       <span
         style={{
           fontFamily: "'Courier Prime', monospace",
           fontSize: 9.5,
-          color: '#4f4a3e',
+          color: 'var(--ink-ghost)',
           whiteSpace: 'nowrap',
         }}
       >
@@ -665,11 +665,11 @@ function ShowRow({ item, tab, onLog }: { item: WatchlistItem; tab: WatchlistStat
         gridTemplateColumns: '34px 1fr auto',
         gap: 12,
         padding: '11px 20px',
-        borderBottom: '1px solid #211d17',
+        borderBottom: '1px solid var(--rule-soft)',
       }}
     >
       {/* Day */}
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#625b4c', paddingTop: 3 }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--ink-faint)', paddingTop: 3 }}>
         {day ?? ''}
       </div>
 
@@ -682,7 +682,7 @@ function ShowRow({ item, tab, onLog }: { item: WatchlistItem; tab: WatchlistStat
               fontStyle: 'italic',
               fontSize: 17.5,
               lineHeight: 1.2,
-              color: 'var(--ink, #ebe5d6)',
+              color: 'var(--ink)',
             }}
           >
             {event.title}
@@ -693,7 +693,7 @@ function ShowRow({ item, tab, onLog }: { item: WatchlistItem; tab: WatchlistStat
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
               marginTop: 2,
               letterSpacing: '0.04em',
             }}
@@ -707,7 +707,7 @@ function ShowRow({ item, tab, onLog }: { item: WatchlistItem; tab: WatchlistStat
               fontFamily: "'Newsreader', Georgia, serif",
               fontStyle: 'italic',
               fontSize: 13.5,
-              color: '#9c9586',
+              color: 'var(--ink-dim)',
               marginTop: 5,
             }}
           >
@@ -723,9 +723,9 @@ function ShowRow({ item, tab, onLog }: { item: WatchlistItem; tab: WatchlistStat
               fontSize: 10,
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
-              color: 'oklch(0.80 0.14 55)',
+              color: 'var(--accent)',
               background: 'none',
-              border: '1px solid #2b2720',
+              border: '1px solid var(--rule)',
               borderRadius: 4,
               padding: '4px 10px',
             }}

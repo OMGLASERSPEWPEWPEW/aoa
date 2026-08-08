@@ -84,7 +84,7 @@ export function Tonight() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
       </div>
     )
@@ -97,7 +97,7 @@ export function Tonight() {
         className="flex items-center justify-between"
         style={{
           padding: '8px 20px 12px',
-          borderBottom: '1px solid #2b2720',
+          borderBottom: '1px solid var(--rule)',
         }}
       >
         <div className="flex items-baseline gap-1.5">
@@ -107,7 +107,7 @@ export function Tonight() {
               fontWeight: 700,
               fontSize: 19,
               letterSpacing: '-0.01em',
-              color: '#ebe5d6',
+              color: 'var(--ink)',
             }}
           >
             The Art of Art
@@ -116,13 +116,13 @@ export function Tonight() {
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
             }}
           >
             • chicago
           </span>
         </div>
-        <span style={{ fontSize: 18, color: '#9c9586' }}>⊙</span>
+        <span style={{ fontSize: 18, color: 'var(--ink-dim)' }}>⊙</span>
       </div>
 
       <MarqueeTicker

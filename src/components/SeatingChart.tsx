@@ -10,9 +10,9 @@ export function SeatingChart({ rank }: { rank: HouseRank }) {
   return (
     <div
       style={{
-        border: '1px solid #2b2720',
+        border: '1px solid var(--rule)',
         borderRadius: 3,
-        backgroundColor: '#141109',
+        backgroundColor: 'var(--bg-card)',
         padding: '12px 0 10px',
         display: 'flex',
         flexDirection: 'column',
@@ -25,7 +25,7 @@ export function SeatingChart({ rank }: { rank: HouseRank }) {
           fontFamily: "'Courier Prime', monospace",
           fontSize: 8.5,
           letterSpacing: '0.3em',
-          color: '#4f4a3e',
+          color: 'var(--ink-ghost)',
         }}
       >
         STAGE
@@ -35,7 +35,7 @@ export function SeatingChart({ rank }: { rank: HouseRank }) {
         style={{
           width: 180,
           height: 2,
-          backgroundColor: 'oklch(0.42 0.09 55)',
+          backgroundColor: 'var(--accent-border)',
           marginBottom: 8,
         }}
       />
@@ -59,7 +59,7 @@ export function SeatingChart({ rank }: { rank: HouseRank }) {
               } else if (isCloserToStage) {
                 bg = 'oklch(0.55 0.11 55)'
               } else {
-                bg = '#2b2720'
+                bg = 'var(--rule)'
               }
 
               return (
@@ -71,7 +71,7 @@ export function SeatingChart({ rank }: { rank: HouseRank }) {
                     height: size,
                     borderRadius: radius,
                     backgroundColor: bg,
-                    boxShadow: isLit ? '0 0 10px oklch(0.80 0.14 55)' : undefined,
+                    boxShadow: isLit ? '0 0 10px var(--accent)' : undefined,
                   }}
                 />
               )
@@ -85,7 +85,7 @@ export function SeatingChart({ rank }: { rank: HouseRank }) {
           fontFamily: "'Courier Prime', monospace",
           fontSize: 8.5,
           letterSpacing: '0.2em',
-          color: '#4f4a3e',
+          color: 'var(--ink-ghost)',
           marginTop: 6,
         }}
       >

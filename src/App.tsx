@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 
 const queryClient = new QueryClient({
@@ -31,6 +32,7 @@ import { PlayDetail } from './pages/PlayDetail'
 
 export default function App() {
   return (
+    <ThemeProvider>
     <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
@@ -64,5 +66,6 @@ export default function App() {
       </AuthProvider>
     </BrowserRouter>
     </QueryClientProvider>
+    </ThemeProvider>
   )
 }

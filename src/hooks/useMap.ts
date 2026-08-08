@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import { supabase } from '../lib/supabase'
+import { useTheme } from '../contexts/ThemeContext'
 
 const CHICAGO_CENTER: [number, number] = [-87.6298, 41.8781]
 const DEFAULT_ZOOM = 12
@@ -15,6 +16,7 @@ const VENUE_TYPE_COLORS: Record<string, string> = {
 export function useMap(container: React.RefObject<HTMLDivElement | null>) {
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const [ready, setReady] = useState(false)
+  const { resolved: theme } = useTheme()
 
   useEffect(() => {
     if (!container.current) return
@@ -29,7 +31,7 @@ export function useMap(container: React.RefObject<HTMLDivElement | null>) {
 
     const map = new mapboxgl.Map({
       container: container.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: `mapbox://styles/mapbox/${theme}-v11`,
       center: CHICAGO_CENTER,
       zoom: DEFAULT_ZOOM,
       attributionControl: false,

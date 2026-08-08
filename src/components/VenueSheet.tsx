@@ -59,9 +59,9 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
     left: 0,
     right: 0,
     zIndex: 1100,
-    backgroundColor: '#0c0a05',
+    backgroundColor: 'var(--bg)',
     borderRadius: '16px 16px 0 0',
-    borderTop: '1px solid #2b2720',
+    borderTop: '1px solid var(--rule)',
     boxShadow: '0 -14px 44px rgba(0,0,0,.75)',
     transform: entered ? 'translateY(0)' : 'translateY(100%)',
     transition: reducedMotion ? 'none' : 'transform 300ms cubic-bezier(.2,.8,.2,1)',
@@ -82,7 +82,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
             width: 38,
             height: 4,
             borderRadius: 2,
-            backgroundColor: '#2b2720',
+            backgroundColor: 'var(--rule)',
             cursor: 'pointer',
           }}
         />
@@ -100,7 +100,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 height: 66,
                 objectFit: 'cover',
                 borderRadius: 3,
-                border: '1px solid #2b2720',
+                border: '1px solid var(--rule)',
                 flexShrink: 0,
               }}
             />
@@ -110,8 +110,8 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 width: 88,
                 height: 66,
                 borderRadius: 3,
-                border: '1px solid #2b2720',
-                backgroundColor: '#141109',
+                border: '1px solid var(--rule)',
+                backgroundColor: 'var(--bg-card)',
                 flexShrink: 0,
               }}
             />
@@ -133,7 +133,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 10,
                 letterSpacing: '0.06em',
-                color: '#625b4c',
+                color: 'var(--ink-faint)',
               }}
             >
               {[
@@ -149,7 +149,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontSize: 9.5,
-            color: '#4f4a3e',
+            color: 'var(--ink-ghost)',
             marginBottom: 14,
           }}
         >
@@ -158,7 +158,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
 
         <div
           style={{
-            backgroundColor: '#141109',
+            backgroundColor: 'var(--bg-card)',
             borderRadius: 3,
             padding: '12px 14px',
             marginBottom: 14,
@@ -170,7 +170,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                backgroundColor: isUp ? 'oklch(0.74 0.16 145)' : '#4f4a3e',
+                backgroundColor: isUp ? 'var(--live)' : 'var(--ink-ghost)',
               }}
             />
             <span
@@ -178,7 +178,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 10,
                 letterSpacing: '0.08em',
-                color: isUp ? 'oklch(0.74 0.16 145)' : '#4f4a3e',
+                color: isUp ? 'var(--live)' : 'var(--ink-ghost)',
               }}
             >
               {isUp ? 'ON STAGE TONIGHT' : 'DARK TONIGHT'}
@@ -216,9 +216,9 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 letterSpacing: '0.06em',
                 padding: '4px 10px',
                 borderRadius: 2,
-                backgroundColor: 'oklch(0.20 0.04 55)',
-                border: '1px solid oklch(0.42 0.09 55)',
-                color: 'oklch(0.80 0.14 55)',
+                backgroundColor: 'var(--accent-bg)',
+                border: '1px solid var(--accent-border)',
+                color: 'var(--accent)',
               }}
             >
               PAY-WHAT-YOU-CAN {venue.pay_what_you_can_days.join(', ').toUpperCase()}
@@ -231,8 +231,8 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                   letterSpacing: '0.06em',
                   padding: '4px 10px',
                   borderRadius: 2,
-                  border: '1px solid #2b2720',
-                  color: '#9c9586',
+                  border: '1px solid var(--rule)',
+                  color: 'var(--ink-dim)',
                 }}
               >
                 USHER SLOTS OPEN
@@ -251,14 +251,14 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 flex: 1,
                 height: 44,
                 borderRadius: 3,
-                border: '1px solid #2b2720',
+                border: '1px solid var(--rule)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 10,
                 letterSpacing: '0.06em',
-                color: '#9c9586',
+                color: 'var(--ink-dim)',
                 textDecoration: 'none',
               }}
             >
@@ -274,13 +274,13 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 width: 56,
                 height: 44,
                 borderRadius: 3,
-                backgroundColor: 'oklch(0.80 0.14 55)',
+                backgroundColor: 'var(--accent)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 18,
                 textDecoration: 'none',
-                color: '#0c0a05',
+                color: 'var(--accent-on)',
               }}
             >
               →
@@ -295,7 +295,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 9,
                 letterSpacing: '0.1em',
-                color: '#4f4a3e',
+                color: 'var(--ink-ghost)',
                 marginBottom: 10,
               }}
             >
@@ -303,7 +303,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
             </div>
             {nearbyVenues.map((nv, i) => (
               <div key={nv.venue.id}>
-                {i > 0 && <div style={{ borderTop: '1px dotted #2b2720', margin: '8px 0' }} />}
+                {i > 0 && <div style={{ borderTop: '1px dotted var(--rule)', margin: '8px 0' }} />}
                 <button
                   onClick={() => nv.currentShow && navigate(`/app/show/${nv.currentShow.id}`)}
                   className="flex items-center justify-between"
@@ -322,7 +322,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                         fontFamily: "'Courier Prime', monospace",
                         fontSize: 10,
                         letterSpacing: '0.08em',
-                        color: nv.isUp ? 'oklch(0.74 0.16 145)' : '#4f4a3e',
+                        color: nv.isUp ? 'var(--live)' : 'var(--ink-ghost)',
                       }}
                     >
                       {nv.isUp ? 'UP' : 'DARK'}
@@ -342,7 +342,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                     style={{
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: 9.5,
-                      color: '#625b4c',
+                      color: 'var(--ink-faint)',
                       flexShrink: 0,
                       marginLeft: 8,
                     }}

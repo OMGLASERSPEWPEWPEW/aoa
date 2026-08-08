@@ -12,7 +12,7 @@ export function InterpretationSentence({ slices, totalCards }: Props) {
         fontFamily: "'Newsreader', Georgia, serif",
         fontSize: 14,
         lineHeight: 1.45,
-        color: '#9c9586',
+        color: 'var(--ink-dim)',
       }}
     >
       {interpretSpectrum(slices, totalCards)}

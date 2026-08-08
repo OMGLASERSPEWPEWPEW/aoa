@@ -24,14 +24,14 @@ export function OfflineIndicator() {
         left: 0,
         right: 0,
         zIndex: 9999,
-        backgroundColor: '#141109',
-        borderBottom: '1px solid #2b2720',
+        backgroundColor: 'var(--bg-card)',
+        borderBottom: '1px solid var(--rule)',
         padding: '8px 20px',
         textAlign: 'center',
         fontFamily: "'Courier Prime', monospace",
         fontSize: 9,
         letterSpacing: '0.1em',
-        color: 'oklch(0.80 0.14 55)',
+        color: 'var(--accent)',
       }}
     >
       OFFLINE — YOUR WORK IS SAVED

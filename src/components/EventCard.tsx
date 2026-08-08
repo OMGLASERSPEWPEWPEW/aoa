@@ -36,7 +36,7 @@ export function EventCard({ event, watchlistStatus, onWatchlistToggle, onTap }: 
       tabIndex={onTap ? 0 : undefined}
       style={{
         padding: '14px 0',
-        borderBottom: '1px solid #2b2720',
+        borderBottom: '1px solid var(--rule)',
         cursor: onTap ? 'pointer' : undefined,
       }}
     >
@@ -60,12 +60,12 @@ export function EventCard({ event, watchlistStatus, onWatchlistToggle, onTap }: 
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 10,
                 letterSpacing: '0.06em',
-                color: '#625b4c',
+                color: 'var(--ink-faint)',
                 marginTop: 3,
               }}
             >
               {venue.name?.toUpperCase()}
-              {venue.neighborhood && <span style={{ color: '#4f4a3e' }}> · {venue.neighborhood.toUpperCase()}</span>}
+              {venue.neighborhood && <span style={{ color: 'var(--ink-ghost)' }}> · {venue.neighborhood.toUpperCase()}</span>}
             </div>
           )}
         </div>
@@ -78,10 +78,10 @@ export function EventCard({ event, watchlistStatus, onWatchlistToggle, onTap }: 
             padding: '4px 8px',
             borderRadius: 2,
             border: watchlistStatus
-              ? '1px solid oklch(0.42 0.09 55)'
-              : '1px solid #2b2720',
-            backgroundColor: watchlistStatus ? 'oklch(0.20 0.04 55)' : 'transparent',
-            color: watchlistStatus ? 'oklch(0.80 0.14 55)' : '#625b4c',
+              ? '1px solid var(--accent-border)'
+              : '1px solid var(--rule)',
+            backgroundColor: watchlistStatus ? 'var(--accent-bg)' : 'transparent',
+            color: watchlistStatus ? 'var(--accent)' : 'var(--ink-faint)',
             cursor: 'pointer',
             whiteSpace: 'nowrap',
           }}
@@ -95,7 +95,7 @@ export function EventCard({ event, watchlistStatus, onWatchlistToggle, onTap }: 
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
-            color: '#4f4a3e',
+            color: 'var(--ink-ghost)',
           }}
         >
           {formatDateRange(event.start_date, event.end_date)}
@@ -105,13 +105,13 @@ export function EventCard({ event, watchlistStatus, onWatchlistToggle, onTap }: 
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
             color: event.price_min === 0 || (event.price_min === null && event.price_max === null)
-              ? 'oklch(0.68 0.13 150)' : '#4f4a3e',
+              ? 'var(--access)' : 'var(--ink-ghost)',
           }}
         >
           {formatPrice(event.price_min, event.price_max)}
         </span>
         {event.hottix_available && (
-          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: 'oklch(0.68 0.13 150)' }}>
+          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: 'var(--access)' }}>
             HOTTIX
           </span>
         )}

@@ -20,7 +20,7 @@ export function TonightFree({ freeEvents, cheapestEvents }: Props) {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 9,
             letterSpacing: '0.1em',
-            color: hasFree ? 'oklch(0.68 0.13 150)' : '#625b4c',
+            color: hasFree ? 'var(--access)' : 'var(--ink-faint)',
           }}
         >
           {hasFree ? 'FREE TONIGHT' : 'CHEAPEST TONIGHT'}
@@ -31,7 +31,7 @@ export function TonightFree({ freeEvents, cheapestEvents }: Props) {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
               letterSpacing: '0.1em',
-              color: '#4f4a3e',
+              color: 'var(--ink-ghost)',
             }}
           >
             {' — NO CATCH, NO TICKET'}
@@ -44,7 +44,7 @@ export function TonightFree({ freeEvents, cheapestEvents }: Props) {
           style={{
             fontFamily: "'Newsreader', Georgia, serif",
             fontSize: 14,
-            color: '#9c9586',
+            color: 'var(--ink-dim)',
             fontStyle: 'italic',
           }}
         >
@@ -69,21 +69,21 @@ export function TonightFree({ freeEvents, cheapestEvents }: Props) {
                   fontFamily: "'Newsreader', Georgia, serif",
                   fontSize: 15,
                   lineHeight: 1.4,
-                  color: '#9c9586',
+                  color: 'var(--ink-dim)',
                 }}
               >
-                <span style={{ fontStyle: 'italic', color: '#ebe5d6' }}>{event.title}</span>
+                <span style={{ fontStyle: 'italic', color: 'var(--ink)' }}>{event.title}</span>
                 {event.venue?.name && (
                   <span> at {event.venue.name}</span>
                 )}
                 {(() => {
                   const times = getTonightTimes(event.show_times)
                   return times.length > 0 ? (
-                    <span style={{ color: '#625b4c' }}> · {times.map(formatShowTime).join(', ')}</span>
+                    <span style={{ color: 'var(--ink-faint)' }}> · {times.map(formatShowTime).join(', ')}</span>
                   ) : null
                 })()}
                 {!hasFree && event.price_min !== null && (
-                  <span style={{ color: 'oklch(0.68 0.13 150)' }}> · ${event.price_min}</span>
+                  <span style={{ color: 'var(--access)' }}> · ${event.price_min}</span>
                 )}
               </span>
             </button>

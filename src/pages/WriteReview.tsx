@@ -59,7 +59,7 @@ export function WriteReview() {
       {/* Header */}
       <div
         className="flex justify-between items-center px-5 py-4"
-        style={{ borderBottom: '1px solid #2b2720' }}
+        style={{ borderBottom: '1px solid var(--rule)' }}
       >
         <button
           onClick={() => navigate(-1)}
@@ -67,7 +67,7 @@ export function WriteReview() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 11,
             letterSpacing: '0.06em',
-            color: '#9c9586',
+            color: 'var(--ink-dim)',
             textTransform: 'uppercase',
           }}
         >
@@ -78,7 +78,7 @@ export function WriteReview() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
             letterSpacing: '0.16em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             textTransform: 'uppercase',
           }}
         >
@@ -115,7 +115,7 @@ export function WriteReview() {
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9.5,
-              color: '#4f4a3e',
+              color: 'var(--ink-ghost)',
             }}
           >
             edit
@@ -129,7 +129,7 @@ export function WriteReview() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
             letterSpacing: '0.06em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             textTransform: 'uppercase',
           }}
         >
@@ -147,9 +147,9 @@ export function WriteReview() {
                   fontSize: 10.5,
                   padding: '6px 11px',
                   borderRadius: 14,
-                  border: isSelected ? 'none' : '1px solid #2b2720',
-                  backgroundColor: isSelected ? 'oklch(0.80 0.14 55)' : 'transparent',
-                  color: isSelected ? '#0c0a05' : '#9c9586',
+                  border: isSelected ? 'none' : '1px solid var(--rule)',
+                  backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
+                  color: isSelected ? 'var(--accent-on)' : 'var(--ink-dim)',
                   transition: 'all 150ms',
                 }}
               >
@@ -162,9 +162,9 @@ export function WriteReview() {
         {/* Editor Well */}
         <div
           style={{
-            border: '1px solid #2b2720',
+            border: '1px solid var(--rule)',
             borderRadius: 3,
-            backgroundColor: '#141109',
+            backgroundColor: 'var(--bg-card)',
             padding: 16,
             minHeight: 236,
           }}
@@ -192,8 +192,8 @@ export function WriteReview() {
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 16,
               lineHeight: 1.55,
-              color: '#ebe5d6',
-              caretColor: 'oklch(0.80 0.14 55)',
+              color: 'var(--ink)',
+              caretColor: 'var(--accent)',
               minHeight: prompt ? 190 : 220,
             }}
           />
@@ -209,7 +209,7 @@ export function WriteReview() {
                 width: 38,
                 height: 22,
                 borderRadius: 11,
-                backgroundColor: spoilers ? 'oklch(0.20 0.04 55)' : '#2b2720',
+                backgroundColor: spoilers ? 'var(--accent-bg)' : 'var(--rule)',
                 transition: 'background-color 160ms ease',
                 flexShrink: 0,
               }}
@@ -225,7 +225,7 @@ export function WriteReview() {
                   width: 18,
                   height: 18,
                   borderRadius: '50%',
-                  backgroundColor: spoilers ? 'oklch(0.80 0.14 55)' : '#625b4c',
+                  backgroundColor: spoilers ? 'var(--accent)' : 'var(--ink-faint)',
                   transition: 'all 160ms ease',
                 }}
               />
@@ -234,7 +234,7 @@ export function WriteReview() {
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 10.5,
-                color: '#9c9586',
+                color: 'var(--ink-dim)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
               }}
@@ -246,7 +246,7 @@ export function WriteReview() {
             style={{
               fontFamily: "'JetBrains Mono', monospace",
               fontSize: 10.5,
-              color: '#4f4a3e',
+              color: 'var(--ink-ghost)',
             }}
           >
             {body.length}
@@ -256,13 +256,13 @@ export function WriteReview() {
         {/* Privacy Note */}
         <div
           className="py-3"
-          style={{ borderTop: '1px dotted #2b2720' }}
+          style={{ borderTop: '1px dotted var(--rule)' }}
         >
           <p
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 13.5,
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
               lineHeight: 1.45,
             }}
           >
@@ -274,7 +274,7 @@ export function WriteReview() {
       {/* Footer */}
       <div
         className="flex gap-3 px-5 pb-5 pt-3"
-        style={{ borderTop: '1px solid #2b2720' }}
+        style={{ borderTop: '1px solid var(--rule)' }}
       >
         <button
           onClick={handleJustLog}
@@ -283,11 +283,11 @@ export function WriteReview() {
             width: 96,
             height: 50,
             borderRadius: 6,
-            border: '1px solid #2b2720',
+            border: '1px solid var(--rule)',
             backgroundColor: 'transparent',
             fontFamily: "'Courier Prime', monospace",
             fontSize: 11,
-            color: '#9c9586',
+            color: 'var(--ink-dim)',
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
             flexShrink: 0,
@@ -302,8 +302,8 @@ export function WriteReview() {
             flex: 1,
             height: 50,
             borderRadius: 6,
-            backgroundColor: body.trim() ? 'oklch(0.80 0.14 55)' : '#2b2720',
-            color: body.trim() ? '#0c0a05' : '#625b4c',
+            backgroundColor: body.trim() ? 'var(--accent)' : 'var(--rule)',
+            color: body.trim() ? 'var(--accent-on)' : 'var(--ink-faint)',
             fontFamily: "'Newsreader', Georgia, serif",
             fontStyle: 'italic',
             fontSize: 16,

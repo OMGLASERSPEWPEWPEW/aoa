@@ -29,7 +29,7 @@ export function HouseRankModal({ rank, onDismiss }: Props) {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        backgroundColor: '#0c0a05',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -42,7 +42,7 @@ export function HouseRankModal({ rank, onDismiss }: Props) {
     >
       <div
         style={{
-          background: 'linear-gradient(180deg, oklch(0.16 0.04 55) 0%, #0c0a05 60%)',
+          background: 'var(--gold-gradient)',
           position: 'absolute',
           inset: 0,
         }}
@@ -58,7 +58,7 @@ export function HouseRankModal({ rank, onDismiss }: Props) {
           fontFamily: "'Newsreader', Georgia, serif",
           fontStyle: 'italic',
           fontSize: 34,
-          color: 'oklch(0.84 0.13 55)',
+          color: 'var(--accent-text)',
           margin: '0 0 12px',
           textAlign: 'center',
         }}
@@ -71,7 +71,7 @@ export function HouseRankModal({ rank, onDismiss }: Props) {
           position: 'relative',
           fontFamily: "'Newsreader', Georgia, serif",
           fontSize: 16,
-          color: '#9c9586',
+          color: 'var(--ink-dim)',
           lineHeight: 1.5,
           textAlign: 'center',
           maxWidth: 300,

@@ -16,7 +16,7 @@ export function StatStrip({ shows, venues, wrote, ushered }: StatStripProps) {
   const values = { shows, venues, wrote, ushered }
 
   return (
-    <div style={{ display: 'flex', borderTop: '1px solid #2b2720', borderBottom: '1px solid #2b2720' }}>
+    <div style={{ display: 'flex', borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }}>
       {CELLS.map((cell, i) => (
         <div
           key={cell.key}
@@ -25,7 +25,7 @@ export function StatStrip({ shows, venues, wrote, ushered }: StatStripProps) {
             flex: 1,
             padding: '14px 0',
             textAlign: 'center',
-            borderLeft: i > 0 ? '1px solid #2b2720' : undefined,
+            borderLeft: i > 0 ? '1px solid var(--rule)' : undefined,
           }}
         >
           <div
@@ -33,7 +33,7 @@ export function StatStrip({ shows, venues, wrote, ushered }: StatStripProps) {
               fontFamily: "'Newsreader', Georgia, serif",
               fontStyle: 'italic',
               fontSize: 24,
-              color: cell.key === 'ushered' ? 'oklch(0.68 0.13 150)' : 'var(--ink)',
+              color: cell.key === 'ushered' ? 'var(--access)' : 'var(--ink)',
             }}
           >
             {values[cell.key]}
@@ -43,7 +43,7 @@ export function StatStrip({ shows, venues, wrote, ushered }: StatStripProps) {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
               letterSpacing: '0.1em',
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
               marginTop: 2,
             }}
           >

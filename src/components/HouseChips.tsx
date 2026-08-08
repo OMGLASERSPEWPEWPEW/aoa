@@ -13,16 +13,16 @@ export function HouseChips({ currentRank }: { currentRank: HouseRank }) {
         let textDecoration: string | undefined
 
         if (isAchieved) {
-          color = '#4f4a3e'
-          border = '1px solid #211d17'
+          color = 'var(--ink-ghost)'
+          border = '1px solid var(--rule-soft)'
           textDecoration = 'line-through'
         } else if (isCurrent) {
-          color = 'oklch(0.80 0.14 55)'
-          border = '1px solid oklch(0.42 0.09 55)'
-          bg = 'oklch(0.20 0.04 55)'
+          color = 'var(--accent)'
+          border = '1px solid var(--accent-border)'
+          bg = 'var(--accent-bg)'
         } else {
-          color = '#625b4c'
-          border = '1px dashed #2b2720'
+          color = 'var(--ink-faint)'
+          border = '1px dashed var(--rule)'
         }
 
         return (

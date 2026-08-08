@@ -21,7 +21,7 @@ export function Landing() {
         style={{
           fontFamily: "'Newsreader', Georgia, serif",
           fontSize: 16,
-          color: '#9c9586',
+          color: 'var(--ink-dim)',
           textAlign: 'center',
           maxWidth: 320,
           lineHeight: 1.5,
@@ -35,8 +35,8 @@ export function Landing() {
           to="/signup"
           className="text-center transition-colors"
           style={{
-            backgroundColor: 'oklch(0.80 0.14 55)',
-            color: '#0c0a05',
+            backgroundColor: 'var(--accent)',
+            color: 'var(--accent-on)',
             fontFamily: "'Newsreader', Georgia, serif",
             fontStyle: 'italic',
             fontSize: 16,
@@ -51,7 +51,7 @@ export function Landing() {
           to="/login"
           className="text-center transition-colors"
           style={{
-            border: '1px solid #2b2720',
+            border: '1px solid var(--rule)',
             color: 'var(--ink)',
             fontFamily: "'Courier Prime', monospace",
             fontSize: 13,
@@ -67,7 +67,7 @@ export function Landing() {
         style={{
           fontFamily: "'JetBrains Mono', monospace",
           fontSize: 9,
-          color: '#4f4a3e',
+          color: 'var(--ink-ghost)',
           marginTop: 48,
         }}
       >

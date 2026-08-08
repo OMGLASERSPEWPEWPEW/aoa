@@ -13,9 +13,9 @@ export function GenreChip({ genre, primary = false }: { genre: string; primary?:
         padding: '3px 8px',
         borderRadius: 2,
         textTransform: 'uppercase',
-        color: isPrimary ? `oklch(0.82 0.15 ${h})` : '#9c9586',
+        color: isPrimary ? `oklch(0.82 0.15 ${h})` : 'var(--ink-dim)',
         backgroundColor: isPrimary ? `oklch(0.22 0.05 ${h})` : 'transparent',
-        border: isPrimary ? 'none' : '1px solid #2b2720',
+        border: isPrimary ? 'none' : '1px solid var(--rule)',
       }}
     >
       {genre}

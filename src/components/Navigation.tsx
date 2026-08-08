@@ -14,8 +14,8 @@ export function Navigation() {
     <nav
       className="flex items-center justify-around"
       style={{
-        borderTop: '1px solid #2b2720',
-        backgroundColor: '#0c0a05',
+        borderTop: '1px solid var(--rule)',
+        backgroundColor: 'var(--bg)',
         padding: '8px 6px 22px',
       }}
     >
@@ -32,14 +32,14 @@ export function Navigation() {
             width: 44,
             height: 44,
             borderRadius: '50%',
-            backgroundColor: 'oklch(0.80 0.14 55)',
+            backgroundColor: 'var(--accent)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontFamily: "'Newsreader', Georgia, serif",
             fontStyle: 'italic',
             fontSize: 19,
-            color: '#0c0a05',
+            color: 'var(--accent-on)',
             border: 'none',
           }}
           aria-label="My Shows"
@@ -66,14 +66,14 @@ function NavSlot({ to, glyph, label, end }: { to: string; glyph: string; label: 
     >
       {({ isActive }) => (
         <>
-          <span style={{ fontSize: 15, color: isActive ? 'oklch(0.80 0.14 55)' : '#625b4c' }}>
+          <span style={{ fontSize: 15, color: isActive ? 'var(--accent)' : 'var(--ink-faint)' }}>
             {glyph}
           </span>
           <span
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
-              color: isActive ? 'oklch(0.80 0.14 55)' : '#625b4c',
+              color: isActive ? 'var(--accent)' : 'var(--ink-faint)',
               marginTop: 3,
               letterSpacing: '0.06em',
             }}

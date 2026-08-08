@@ -80,7 +80,7 @@ export function LogShow() {
 
   if (loading || !event) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
       </div>
     )
@@ -99,7 +99,7 @@ export function LogShow() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 11,
             letterSpacing: '0.06em',
-            color: '#9c9586',
+            color: 'var(--ink-dim)',
             textTransform: 'uppercase',
           }}
         >
@@ -110,7 +110,7 @@ export function LogShow() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
             letterSpacing: '0.06em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             textTransform: 'uppercase',
           }}
         >
@@ -151,7 +151,7 @@ export function LogShow() {
           style={{
             fontFamily: "'Newsreader', Georgia, serif",
             fontSize: 15,
-            color: '#9c9586',
+            color: 'var(--ink-dim)',
           }}
         >
           So. What did it do to you?
@@ -166,7 +166,7 @@ export function LogShow() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
               letterSpacing: '0.06em',
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
               textTransform: 'uppercase',
             }}
           >
@@ -184,8 +184,8 @@ export function LogShow() {
             width: '100%',
             height: 50,
             borderRadius: 8,
-            backgroundColor: emotions.length > 0 ? 'var(--accent)' : '#2b2720',
-            color: emotions.length > 0 ? 'var(--bg)' : '#625b4c',
+            backgroundColor: emotions.length > 0 ? 'var(--accent)' : 'var(--rule)',
+            color: emotions.length > 0 ? 'var(--accent-on)' : 'var(--ink-faint)',
             fontFamily: "'Newsreader', Georgia, serif",
             fontStyle: 'italic',
             fontSize: 16,
@@ -204,7 +204,7 @@ export function LogShow() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
             letterSpacing: '0.06em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             textTransform: 'uppercase',
             padding: '8px 0',
           }}

@@ -38,12 +38,12 @@ export function TonightHero({ event, spectrum, totalCards }: Props) {
   ].filter(Boolean).join(' • ')
 
   return (
-    <div style={{ borderBottom: '1px solid #2b2720' }}>
+    <div style={{ borderBottom: '1px solid var(--rule)' }}>
       {/* Hero image band */}
       <div
         style={{
           height: 196,
-          backgroundColor: '#141109',
+          backgroundColor: 'var(--bg-card)',
           backgroundImage: event.photo_url || venue?.photo_url
             ? `url(${event.photo_url || venue?.photo_url})`
             : undefined,
@@ -59,7 +59,7 @@ export function TonightHero({ event, spectrum, totalCards }: Props) {
             left: 0,
             right: 0,
             height: 80,
-            background: 'linear-gradient(transparent, #0c0a05)',
+            background: 'linear-gradient(transparent, var(--bg))',
           }}
         />
         {/* Genre chips */}
@@ -97,7 +97,7 @@ export function TonightHero({ event, spectrum, totalCards }: Props) {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10.5,
             letterSpacing: '0.08em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             marginTop: 6,
           }}
         >
@@ -109,7 +109,7 @@ export function TonightHero({ event, spectrum, totalCards }: Props) {
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 15,
-              color: '#9c9586',
+              color: 'var(--ink-dim)',
               lineHeight: 1.4,
               marginTop: 10,
               display: '-webkit-box',
@@ -142,8 +142,8 @@ export function TonightHero({ event, spectrum, totalCards }: Props) {
               flex: 1,
               height: 46,
               borderRadius: 3,
-              backgroundColor: 'oklch(0.80 0.14 55)',
-              color: '#0c0a05',
+              backgroundColor: 'var(--accent)',
+              color: 'var(--accent-on)',
               fontFamily: "'Newsreader', Georgia, serif",
               fontStyle: 'italic',
               fontSize: 15,
@@ -163,7 +163,7 @@ export function TonightHero({ event, spectrum, totalCards }: Props) {
               color: 'var(--ink)',
               fontFamily: "'Courier Prime', monospace",
               fontSize: 12,
-              border: '1px solid #2b2720',
+              border: '1px solid var(--rule)',
               cursor: 'pointer',
             }}
           >

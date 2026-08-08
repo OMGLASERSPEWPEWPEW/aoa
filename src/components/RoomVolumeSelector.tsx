@@ -27,9 +27,9 @@ export function RoomVolumeSelector({ value, onChange }: Props) {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10.5,
               letterSpacing: '0.04em',
-              border: isSelected ? '1.5px solid oklch(0.80 0.14 55)' : '1px solid #2b2720',
-              backgroundColor: isSelected ? 'oklch(0.20 0.04 55)' : 'transparent',
-              color: isSelected ? 'oklch(0.80 0.14 55)' : '#9c9586',
+              border: isSelected ? '1.5px solid var(--accent)' : '1px solid var(--rule)',
+              backgroundColor: isSelected ? 'var(--accent-bg)' : 'transparent',
+              color: isSelected ? 'var(--accent)' : 'var(--ink-dim)',
             }}
           >
             {opt.label}

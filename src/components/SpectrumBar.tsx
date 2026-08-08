@@ -27,7 +27,7 @@ export function SpectrumBar({ slices, height, totalCards }: Props) {
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10.5,
-            color: '#4f4a3e',
+            color: 'var(--ink-ghost)',
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
           }}

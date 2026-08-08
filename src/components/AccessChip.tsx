@@ -16,8 +16,8 @@ export function AccessChip({ label }: { label: string }) {
         padding: '3px 8px',
         borderRadius: 2,
         textTransform: 'uppercase',
-        color: isAccess ? 'oklch(0.68 0.13 150)' : '#9c9586',
-        border: isAccess ? '1px solid oklch(0.36 0.07 150)' : '1px solid #2b2720',
+        color: isAccess ? 'var(--access)' : 'var(--ink-dim)',
+        border: isAccess ? '1px solid oklch(0.36 0.07 150)' : '1px solid var(--rule)',
       }}
     >
       {upper}

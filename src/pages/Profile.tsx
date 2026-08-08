@@ -15,7 +15,7 @@ export function Profile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
       </div>
     )
@@ -24,10 +24,10 @@ export function Profile() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-8 text-center">
-        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: '#ebe5d6', marginBottom: 6 }}>
+        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: 'var(--ink)', marginBottom: 6 }}>
           Something went wrong loading your profile.
         </p>
-        <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 11, color: '#625b4c', marginBottom: 16 }}>
+        <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 11, color: 'var(--ink-faint)', marginBottom: 16 }}>
           {error}
         </p>
       </div>
@@ -37,10 +37,10 @@ export function Profile() {
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-8 text-center">
-        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: '#ebe5d6', marginBottom: 6 }}>
+        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: 'var(--ink)', marginBottom: 6 }}>
           Your profile is being set up.
         </p>
-        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#9c9586' }}>
+        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: 'var(--ink-dim)' }}>
           This usually takes a moment. Try refreshing.
         </p>
       </div>
@@ -59,9 +59,9 @@ export function Profile() {
       {/* Gold gradient header */}
       <div
         style={{
-          background: 'linear-gradient(180deg, oklch(0.16 0.04 55), #0c0a05)',
+          background: 'var(--gold-gradient)',
           padding: '14px 20px 18px',
-          borderBottom: '1px solid #2b2720',
+          borderBottom: '1px solid var(--rule)',
         }}
       >
         {/* Avatar + Name */}
@@ -71,7 +71,7 @@ export function Profile() {
               width: 54,
               height: 54,
               borderRadius: '50%',
-              backgroundColor: '#2b2720',
+              backgroundColor: 'var(--rule)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -82,7 +82,7 @@ export function Profile() {
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <span style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 22, color: '#625b4c' }}>
+              <span style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 22, color: 'var(--ink-faint)' }}>
                 {displayName[0]?.toUpperCase()}
               </span>
             )}
@@ -103,7 +103,7 @@ export function Profile() {
                 style={{
                   fontFamily: "'Courier Prime', monospace",
                   fontSize: 10,
-                  color: '#625b4c',
+                  color: 'var(--ink-faint)',
                   letterSpacing: '0.06em',
                 }}
               >
@@ -120,7 +120,7 @@ export function Profile() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
               letterSpacing: '0.1em',
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
             }}
           >
             YOUR SEAT
@@ -130,7 +130,7 @@ export function Profile() {
               fontFamily: "'Newsreader', Georgia, serif",
               fontStyle: 'italic',
               fontSize: 20,
-              color: 'oklch(0.84 0.13 55)',
+              color: 'var(--accent-text)',
             }}
           >
             {rankName}
@@ -139,7 +139,7 @@ export function Profile() {
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9.5,
-              color: '#4f4a3e',
+              color: 'var(--ink-ghost)',
             }}
           >
             {rank + 1} OF 7
@@ -170,7 +170,7 @@ export function Profile() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 9,
             letterSpacing: '0.1em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             marginBottom: 10,
           }}
         >
@@ -183,7 +183,7 @@ export function Profile() {
               style={{
                 fontFamily: "'Newsreader', Georgia, serif",
                 fontSize: 14,
-                color: '#9c9586',
+                color: 'var(--ink-dim)',
                 lineHeight: 1.45,
                 marginTop: 8,
               }}
@@ -196,7 +196,7 @@ export function Profile() {
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 14,
-              color: '#9c9586',
+              color: 'var(--ink-dim)',
               fontStyle: 'italic',
             }}
           >
@@ -212,7 +212,7 @@ export function Profile() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 9,
             letterSpacing: '0.1em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             marginBottom: 10,
           }}
         >
@@ -234,13 +234,13 @@ function NextStepSentence({ rank }: { rank: HouseRank }) {
       style={{
         fontFamily: "'Newsreader', Georgia, serif",
         fontSize: 14.5,
-        color: '#9c9586',
+        color: 'var(--ink-dim)',
         marginTop: 14,
         lineHeight: 1.45,
       }}
     >
       {criteria} and you're in the{' '}
-      <span style={{ fontStyle: 'italic', color: '#ebe5d6' }}>{nextRank}</span>.
+      <span style={{ fontStyle: 'italic', color: 'var(--ink)' }}>{nextRank}</span>.
     </p>
   )
 }

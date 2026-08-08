@@ -24,13 +24,13 @@ export function ReviewsList({ eventId }: Props) {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
               letterSpacing: '0.1em',
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
             }}
           >
             REVIEWS
           </span>
           {reviews.length > 0 && (
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: '#4f4a3e' }}>
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: 'var(--ink-ghost)' }}>
               ({reviews.length})
             </span>
           )}
@@ -42,7 +42,7 @@ export function ReviewsList({ eventId }: Props) {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
               letterSpacing: '0.06em',
-              color: 'oklch(0.80 0.14 55)',
+              color: 'var(--accent)',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -54,7 +54,7 @@ export function ReviewsList({ eventId }: Props) {
       </div>
 
       {reviews.length === 0 ? (
-        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 14, color: '#9c9586' }}>
+        <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 14, color: 'var(--ink-dim)' }}>
           No reviews yet. Be the first.
         </p>
       ) : (

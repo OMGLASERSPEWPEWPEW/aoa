@@ -64,7 +64,7 @@ export function MentorChat() {
           <div className="flex flex-col items-center justify-center h-full px-6 pb-4">
             <MentorAvatar size={64} />
             <h2 style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 20, color: 'var(--ink)', marginTop: 16, marginBottom: 4 }}>Theater Made Easy</h2>
-            <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#9c9586', textAlign: 'center', maxWidth: 280, marginBottom: 24 }}>
+            <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: 'var(--ink-dim)', textAlign: 'center', maxWidth: 280, marginBottom: 24 }}>
               I know Chicago theater inside and out. Ask me anything — where to start, what to see, or how the scene works.
             </p>
             <SuggestedPrompts onSelect={sendMessage} />
@@ -77,11 +77,11 @@ export function MentorChat() {
             {loading && (
               <div className="flex gap-2.5 items-start">
                 <MentorAvatar size={32} />
-                <div style={{ backgroundColor: '#141109', borderRadius: 12, borderTopLeftRadius: 4, padding: '12px 16px' }}>
+                <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 12, borderTopLeftRadius: 4, padding: '12px 16px' }}>
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#4f4a3e', animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#4f4a3e', animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#4f4a3e', animationDelay: '300ms' }} />
+                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'var(--ink-ghost)', animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'var(--ink-ghost)', animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'var(--ink-ghost)', animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>

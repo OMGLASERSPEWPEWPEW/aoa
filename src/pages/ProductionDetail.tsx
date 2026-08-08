@@ -53,7 +53,7 @@ export function ProductionDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
       </div>
     )
@@ -61,7 +61,7 @@ export function ProductionDetail() {
 
   if (!event) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Show not found.
       </div>
     )
@@ -95,7 +95,7 @@ export function ProductionDetail() {
       <div
         style={{
           height: 196,
-          backgroundColor: '#141109',
+          backgroundColor: 'var(--bg-card)',
           backgroundImage: event.photo_url || venue?.photo_url
             ? `url(${event.photo_url || venue?.photo_url})`
             : undefined,
@@ -113,7 +113,7 @@ export function ProductionDetail() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
               letterSpacing: '0.1em',
-              color: '#4f4a3e',
+              color: 'var(--ink-ghost)',
               position: 'relative',
               zIndex: 1,
             }}
@@ -128,7 +128,7 @@ export function ProductionDetail() {
             left: 0,
             right: 0,
             height: 80,
-            background: 'linear-gradient(transparent, #0c0a05)',
+            background: 'linear-gradient(transparent, var(--bg))',
           }}
         />
       </div>
@@ -154,7 +154,7 @@ export function ProductionDetail() {
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 14,
-              color: '#9c9586',
+              color: 'var(--ink-dim)',
               marginTop: 6,
             }}
           >
@@ -169,7 +169,7 @@ export function ProductionDetail() {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
             letterSpacing: '0.08em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             marginTop: 6,
           }}
         >
@@ -183,8 +183,8 @@ export function ProductionDetail() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
               letterSpacing: '0.06em',
-              color: 'oklch(0.68 0.13 150)',
-              border: '1px solid oklch(0.68 0.13 150)',
+              color: 'var(--access)',
+              border: '1px solid var(--access)',
               borderRadius: 2,
               padding: '2px 6px',
               marginTop: 8,
@@ -203,8 +203,8 @@ export function ProductionDetail() {
                 height: 46,
                 flex: 1,
                 borderRadius: 3,
-                backgroundColor: 'oklch(0.80 0.14 55)',
-                color: '#0c0a05',
+                backgroundColor: 'var(--accent)',
+                color: 'var(--accent-on)',
                 fontFamily: "'Newsreader', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: 15,
@@ -222,8 +222,8 @@ export function ProductionDetail() {
                 height: 46,
                 flex: 1,
                 borderRadius: 3,
-                backgroundColor: 'oklch(0.80 0.14 55)',
-                color: '#0c0a05',
+                backgroundColor: 'var(--accent)',
+                color: 'var(--accent-on)',
                 fontFamily: "'Newsreader', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: 15,
@@ -248,7 +248,7 @@ export function ProductionDetail() {
               color: 'var(--ink)',
               fontFamily: "'Courier Prime', monospace",
               fontSize: 12,
-              border: '1px solid #2b2720',
+              border: '1px solid var(--rule)',
               cursor: 'pointer',
             }}
           >
@@ -258,13 +258,13 @@ export function ProductionDetail() {
       </div>
 
       {/* 2b. THE COMPANY — cast/ensemble */}
-      <div style={{ padding: '14px 20px', borderTop: '1px solid #2b2720' }}>
+      <div style={{ padding: '14px 20px', borderTop: '1px solid var(--rule)' }}>
         <span
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontSize: 9,
             letterSpacing: '0.1em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
           }}
         >
           THE COMPANY
@@ -278,11 +278,11 @@ export function ProductionDetail() {
                     width: 56,
                     height: 56,
                     borderRadius: '50%',
-                    backgroundColor: '#2b2720',
+                    backgroundColor: 'var(--rule)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#625b4c',
+                    color: 'var(--ink-faint)',
                     fontSize: 20,
                   }}
                 >
@@ -292,7 +292,7 @@ export function ProductionDetail() {
                   style={{
                     fontFamily: "'Newsreader', Georgia, serif",
                     fontSize: 12.5,
-                    color: '#9c9586',
+                    color: 'var(--ink-dim)',
                     marginTop: 6,
                     textAlign: 'center',
                     maxWidth: 70,
@@ -308,7 +308,7 @@ export function ProductionDetail() {
                     style={{
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: 9,
-                      color: '#4f4a3e',
+                      color: 'var(--ink-ghost)',
                       marginTop: 2,
                     }}
                   >
@@ -323,7 +323,7 @@ export function ProductionDetail() {
                   style={{
                     fontFamily: "'Courier Prime', monospace",
                     fontSize: 10.5,
-                    color: '#4f4a3e',
+                    color: 'var(--ink-ghost)',
                   }}
                 >
                   +{event.cast_members.length - 3}
@@ -336,7 +336,7 @@ export function ProductionDetail() {
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 14,
-              color: '#9c9586',
+              color: 'var(--ink-dim)',
               fontStyle: 'italic',
               marginTop: 10,
             }}
@@ -347,14 +347,14 @@ export function ProductionDetail() {
       </div>
 
       {/* 3. "The house felt" panel */}
-      <div style={{ backgroundColor: '#141109', padding: '16px 20px' }}>
+      <div style={{ backgroundColor: 'var(--bg-card)', padding: '16px 20px' }}>
         <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>
           <span
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
               letterSpacing: '0.1em',
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
             }}
           >
             THE HOUSE FELT
@@ -364,7 +364,7 @@ export function ProductionDetail() {
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 9,
-                color: '#4f4a3e',
+                color: 'var(--ink-ghost)',
               }}
             >
               {totalCards} CARD{totalCards !== 1 ? 'S' : ''}
@@ -384,7 +384,7 @@ export function ProductionDetail() {
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 14,
-              color: '#9c9586',
+              color: 'var(--ink-dim)',
               fontStyle: 'italic',
             }}
           >
@@ -401,7 +401,7 @@ export function ProductionDetail() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 9,
               letterSpacing: '0.1em',
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
             }}
           >
             WHAT PEOPLE SAID
@@ -414,7 +414,7 @@ export function ProductionDetail() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
               letterSpacing: '0.06em',
-              color: 'oklch(0.80 0.14 55)',
+              color: 'var(--accent)',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -425,13 +425,13 @@ export function ProductionDetail() {
         </div>
 
         {reviewsLoading ? (
-          <p style={{ color: '#625b4c', fontSize: 13 }}>Loading...</p>
+          <p style={{ color: 'var(--ink-faint)', fontSize: 13 }}>Loading...</p>
         ) : reviews.length === 0 ? (
           <p
             style={{
               fontFamily: "'Newsreader', Georgia, serif",
               fontSize: 14,
-              color: '#9c9586',
+              color: 'var(--ink-dim)',
               fontStyle: 'italic',
             }}
           >
@@ -441,7 +441,7 @@ export function ProductionDetail() {
           <div>
             {reviews.map((review, i) => (
               <div key={review.id}>
-                {i > 0 && <div style={{ borderTop: '1px dotted #2b2720', margin: '12px 0' }} />}
+                {i > 0 && <div style={{ borderTop: '1px dotted var(--rule)', margin: '12px 0' }} />}
                 {review.contains_spoilers ? (
                   <SpoilerReview review={review} />
                 ) : (
@@ -461,12 +461,12 @@ export function ProductionDetail() {
             display: 'block',
             width: '100%',
             padding: '14px 20px',
-            borderTop: '1px solid #2b2720',
+            borderTop: '1px solid var(--rule)',
             background: 'none',
             border: 'none',
             borderTopStyle: 'solid',
             borderTopWidth: 1,
-            borderTopColor: '#2b2720',
+            borderTopColor: 'var(--rule)',
             textAlign: 'left',
             cursor: 'pointer',
           }}
@@ -476,7 +476,7 @@ export function ProductionDetail() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
               letterSpacing: '0.08em',
-              color: '#625b4c',
+              color: 'var(--ink-faint)',
             }}
           >
             THE PLAY:{' '}
@@ -531,7 +531,7 @@ function ReviewRow({ review }: { review: NonNullable<ReturnType<typeof useReview
           style={{
             fontFamily: "'Newsreader', Georgia, serif",
             fontSize: 14,
-            color: '#9c9586',
+            color: 'var(--ink-dim)',
             lineHeight: 1.5,
           }}
         >
@@ -555,8 +555,8 @@ function SpoilerReview({ review }: { review: NonNullable<ReturnType<typeof useRe
         minHeight: 44,
         fontFamily: "'Courier Prime', monospace",
         fontSize: 11,
-        color: 'oklch(0.66 0.19 35)',
-        backgroundColor: 'oklch(0.20 0.05 35)',
+        color: 'var(--danger)',
+        backgroundColor: 'var(--danger-bg)',
         border: 'none',
         borderRadius: 3,
         padding: '10px 14px',

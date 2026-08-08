@@ -15,8 +15,8 @@ export function MarqueeTicker({ tonightCount, under20Count, openingsCount }: Pro
   return (
     <div
       style={{
-        background: 'linear-gradient(180deg, oklch(0.16 0.04 55), #0c0a05)',
-        borderBottom: '1px solid #2b2720',
+        background: 'var(--gold-gradient)',
+        borderBottom: '1px solid var(--rule)',
         overflow: 'hidden',
         whiteSpace: 'nowrap',
       }}
@@ -30,14 +30,14 @@ export function MarqueeTicker({ tonightCount, under20Count, openingsCount }: Pro
           fontFamily: "'Courier Prime', monospace",
           fontSize: 10.5,
           letterSpacing: '0.14em',
-          color: 'oklch(0.80 0.14 55)',
+          color: 'var(--accent)',
           animation: 'marquee-scroll 26s linear infinite',
         }}
       >
         <span>{content}</span>
-        <span style={{ color: '#625b4c' }}>•</span>
+        <span style={{ color: 'var(--ink-faint)' }}>•</span>
         <span>{content}</span>
-        <span style={{ color: '#625b4c' }}>•</span>
+        <span style={{ color: 'var(--ink-faint)' }}>•</span>
       </div>
 
       <style>{`

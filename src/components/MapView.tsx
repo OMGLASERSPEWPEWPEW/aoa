@@ -4,6 +4,7 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { createMarkerElement } from './MapMarker'
 import { MapFilterChips } from './MapFilterChips'
@@ -21,6 +22,7 @@ export function MapView() {
   const markersRef = useRef<Map<string, { marker: mapboxgl.Marker; el: HTMLDivElement; venue: Venue }>>(new Map())
   const markerClickedRef = useRef(false)
   const { user } = useAuth()
+  const { resolved: theme } = useTheme()
   const { getStatus } = useWatchlist()
 
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
@@ -108,7 +110,7 @@ export function MapView() {
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: `mapbox://styles/mapbox/${theme}-v11`,
       center: CHICAGO_CENTER,
       zoom: 12,
       attributionControl: true,
@@ -173,13 +175,19 @@ export function MapView() {
   }, [venues, events, activeFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors])
 
   useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    map.setStyle(`mapbox://styles/mapbox/${theme}-v11`)
+  }, [theme])
+
+  useEffect(() => {
     for (const [id, { el }] of markersRef.current) {
       const selected = selectedVenue?.id === id
       const chip = el.firstElementChild as HTMLElement | null
       if (chip) {
         chip.style.transform = selected ? 'scale(1.18)' : 'scale(1)'
         chip.style.boxShadow = selected
-          ? '0 3px 8px rgba(0,0,0,.7), 0 0 12px oklch(0.80 0.14 55)'
+          ? '0 3px 8px rgba(0,0,0,.7), 0 0 12px var(--accent)'
           : '0 3px 8px rgba(0,0,0,.7)'
       }
     }
@@ -187,12 +195,12 @@ export function MapView() {
 
   if (!hasToken) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ backgroundColor: '#141109', color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--ink-faint)' }}>
         <div className="text-center p-6">
           <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 18, color: 'var(--ink)', marginBottom: 8 }}>
             Map Coming Soon
           </p>
-          <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 10, color: '#625b4c' }}>
+          <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: 10, color: 'var(--ink-faint)' }}>
             Add VITE_MAPBOX_TOKEN to .env.local
           </p>
         </div>
@@ -240,7 +248,7 @@ export function MapView() {
           right: 4,
           fontFamily: "'Courier Prime', monospace",
           fontSize: 8,
-          color: '#3f3a31',
+          color: 'var(--ink-whisper)',
           pointerEvents: 'none',
           zIndex: 5,
         }}

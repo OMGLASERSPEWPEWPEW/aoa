@@ -19,10 +19,10 @@ export function WatchlistButton({ status, onToggle }: WatchlistButtonProps) {
         border: 'none',
         backgroundColor: 'transparent',
         color: status === 'seen'
-          ? 'oklch(0.68 0.13 150)'
+          ? 'var(--access)'
           : status
-            ? 'oklch(0.80 0.14 55)'
-            : '#625b4c',
+            ? 'var(--accent)'
+            : 'var(--ink-faint)',
         cursor: 'pointer',
         flexShrink: 0,
       }}

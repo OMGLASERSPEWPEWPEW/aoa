@@ -55,7 +55,7 @@ export function Header() {
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
               letterSpacing: '0.06em',
-              color: 'oklch(0.80 0.14 55)',
+              color: 'var(--accent)',
               textDecoration: 'none',
             }}
           >

@@ -60,7 +60,7 @@ export function PlayDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
       </div>
     )
@@ -68,7 +68,7 @@ export function PlayDetail() {
 
   if (!play) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ color: '#625b4c' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Play not found.
       </div>
     )
@@ -96,12 +96,12 @@ export function PlayDetail() {
         style={{
           fontFamily: "'Newsreader', Georgia, serif",
           fontSize: 14,
-          color: '#9c9586',
+          color: 'var(--ink-dim)',
           marginBottom: play.awards.length > 0 || play.year_written ? 6 : 0,
         }}
       >
         {play.playwright}
-        {play.year_written && <span style={{ color: '#625b4c' }}> · {play.year_written}</span>}
+        {play.year_written && <span style={{ color: 'var(--ink-faint)' }}> · {play.year_written}</span>}
       </div>
 
       {play.awards.length > 0 && (
@@ -113,8 +113,8 @@ export function PlayDetail() {
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 9,
                 letterSpacing: '0.06em',
-                color: 'oklch(0.80 0.14 55)',
-                border: '1px solid oklch(0.42 0.09 55)',
+                color: 'var(--accent)',
+                border: '1px solid var(--accent-border)',
                 borderRadius: 2,
                 padding: '2px 6px',
                 textTransform: 'uppercase',
@@ -131,7 +131,7 @@ export function PlayDetail() {
           style={{
             fontFamily: "'Newsreader', Georgia, serif",
             fontSize: 15,
-            color: '#9c9586',
+            color: 'var(--ink-dim)',
             lineHeight: 1.5,
             marginBottom: 20,
           }}
@@ -146,7 +146,7 @@ export function PlayDetail() {
           fontFamily: "'Courier Prime', monospace",
           fontSize: 9,
           letterSpacing: '0.1em',
-          color: '#625b4c',
+          color: 'var(--ink-faint)',
           marginBottom: 12,
         }}
       >
@@ -159,7 +159,7 @@ export function PlayDetail() {
             fontFamily: "'Newsreader', Georgia, serif",
             fontStyle: 'italic',
             fontSize: 14,
-            color: '#9c9586',
+            color: 'var(--ink-dim)',
           }}
         >
           No productions tracked yet.
@@ -175,7 +175,7 @@ export function PlayDetail() {
 
             return (
               <div key={e.id}>
-                {i > 0 && <div style={{ borderTop: '1px dotted #2b2720', margin: '10px 0' }} />}
+                {i > 0 && <div style={{ borderTop: '1px dotted var(--rule)', margin: '10px 0' }} />}
                 <button
                   onClick={() => navigate(`/app/show/${e.id}`)}
                   style={{
@@ -194,7 +194,7 @@ export function PlayDetail() {
                         fontFamily: "'Newsreader', Georgia, serif",
                         fontStyle: 'italic',
                         fontSize: 15,
-                        color: isUpcoming ? 'oklch(0.80 0.14 55)' : 'var(--ink)',
+                        color: isUpcoming ? 'var(--accent)' : 'var(--ink)',
                       }}
                     >
                       {e.venue?.name ?? 'Unknown venue'}
@@ -204,7 +204,7 @@ export function PlayDetail() {
                         style={{
                           fontFamily: "'Courier Prime', monospace",
                           fontSize: 10,
-                          color: '#4f4a3e',
+                          color: 'var(--ink-ghost)',
                         }}
                       >
                         {year}
@@ -218,7 +218,7 @@ export function PlayDetail() {
                         fontFamily: "'Courier Prime', monospace",
                         fontSize: 9,
                         letterSpacing: '0.06em',
-                        color: 'oklch(0.80 0.14 55)',
+                        color: 'var(--accent)',
                         marginTop: 3,
                       }}
                     >

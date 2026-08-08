@@ -11,8 +11,8 @@ export function ReviewBadge({ rank }: { rank: HouseRank }) {
         letterSpacing: '0.1em',
         padding: '1px 6px',
         borderRadius: 9,
-        color: isOrchestra ? 'oklch(0.80 0.14 55)' : '#9c9586',
-        border: `1px solid ${isOrchestra ? 'oklch(0.42 0.09 55)' : '#2b2720'}`,
+        color: isOrchestra ? 'var(--accent)' : 'var(--ink-dim)',
+        border: `1px solid ${isOrchestra ? 'var(--accent-border)' : 'var(--rule)'}`,
         textTransform: 'uppercase',
         whiteSpace: 'nowrap',
       }}

@@ -55,7 +55,7 @@ export function EmotionWheel({ selected, onChange }: Props) {
             fontSize: 10,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
             animation: shaking ? 'wheel-shake 120ms ease-out' : undefined,
           }}
         >
@@ -75,7 +75,7 @@ export function EmotionWheel({ selected, onChange }: Props) {
                 top: pos.top,
                 width: 66,
                 height: 66,
-                border: isSelected ? `1.5px solid ${base(e)}` : '1px solid #2b2720',
+                border: isSelected ? `1.5px solid ${base(e)}` : '1px solid var(--rule)',
                 backgroundColor: isSelected ? fill(e) : 'transparent',
                 color: isSelected ? bright(e) : nodeColor(e),
                 fontFamily: "'Courier Prime', monospace",
@@ -105,7 +105,7 @@ export function EmotionWheel({ selected, onChange }: Props) {
             fontSize: 9,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
-            color: '#625b4c',
+            color: 'var(--ink-faint)',
           }}
         >
           SELECTED
@@ -121,7 +121,7 @@ export function EmotionWheel({ selected, onChange }: Props) {
                   width: 10,
                   height: 10,
                   borderRadius: '50%',
-                  backgroundColor: e ? base(e) : '#2b2720',
+                  backgroundColor: e ? base(e) : 'var(--rule)',
                   transition: 'background-color 150ms',
                 }}
               />
@@ -142,6 +142,6 @@ export function EmotionWheel({ selected, onChange }: Props) {
 }
 
 function nodeColor(e: EmotionDef): string {
-  if (e.slug === 'bored') return '#625b4c'
+  if (e.slug === 'bored') return 'var(--ink-faint)'
   return base(e)
 }
