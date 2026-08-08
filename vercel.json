@@ -37,6 +37,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/prototypes/:path*", "destination": "/prototypes/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
