@@ -1326,3 +1326,65 @@ The graph is only useful when you're actively building a new project from a `gra
 
 ---
 
+## 2026-08-09_12-04-47 (session 66f33189)
+
+**assistant**: There's no cron schedule set up. The flash bot (`event-scraper` Edge Function) exists and works — it scrapes venue calendar URLs, feeds the HTML to DeepSeek V4 Flash for extraction, and upserts events into the database. But right now it only runs when manually triggered via an HTTP call with the `x-scraper-key` header. There's no automated schedule.
+
+To make it run automatically, we'd need to set up either `pg_cron` in Supabase or an external scheduler (like a Vercel cron or a simple GitHub Acti...
+
+**user**: What's normative?
+
+---
+
+## 2026-08-09_12-06-27 (session 66f33189)
+
+**assistant**: For theater listings, once daily is the norm — most venues update their calendars during business hours, and shows get announced days or weeks in advance, not minutes. A 6 AM run catches anything posted the day before and has fresh data ready before anyone opens the app.
+
+Twice daily (say 6 AM + 6 PM) is worth it if you want to catch same-day announcements or last-minute additions, but it doubles the DeepSeek API cost for marginal gain.
+
+I'd recommend **once daily at 6 AM CST** to start, and bum...
+
+**user**: okay let's set that up.  How many prompts do we have?
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: mcp__supabase__execute_sql]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-09_12-12-39 (session 66f33189)
+
+**assistant**: Now update the routes and Header to use "admin" instead of "docs".
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the routes in App.tsx.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+

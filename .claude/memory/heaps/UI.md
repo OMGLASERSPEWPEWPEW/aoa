@@ -1125,3 +1125,32 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
+## 2026-08-09_11-31-12 (session 66f33189)
+
+**assistant**: Proposed commits (3):
+
+**1.** `fix(ui): restore UpdateBanner for PWA updates using glyffitimobile pattern (v0.4.30)`
+```
+Why: The UpdateBanner was removed in v0.4.28, killing the only mechanism
+     that detected new SWs and prompted a reload. iPhone PWA stuck on stale version.
+Files: src/components/UpdateBanner.tsx, src/App.tsx, src/global.d.ts, package.json
+```
+
+**2.** `feat(ui): add docs pages inside AppShell with iframe viewer`
+```
+Why: Prototype pages were static HTML outside the React app ...
+
+**user**: yes
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

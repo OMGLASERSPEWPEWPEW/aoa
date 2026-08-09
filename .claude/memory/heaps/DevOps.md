@@ -2618,3 +2618,72 @@ Let me commit this.
 
 ---
 
+## 2026-08-09_11-38-38 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The last Vercel deployment is 23 hours old — our push from minutes ago hasn't deployed yet. Let me check if auto-deploy is working and find the production URL.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Production URL is `aoa-nine.vercel.app`. The last deploy was 23h ago — our push didn't trigger auto-deploy. Let me check what's live and then deploy manually.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Production is still on v0.4.29 — our push never auto-deployed. Deploying now.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-56-45 (session 66f33189)
+
+**assistant**: Deployed. v0.4.30 is now live at `aoa-nine.vercel.app`. 
+
+On your iPhone: fully close the PWA from the app switcher (swipe up to kill it), wait a few seconds, then reopen. The old SW will fetch the new `sw.js`, activate it via `skipWaiting`, and on the next open you should see the "Updated / Reload" banner. Tap Reload and you'll be on v0.4.30.
+
+If it still doesn't update after a full close+reopen cycle, you may need to delete the PWA from your home screen and re-add it — that's the nuclear optio...
+
+**user**: ok that worked. Finally.  Let's talk about the flash bot. How often does it check for new shows etc?
+
+**assistant**: Good to hear v0.4.30 landed. Let me find what we have on the flash bot.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: This is a research question — let me check the scraper setup.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_12-08-51 (session 66f33189)
+
+**assistant**: Right now you have **12 venues with calendar URLs**. Each scraper run does:
+- 1 DeepSeek V4 Flash prompt per venue (extraction)
+- Plus enrichment fetches (no AI, just HTML/og:image)
+
+So that's **12 prompts per daily run**. At DeepSeek V4 Flash pricing ($0.10/M input, $0.40/M output), a full run probably costs a few cents — essentially free.
+
+As you add more venues, it scales linearly. Even at 50 venues it'd be well under $1/day.
+
+Want me to set up the daily 6 AM CST cron now?
+
+---
+[timestamp] 20...
+
+**user**: I'm confused.  Can you show me the prompts? Is it the same prompt for each venue with the name swapped out? Why is it only 12 venues? Doesn't chicago have a ton? storefronts, etc?
+
+---
+
