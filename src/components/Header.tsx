@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../hooks/useProfile'
@@ -47,10 +48,8 @@ export function Header() {
       </div>
       <div className="flex items-center gap-3">
         {isAdmin && (
-          <a
-            href="/prototypes/"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/app/docs"
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
@@ -60,7 +59,7 @@ export function Header() {
             }}
           >
             DOCS
-          </a>
+          </Link>
         )}
         <span
           style={{
