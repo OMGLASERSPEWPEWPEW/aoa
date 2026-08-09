@@ -539,7 +539,16 @@ Deploy edge function, configure provider, wire `callModel()`. Test: prompt → r
 
 ### 7.5 PWA Configuration
 
-vite-plugin-pwa in vite.config.ts, manifest with app name/colors/icons, service worker, offline fallback.
+Follow `~/Development/patterns/kb/wiki/procedures/pwa-version-refresh.md` exactly. Summary:
+
+1. Add VitePWA plugin to `vite.config.ts` with `registerType: 'autoUpdate'`, manifest, and workbox config (`skipWaiting: true`, `clientsClaim: true`)
+2. Add `/// <reference types="vite-plugin-pwa/react" />` to `src/global.d.ts`
+3. Create `src/components/UpdateBanner.tsx` with `useRegisterSW()` hook + bfcache detection
+4. Render `<UpdateBanner />` in `App.tsx` root layout, outside routing
+5. Create `VersionStamp` component, display in app header
+6. Add Vercel cache headers for `sw.js`, `index.html`, and `manifest.webmanifest`
+
+**The UpdateBanner is mandatory.** Without `useRegisterSW()`, the SPA will never reload when a new SW activates. Users get stuck on stale code indefinitely. See the procedure doc for the incident report.
 
 ### 7.6 Database Seed
 
