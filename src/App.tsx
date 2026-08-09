@@ -29,12 +29,16 @@ import { LogShow } from './pages/LogShow'
 import { WriteReview } from './pages/WriteReview'
 import { ProductionDetail } from './pages/ProductionDetail'
 import { PlayDetail } from './pages/PlayDetail'
+import { Docs } from './pages/Docs'
+import { DocsViewer } from './pages/DocsViewer'
+import { UpdateBanner } from './components/UpdateBanner'
 export default function App() {
   return (
     <ThemeProvider>
     <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
+        <UpdateBanner />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -59,6 +63,8 @@ export default function App() {
             <Route path="play/:playId" element={<PlayDetail />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="docs" element={<Docs />} />
+            <Route path="docs/:page" element={<DocsViewer />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
