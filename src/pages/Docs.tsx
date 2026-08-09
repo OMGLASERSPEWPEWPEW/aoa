@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useCostDashboard } from '../hooks/useCostDashboard'
 
-const tabs = ['Design', 'AI Prompts'] as const
+const tabs = ['Design', 'AI Prompts', 'Costs'] as const
 type Tab = (typeof tabs)[number]
 
 const prototypes = [
@@ -169,6 +170,7 @@ export function Docs() {
         {tab === 'AI Prompts' && (
           <PromptsTab expanded={expanded} setExpanded={setExpanded} />
         )}
+        {tab === 'Costs' && <CostsTab />}
       </div>
     </div>
   )
@@ -209,6 +211,152 @@ function DesignTab() {
           </Link>
         ))}
       </div>
+    </>
+  )
+}
+
+function formatCost(n: number): string {
+  if (n < 0.01) return `$${n.toFixed(4)}`
+  return `$${n.toFixed(2)}`
+}
+
+function CostsTab() {
+  const { today, rolling7d, rolling30d, byModel, byFeature, dailySeries, loading } = useCostDashboard()
+
+  if (loading) {
+    return (
+      <div style={{ ...mono, fontSize: 11, color: 'var(--ink-faint)', padding: '40px 0', textAlign: 'center' }}>
+        Loading usage data...
+      </div>
+    )
+  }
+
+  const maxDaily = Math.max(...dailySeries.map((d) => d.total_cost), 0.0001)
+
+  return (
+    <>
+      <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>
+        AI Costs
+      </div>
+      <p style={{ fontSize: 14, color: 'var(--ink-dim)', lineHeight: 1.5, margin: '8px 0 20px' }}>
+        Token usage and estimated costs across all AI features.
+      </p>
+
+      {/* Summary cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+        {[
+          { label: 'TODAY', value: today },
+          { label: '7 DAYS', value: rolling7d },
+          { label: '30 DAYS', value: rolling30d },
+        ].map((c) => (
+          <div
+            key={c.label}
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--rule)',
+              borderRadius: 3,
+              padding: '12px 8px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-faint)', marginBottom: 4 }}>
+              {c.label}
+            </div>
+            <div style={{ ...mono, fontSize: 16, color: 'var(--ink)' }}>
+              {formatCost(c.value)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Daily bar chart */}
+      {dailySeries.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-faint)', textTransform: 'uppercase', marginBottom: 8 }}>
+            Daily Cost (14 days)
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {dailySeries.map((d) => (
+              <div key={d.day} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ ...mono, fontSize: 10, color: 'var(--ink-faint)', width: 44, flexShrink: 0 }}>
+                  {new Date(d.day + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+                <div style={{ flex: 1, height: 10, background: 'var(--bg-chrome)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${Math.max((d.total_cost / maxDaily) * 100, 1)}%`,
+                      background: 'var(--accent)',
+                      borderRadius: 2,
+                    }}
+                  />
+                </div>
+                <span style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', width: 52, textAlign: 'right', flexShrink: 0 }}>
+                  {formatCost(d.total_cost)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* By feature */}
+      {byFeature.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-faint)', textTransform: 'uppercase', marginBottom: 8 }}>
+            By Feature
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {byFeature.map((f) => (
+              <div
+                key={f.feature}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--rule)', borderRadius: 3,
+                }}
+              >
+                <span style={{ fontSize: 13, color: 'var(--ink)' }}>{f.feature}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ ...mono, fontSize: 10, color: 'var(--ink-faint)' }}>{f.call_count} calls</span>
+                  <span style={{ ...mono, fontSize: 13, color: 'var(--ink)' }}>{formatCost(f.total_cost)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* By model */}
+      {byModel.length > 0 && (
+        <div>
+          <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-faint)', textTransform: 'uppercase', marginBottom: 8 }}>
+            By Model
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {byModel.map((m) => (
+              <div
+                key={m.model}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--rule)', borderRadius: 3,
+                }}
+              >
+                <span style={{ fontSize: 13, color: 'var(--ink)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.model}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                  <span style={{ ...mono, fontSize: 10, color: 'var(--ink-faint)' }}>{m.call_count} calls</span>
+                  <span style={{ ...mono, fontSize: 13, color: 'var(--ink)' }}>{formatCost(m.total_cost)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {byFeature.length === 0 && byModel.length === 0 && (
+        <div style={{ ...mono, fontSize: 11, color: 'var(--ink-faint)', textAlign: 'center', padding: '20px 0' }}>
+          No AI usage recorded yet.
+        </div>
+      )}
     </>
   )
 }
