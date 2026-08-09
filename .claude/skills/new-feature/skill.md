@@ -16,6 +16,7 @@ You are executing the **new feature documentation workflow**. This skill produce
 |---------|-------|
 | **PRD Directory** | `.claude/docs/prd/` |
 | **ADR Directory** | `docs/adr/` |
+| **Graph Directory** | `docs/graphs/` |
 | **Roadmap Directory** | `docs/roadmap/` |
 | **Main Documentation File** | `CLAUDE.md` |
 
@@ -219,6 +220,74 @@ Skip the ADR only when the feature introduces no architectural decisions (pure U
 
 **Output**: Architecture document (in PRD or standalone) + ADR(s) in `docs/adr/`
 
+### 4.4 Graph Engineering Document (MANDATORY)
+
+Create `docs/graphs/<feature-slug>.md` as a standalone graph-engineering spec in the standard format. This file is automatically discovered by Lighthouse for live visualization during implementation.
+
+The graph MUST follow this structure:
+
+```markdown
+# Graph Engineering: <Feature Name>
+
+**Version:** 0.1.0
+**Generated:** <date>
+**Nodes:** <count> | **Phases:** <count> | **Loop specs:** <count>
+
+---
+
+## Section 1: Task Graph Topology
+
+### Nodes
+<GROUP_NAME>: node-a, node-b, node-c
+
+### Edges
+node-a → node-b → node-c
+
+---
+
+## Section 2: Node Specifications
+
+#### Node: <node-id>
+- **Type**: feature | config | scaffold | pattern-install
+- **Agent**: frontend-developer | backend-architect | (main context)
+- **Depends on**: <node-id> or (none)
+- **Inputs**: <what this node reads>
+- **Outputs**: <exact file paths this node creates/modifies>
+- **Loop pattern**: one-shot | plan-execute-verify
+- **Success criteria**: <observable outcome>
+- **Estimated effort**: Trivial | Small | Medium | Large
+
+---
+
+## Section 3: Loop Specifications
+
+### Loop: <node-id>
+- **Trigger**: <when this loop starts>
+- **Inner cycle**:
+  1. Plan: <what to plan>
+  2. Execute: <what to build>
+  3. Verify: <how to check>
+- **Evaluator**: <pass/fail criteria>
+- **Retry**: <on failure strategy, max cycles>
+- **Stop condition**: <when to stop looping>
+
+---
+
+## Section 5: Build Phases
+
+### Phase 0: <name>
+- [ ] node-a
+- [ ] node-b → node-c
+```
+
+**Rules:**
+- Every FR in the PRD maps to at least one graph node
+- Every node with non-trivial logic gets a loop spec (plan-execute-verify)
+- Node `outputs` must list exact file paths — these are used by Lighthouse's correlator to track progress
+- The graph file is STANDALONE — it must be parseable by the graph-engineering parser without the PRD
+
+**Output**: `docs/graphs/<feature-slug>.md`
+
 ---
 
 ## Phase 5: QA Doc
@@ -285,6 +354,9 @@ Verify the documentation package is complete and implementation-ready. An implem
 - [ ] **Architecture doc** specifies exact API request/response schemas (not just "accepts a message ID")
 - [ ] **Architecture doc** specifies exact DB changes as SQL statements
 - [ ] **Architecture doc** references existing code to reuse (with file paths and line numbers) — the implementing agent should extend, not reinvent
+- [ ] **Graph engineering doc** exists at `docs/graphs/<feature-slug>.md` with nodes, edges, loop specs, and build phases
+- [ ] **Graph engineering doc** node outputs list exact file paths (for Lighthouse correlator)
+- [ ] **Graph engineering doc** every non-trivial node has a loop spec
 - [ ] **ADR** records why the chosen approach was picked over alternatives (if applicable)
 - [ ] **QA doc** has one checkbox per observable behavior — an implementing agent can use this as a done-list
 - [ ] **Every error state** is specified (what fails, what the user sees, how the system recovers)
@@ -319,7 +391,7 @@ Before proceeding to the next phase, confirm:
 - [ ] **Phase 1 → 2**: Feature approved, roadmap updated
 - [ ] **Phase 2 → 3**: PRD created, all FRs pass quality bar
 - [ ] **Phase 3 → 4**: UX recommendations documented (if applicable)
-- [ ] **Phase 4 → 5**: Architecture defined with exact specifics, prior art documented, ADR written (if applicable)
+- [ ] **Phase 4 → 5**: Architecture defined with exact specifics, prior art documented, ADR written (if applicable), graph engineering doc created at `docs/graphs/`
 - [ ] **Phase 5 → 6**: QA doc created, every FR has a corresponding checkbox
 - [ ] **Phase 6 → 7**: Main docs updated, roadmap status set to "In Progress"
 - [ ] **Phase 7 → Done**: Handoff review passed — all verification checks green

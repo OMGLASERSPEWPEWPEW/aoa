@@ -26,6 +26,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/zephyr-init.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/lighthouse.sh"
           }
         ]
       }
@@ -49,6 +53,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/session-journal.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/lighthouse.sh"
           }
         ]
       }
@@ -111,6 +119,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/session-journal.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/lighthouse.sh"
           }
         ]
       }
@@ -121,6 +133,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/session-journal.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/lighthouse.sh"
           }
         ]
       }

@@ -2381,3 +2381,240 @@ Let me also check the landing page in lig...
 
 ---
 
+## 2026-08-08_12-11-40 (session 9b8761c3)
+
+**assistant**: [tool: Read]
+
+**assistant**: I'll add expandable card styles with screenshots, website links, and detailed breakdowns. Adding new CSS and rebuilding the landscape tab.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now replacing the landscape tab content with expandable, linked, screenshot-enabled cards.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the JS at the bottom to handle card expand/collapse.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now copy to public and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_12-38-09 (session b9154454)
+
+**assistant**: Pushed. **v0.4.27** — now when you deploy and a user has the old service worker cached, they'll see a floating "Updated — Reload" toast at the bottom of the screen. Clicking it forces the new SW to activate and reloads the page.
+
+The banner uses your theme tokens (`var(--ink)` background, `var(--accent)` button) so it works in both light and dark mode.
+
+---
+[timestamp] 2026-08-08 CST
+
+**user**: what version are we on now?
+
+---
+
+## 2026-08-08_12-44-18 (session b9154454)
+
+**assistant**: There it is. GlyffitiMobile has explicit **Vercel headers** that force `sw.js`, `index.html`, and `manifest.webmanifest` to `max-age=0, must-revalidate`. AOA has **none** — so Vercel's CDN may be caching `sw.js` and `index.html`, preventing browsers from discovering new versions.
+
+Here's my plan — it's a simple config fix:
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Write]
+
+**assistant**: The fix is simple — AOA's `vercel.json` is missing cache headers that GlyffitiMobile has. Without them, Vercel's CDN can cache `sw.js` and `index.html`, so browsers never discover the new service worker. One file change to `vercel.json`.
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_12-53-48 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The production URL is `https://aoa-nine.vercel.app`. Let me check what it's actually serving.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Confirmed. **Vercel is serving v0.4.25** (deployed Aug 3). Our local build is v0.4.27 with asset hash `index-DVkRIcMv.js`, but Vercel has `index-CJyrPHA9.js` from 5 days ago.
+
+The problem is simple: **Vercel's GitHub integration stopped auto-deploying.** Let me check why and do a manual deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_12-57-32 (session b9154454)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploying to Vercel.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_13-03-08 (session b9154454)
+
+**assistant**: **v0.4.28 is live.** Summary of everything this session:
+
+- **Dark/light/system theme** — fully working with warm parchment light palette
+- **Vercel cache headers** — `sw.js` and `index.html` served with `max-age=0, must-revalidate`
+- **UpdateBanner removed** — `autoUpdate` handles SW silently
+- **GitHub auto-deploy is disconnected** — the Vercel GitHub App lost access to the repo. You'll need to reconnect it in Vercel dashboard → Settings → Git. Until then I'll do `vercel deploy --prod` after p...
+
+**user**: ok that worked. Okay so if you look at this projects start, we tried to get as much working from scratch the init part regarding havign the SW autoupdating like a system with glyffiti including using vercel and supabase cli's to add and edit settings appropriately. Why didn't that all get done? What can we do about our initiationalization process which I think is at /development/patterns somewhere.  
+
+How can we make this better.
+
+**assistant**: Good question. Let me dig into the patterns library and compare what AOA got vs what it should have gotten.
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-08_14-11-31 (session 9b8761c3)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build to verify, then commit and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build is good — `dist/prototypes/` has all files and Landscape card is first (line 39). Committing and pushing.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_14-13-35 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now I see the full picture. Here's what's happening:
+
+- `/new-app` **does** include diagnostics as a mandatory graph node — but only at project creation time
+- `/new-feature` **never asks** "does this feature need diagnostic events?" or "what tests cover this?"
+- The architecture doc template in `/new-feature` has no "Infrastructure Integration" section — no prompt to consider diagnostics hooks, test files, or telemetry for the new feature
+
+The fix is adding an **Infrastructure Integration check...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now I have the full picture. The `/new-feature` skill's Phase 4 (Architecture) and Phase 7 (Handoff Review) have no prompts for:
+- "Does this feature need diagnostic events?"
+- "What unit tests cover the pure logic?"
+- "Does the Vercel CSP need updating for new external APIs?"
+
+I'll add an **Infrastructure Integration** section to the architecture phase and matching checklist items to the handoff review.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add matching items to the handoff review checklist.
+
+**assistant**: [tool: Edit]
+
+**assistant**: And add to the anti-shortcut table.
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-08_14-34-05 (session b9154454)
+
+**user**: Okay how can we create a sister website where we can visualize implementation live like render the graph nodes real-time tracking, issue to issue as things are being built when loops are used and visualizing that use but on a vite website localhost for the project on an open port number based on whats available in /development/patterns
+
+Do you understand what I am asking? I see a lot of posts showing code like that. Can you web search? It's something that should be observable by others
+
+**assistant**: Yes — a live dashboard that visualizes the graph engineering execution in real-time: which nodes are done, which loops are running, iteration counts, agent assignments, and progress as features get built. Like a CI/CD pipeline view but for AI agent workflows.
+
+Let me search for what's out there first.
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: WebSearch]
+
+---
+
+## 2026-08-09_11-25-20 (session c4e3cf60)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the frontend dropdown to use `<optgroup>` for grouped display.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: AOA now shows 2 graphs: Master Plan and graph-engineering-v2. The dropdown will group them under `aoa` with `optgroup`. Any project that creates `docs/graphs/<feature>.md` files will automatically appear.
+
+Let me commit this.
+
+**assistant**: [tool: Bash]
+
+---
+

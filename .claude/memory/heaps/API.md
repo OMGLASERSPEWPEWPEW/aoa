@@ -1364,3 +1364,284 @@ Then select `chrome-devtools` and restart it. That'll pick up the `--headless` f
 
 ---
 
+## 2026-08-08_13-11-22 (session 9b8761c3)
+
+**assistant**: Pushed. Every competitor card now:
+
+- **Has a favicon** from Google's favicon API
+- **Clicks to expand** showing a detail panel that spans the full grid width
+- **Shows a live screenshot** of their website (via thum.io thumbnail service)
+- **Links to their actual site** (clickable URL with arrow)
+- **Includes metadata** — platforms, founding year, business model, scale
+- **Shows key features, weaknesses, and "Steal This"** insights pulled from the research docs
+- **Collapses back** when clicked ...
+
+**user**: ok on the docs page.  Landscape is the bottom card but since it's newest it should be at top.  Can we fix that
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_14-11-31 (session 9b8761c3)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build to verify, then commit and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build is good — `dist/prototypes/` has all files and Landscape card is first (line 39). Committing and pushing.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_14-13-35 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now I see the full picture. Here's what's happening:
+
+- `/new-app` **does** include diagnostics as a mandatory graph node — but only at project creation time
+- `/new-feature` **never asks** "does this feature need diagnostic events?" or "what tests cover this?"
+- The architecture doc template in `/new-feature` has no "Infrastructure Integration" section — no prompt to consider diagnostics hooks, test files, or telemetry for the new feature
+
+The fix is adding an **Infrastructure Integration check...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now I have the full picture. The `/new-feature` skill's Phase 4 (Architecture) and Phase 7 (Handoff Review) have no prompts for:
+- "Does this feature need diagnostic events?"
+- "What unit tests cover the pure logic?"
+- "Does the Vercel CSP need updating for new external APIs?"
+
+I'll add an **Infrastructure Integration** section to the architecture phase and matching checklist items to the handoff review.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add matching items to the handoff review checklist.
+
+**assistant**: [tool: Edit]
+
+**assistant**: And add to the anti-shortcut table.
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-08_17-20-47 (session b9154454)
+
+**assistant**: Lighthouse is live and receiving events. The hook is installed in AOA across all 4 lifecycle events (SessionStart, PreToolUse, PostToolUse, Stop). 
+
+**What's working right now:**
+- Lighthouse server on `http://localhost:3032` — accepting events, WebSocket ready
+- Hook at `.claude/hooks/lighthouse.sh` — fire-and-forget, never blocks Claude
+- Every tool call in this AOA session is now being POSTed to Lighthouse
+
+The hooks won't fire for *this* session (they were added mid-session), but your **next...
+
+**user**: efused to load http://localhost:3032/favicon.ico because it appears in neither the img-src directive nor the default-src 
+
+says cannot get
+
+**assistant**: The Express server has no GET `/` route — it only has POST `/api/events` and GET `/api/health`. Let me fix that and the favicon issue.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now restart the server.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_18-40-14 (session c4e3cf60)
+
+**assistant**: Good reference pattern. Now I have everything I need to write the Backend Core PRD. Let me also check the watcher pattern.
+
+**assistant**: [tool: Read]
+
+**assistant**: Now let me write the Backend Core PRD — this is the biggest and most important one since every other feature references its schemas and APIs.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now the QA doc and ADR for Backend Core.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Feature 1 done (PRD + QA + ADR). Now **Feature 2: Edge Rendering** — the small, self-contained one.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-08_18-52-18 (session c4e3cf60)
+
+**assistant**: Let me check compilation and restart the server.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 3 projects discovered. Let me reload the dashboard and test.
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: Now you're looking at **Lighthouse's own graph**. The dropdown in the header shows "lighthouse" selected, and the DAG displays all 28 Lighthouse nodes — you can see the green "DONE" badges on `scaffold`, `port-claim`, `app-shell`, `ws-client`, `store-graph`, `store-events`, `node-card`, `layout-engine`, `graph-parser`, and others we've completed. The remaining nodes (`db-setup`, `event-api`, `ws-server`, `edge-rendering`, `correlator`, `sidebar`, etc.) are still dark.
+
+The minimap in the bottom-...
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-20-24 (session c4e3cf60)
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: [Image #2] what do you see you have a damn screenshot.  I see the event feed that works but graph is something else or useless
+
+**user**: [Image: source: /var/folders/2m/v5hl_7rn3xbg8ttl5v1dss8w0000gn/T/TemporaryItems/NSIRD_screencaptureui_XubVii/Screenshot 2026-08-09 at 11.17.33 AM.png]
+
+**assistant**: You're right. I see it now — the event feed is streaming 41 events and working great. The graph is showing AOA's original build plan from July, which has nothing to do with the "add top nav bar" work happening right now. It's a static architecture diagram, not a live activity view.
+
+The graph is only useful when you're actively building a new project from a `graph-engineering.md` spec (like we were doing with Lighthouse earlier today). For day-to-day work on a mature project, it's dead weight ne...
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: no jesus christ. If we add a new feature we should display the graph implementation for that new feature as its being built holy fuck
+
+---
+
+## 2026-08-09_11-21-58 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Everything looks right. Let me also quickly check that the CSS variables used in the Docs pages (`--surface`, `--rule`, etc.) actually exist in the app's theme.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: `--surface` doesn't exist in the token system. Let me fix that in Docs.tsx.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-25-20 (session c4e3cf60)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the frontend dropdown to use `<optgroup>` for grouped display.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: AOA now shows 2 graphs: Master Plan and graph-engineering-v2. The dropdown will group them under `aoa` with `optgroup`. Any project that creates `docs/graphs/<feature>.md` files will automatically appear.
+
+Let me commit this.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-30-39 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**user**: [Request interrupted by user]
+
+**user**: <command-message>cap</command-message>
+<command-name>/cap</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: Looking at the changes to commit and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

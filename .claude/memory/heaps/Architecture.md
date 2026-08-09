@@ -2141,3 +2141,433 @@ The dev server is still running on `localhost:5204` — you can test the theme t
 
 ---
 
+## 2026-08-08_12-11-40 (session 9b8761c3)
+
+**assistant**: [tool: Read]
+
+**assistant**: I'll add expandable card styles with screenshots, website links, and detailed breakdowns. Adding new CSS and rebuilding the landscape tab.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now replacing the landscape tab content with expandable, linked, screenshot-enabled cards.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the JS at the bottom to handle card expand/collapse.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now copy to public and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_12-30-47 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: AOA needs the PWA type reference. Let me add it.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Now let me bump the version and commit + push.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_12-53-48 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The production URL is `https://aoa-nine.vercel.app`. Let me check what it's actually serving.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Confirmed. **Vercel is serving v0.4.25** (deployed Aug 3). Our local build is v0.4.27 with asset hash `index-DVkRIcMv.js`, but Vercel has `index-CJyrPHA9.js` from 5 days ago.
+
+The problem is simple: **Vercel's GitHub integration stopped auto-deploying.** Let me check why and do a manual deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_13-19-41 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: Clear picture. The checklist has three gaps:
+
+1. **Diagnostics** — listed as optional, but user feedback says it should be mandatory (same as auth)
+2. **PWA / Service Worker** — not in the checklist at all (VitePWA plugin, workbox config, manifest)
+3. **Testing** — no section for vitest + testing-library + playwright setup
+
+Notifications (web-push) is legitimately "as needed" — not every app needs push. But the other three should be standard.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now move diagnostics from optional to mandatory and add the detailed steps.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Let me verify the final checklist reads correctly.
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-08_14-11-31 (session 9b8761c3)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build to verify, then commit and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build is good — `dist/prototypes/` has all files and Landscape card is first (line 39). Committing and pushing.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_14-13-35 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now I see the full picture. Here's what's happening:
+
+- `/new-app` **does** include diagnostics as a mandatory graph node — but only at project creation time
+- `/new-feature` **never asks** "does this feature need diagnostic events?" or "what tests cover this?"
+- The architecture doc template in `/new-feature` has no "Infrastructure Integration" section — no prompt to consider diagnostics hooks, test files, or telemetry for the new feature
+
+The fix is adding an **Infrastructure Integration check...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now I have the full picture. The `/new-feature` skill's Phase 4 (Architecture) and Phase 7 (Handoff Review) have no prompts for:
+- "Does this feature need diagnostic events?"
+- "What unit tests cover the pure logic?"
+- "Does the Vercel CSP need updating for new external APIs?"
+
+I'll add an **Infrastructure Integration** section to the architecture phase and matching checklist items to the handoff review.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add matching items to the handoff review checklist.
+
+**assistant**: [tool: Edit]
+
+**assistant**: And add to the anti-shortcut table.
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-08_14-34-05 (session b9154454)
+
+**user**: Okay how can we create a sister website where we can visualize implementation live like render the graph nodes real-time tracking, issue to issue as things are being built when loops are used and visualizing that use but on a vite website localhost for the project on an open port number based on whats available in /development/patterns
+
+Do you understand what I am asking? I see a lot of posts showing code like that. Can you web search? It's something that should be observable by others
+
+**assistant**: Yes — a live dashboard that visualizes the graph engineering execution in real-time: which nodes are done, which loops are running, iteration counts, agent assignments, and progress as features get built. Like a CI/CD pipeline view but for AI agent workflows.
+
+Let me search for what's out there first.
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: WebSearch]
+
+---
+
+## 2026-08-08_15-05-10 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good. Now let me set up the project structure, port config, and write the graph engineering doc. This is going to be a large amount of file creation — let me use agents to parallelize.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Lighthouse is scaffolded and building. Now let me write the graph engineering doc — this is the living build plan that drives all future work.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The graph engineering doc is large (the Plan agent produced the complete 28-node spec). Let me write it to the project. Given context constraints, I'll write the core doc and save the detailed loop specs.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now let me commit this and verify the build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_17-44-25 (session c4e3cf60)
+
+**assistant**: Clean compile. Let me reload the dashboard to see if it's working.
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: It's alive. The dashboard shows:
+
+- **Green dot** in the header (connected)
+- **Event Feed (1)** — already captured the `mcp__chrome-devtools__navigate_page` PostToolUse event from the reload I just did
+- **Status bar** at the bottom: "Connected · 1 events · 1 session · 1 evt/min"
+- The event row shows timestamp `17:43:37.512`, blue `POST` badge, tool name `mcp__chrome-devtools__navigate_page`, and project `aoa`
+
+Every tool call from this conversation is now streaming into the dashboard in real-...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: It's streaming beautifully. 6 events captured so far — you can see the full lifecycle of this conversation's tool calls:
+
+1. `POST` navigate_page (the reload)
+2. `PRE`/`POST` take_screenshot (first screenshot)
+3. `PRE`/`POST` Bash (the health check curl)
+4. `PRE` take_screenshot (this current screenshot)
+
+Color coding is working: amber `PRE` for PreToolUse, blue `POST` for PostToolUse. Status bar shows "Connected · 6 events · 1 session · 6 evt/min". The server confirms 2 WebSocket clients connec...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-08_17-54-26 (session c4e3cf60)
+
+**assistant**: Let me check compilation and test.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me click on a node to test the detail panel. I'll click on the "mentor-chat-ui" node.
+
+**assistant**: [tool: mcp__chrome-devtools__evaluate_script]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: The node detail panel is working beautifully. Clicking `mentor-chat-ui` shows:
+
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends On**: mentor-edge-fn
+- **Inputs**: architecture.md sections
+- **Outputs**: all the component files (MentorChat.tsx, MentorAvatar.tsx, etc.)
+- **Loop Pattern**: plan-execute-verify
+- **Success Criteria**: full user flow description
+- **Effort**: Medium
+- **Group**: MENTOR
+- **Loop Spec**: with trigger, inner cycle steps, and more (scrollable)
+
+The three-p...
+
+**assistant**: [tool: Bash]
+
+**assistant**: Four commits now. Here's the current state of Lighthouse:
+
+**Built (12 graph nodes):**
+- Phase 0: scaffold, port-claim
+- Phase 2: graph-parser, app-shell, graph-canvas
+- Phase 3: node-card, ws-client, store-graph, store-events, store-ui
+- Phase 4: layout-engine
+- Phase 5: event-feed, node-detail-panel
+
+**Still open:** edge-rendering, correlator, status-engine, sidebar, phase-progress, loop-panel, session-panel, shared-state-panel, all of Phase 1 (backend persistence), Phase 6 (pattern distributi...
+
+---
+
+## 2026-08-08_18-40-14 (session c4e3cf60)
+
+**assistant**: Good reference pattern. Now I have everything I need to write the Backend Core PRD. Let me also check the watcher pattern.
+
+**assistant**: [tool: Read]
+
+**assistant**: Now let me write the Backend Core PRD — this is the biggest and most important one since every other feature references its schemas and APIs.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now the QA doc and ADR for Backend Core.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Feature 1 done (PRD + QA + ADR). Now **Feature 2: Edge Rendering** — the small, self-contained one.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-09_11-20-24 (session c4e3cf60)
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: [Image #2] what do you see you have a damn screenshot.  I see the event feed that works but graph is something else or useless
+
+**user**: [Image: source: /var/folders/2m/v5hl_7rn3xbg8ttl5v1dss8w0000gn/T/TemporaryItems/NSIRD_screencaptureui_XubVii/Screenshot 2026-08-09 at 11.17.33 AM.png]
+
+**assistant**: You're right. I see it now — the event feed is streaming 41 events and working great. The graph is showing AOA's original build plan from July, which has nothing to do with the "add top nav bar" work happening right now. It's a static architecture diagram, not a live activity view.
+
+The graph is only useful when you're actively building a new project from a `graph-engineering.md` spec (like we were doing with Lighthouse earlier today). For day-to-day work on a mature project, it's dead weight ne...
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: no jesus christ. If we add a new feature we should display the graph implementation for that new feature as its being built holy fuck
+
+---
+
+## 2026-08-09_11-21-58 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Everything looks right. Let me also quickly check that the CSS variables used in the Docs pages (`--surface`, `--rule`, etc.) actually exist in the app's theme.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: `--surface` doesn't exist in the token system. Let me fix that in Docs.tsx.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-25-20 (session c4e3cf60)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the frontend dropdown to use `<optgroup>` for grouped display.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: AOA now shows 2 graphs: Master Plan and graph-engineering-v2. The dropdown will group them under `aoa` with `optgroup`. Any project that creates `docs/graphs/<feature>.md` files will automatically appear.
+
+Let me commit this.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-29-15 (session c4e3cf60)
+
+**assistant**: Done. The `/new-feature` skill now automatically produces `docs/graphs/<feature-slug>.md` as a mandatory output in Phase 4. Lighthouse discovers these files and adds them to the dropdown. No manual steps.
+
+When you run `/new-feature` for "top nav bar" or anything else, it'll create the graph file. Lighthouse picks it up. You see the feature's nodes light up as you build.
+
+---
+[timestamp] 2026-08-09 11:30 CST
+
+**user**: update the patterns directory
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-29-26 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now add UpdateBanner to App.tsx.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Let me verify the SW registration is now handled by the `useRegisterSW` hook (not the auto-injected script).
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

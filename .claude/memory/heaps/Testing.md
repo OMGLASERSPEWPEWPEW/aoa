@@ -1729,3 +1729,292 @@ Let me also check the landing page in lig...
 
 ---
 
+## 2026-08-08_13-19-41 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: Clear picture. The checklist has three gaps:
+
+1. **Diagnostics** — listed as optional, but user feedback says it should be mandatory (same as auth)
+2. **PWA / Service Worker** — not in the checklist at all (VitePWA plugin, workbox config, manifest)
+3. **Testing** — no section for vitest + testing-library + playwright setup
+
+Notifications (web-push) is legitimately "as needed" — not every app needs push. But the other three should be standard.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now move diagnostics from optional to mandatory and add the detailed steps.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Let me verify the final checklist reads correctly.
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-08_14-13-35 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now I see the full picture. Here's what's happening:
+
+- `/new-app` **does** include diagnostics as a mandatory graph node — but only at project creation time
+- `/new-feature` **never asks** "does this feature need diagnostic events?" or "what tests cover this?"
+- The architecture doc template in `/new-feature` has no "Infrastructure Integration" section — no prompt to consider diagnostics hooks, test files, or telemetry for the new feature
+
+The fix is adding an **Infrastructure Integration check...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now I have the full picture. The `/new-feature` skill's Phase 4 (Architecture) and Phase 7 (Handoff Review) have no prompts for:
+- "Does this feature need diagnostic events?"
+- "What unit tests cover the pure logic?"
+- "Does the Vercel CSP need updating for new external APIs?"
+
+I'll add an **Infrastructure Integration** section to the architecture phase and matching checklist items to the handoff review.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add matching items to the handoff review checklist.
+
+**assistant**: [tool: Edit]
+
+**assistant**: And add to the anti-shortcut table.
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-08_14-29-11 (session b9154454)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now create the infrastructure integration rule template.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now add integration verification to the implementation skill.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the implementation skill's completion checklist to reference integration.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Done. Here's what changed:
+
+**`/new-feature` skill** — Section 4.4 is now a full **Integration Matrix** with 12 infrastructure pieces. Every "Yes" row requires file paths and concrete specs. The handoff review (Phase 7) verifies the matrix is complete. The anti-shortcut table catches hardcoded colors, skipped diagnostics, missing tests, and doc gaps.
+
+**`/implementation` skill** — New **Phase 3.3: Infrastructure Integration Verification** with a concrete verification table (grep for hardcoded co...
+
+---
+
+## 2026-08-08_15-05-10 (session b9154454)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good. Now let me set up the project structure, port config, and write the graph engineering doc. This is going to be a large amount of file creation — let me use agents to parallelize.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Lighthouse is scaffolded and building. Now let me write the graph engineering doc — this is the living build plan that drives all future work.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The graph engineering doc is large (the Plan agent produced the complete 28-node spec). Let me write it to the project. Given context constraints, I'll write the core doc and save the detailed loop specs.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now let me commit this and verify the build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_17-18-25 (session b9154454)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now start the Lighthouse server.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Server is running. Now let me test the hook by sending a simulated event.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-08_17-54-26 (session c4e3cf60)
+
+**assistant**: Let me check compilation and test.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me click on a node to test the detail panel. I'll click on the "mentor-chat-ui" node.
+
+**assistant**: [tool: mcp__chrome-devtools__evaluate_script]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: The node detail panel is working beautifully. Clicking `mentor-chat-ui` shows:
+
+- **Type**: feature
+- **Agent**: frontend-developer
+- **Depends On**: mentor-edge-fn
+- **Inputs**: architecture.md sections
+- **Outputs**: all the component files (MentorChat.tsx, MentorAvatar.tsx, etc.)
+- **Loop Pattern**: plan-execute-verify
+- **Success Criteria**: full user flow description
+- **Effort**: Medium
+- **Group**: MENTOR
+- **Loop Spec**: with trigger, inner cycle steps, and more (scrollable)
+
+The three-p...
+
+**assistant**: [tool: Bash]
+
+**assistant**: Four commits now. Here's the current state of Lighthouse:
+
+**Built (12 graph nodes):**
+- Phase 0: scaffold, port-claim
+- Phase 2: graph-parser, app-shell, graph-canvas
+- Phase 3: node-card, ws-client, store-graph, store-events, store-ui
+- Phase 4: layout-engine
+- Phase 5: event-feed, node-detail-panel
+
+**Still open:** edge-rendering, correlator, status-engine, sidebar, phase-progress, loop-panel, session-panel, shared-state-panel, all of Phase 1 (backend persistence), Phase 6 (pattern distributi...
+
+---
+
+## 2026-08-08_18-52-18 (session c4e3cf60)
+
+**assistant**: Let me check compilation and restart the server.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 3 projects discovered. Let me reload the dashboard and test.
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: Now you're looking at **Lighthouse's own graph**. The dropdown in the header shows "lighthouse" selected, and the DAG displays all 28 Lighthouse nodes — you can see the green "DONE" badges on `scaffold`, `port-claim`, `app-shell`, `ws-client`, `store-graph`, `store-events`, `node-card`, `layout-engine`, `graph-parser`, and others we've completed. The remaining nodes (`db-setup`, `event-api`, `ws-server`, `edge-rendering`, `correlator`, `sidebar`, etc.) are still dark.
+
+The minimap in the bottom-...
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-09-59 (session c4e3cf60)
+
+**assistant**: [tool: Write]
+
+**assistant**: Feature 5 done. Now **Feature 6: Pattern Distribution**.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Feature 6 done. Last one — **Feature 7: Integration & Testing**.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: All 7 feature PRDs complete. Let me commit everything.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_11-20-24 (session c4e3cf60)
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: [Image #2] what do you see you have a damn screenshot.  I see the event feed that works but graph is something else or useless
+
+**user**: [Image: source: /var/folders/2m/v5hl_7rn3xbg8ttl5v1dss8w0000gn/T/TemporaryItems/NSIRD_screencaptureui_XubVii/Screenshot 2026-08-09 at 11.17.33 AM.png]
+
+**assistant**: You're right. I see it now — the event feed is streaming 41 events and working great. The graph is showing AOA's original build plan from July, which has nothing to do with the "add top nav bar" work happening right now. It's a static architecture diagram, not a live activity view.
+
+The graph is only useful when you're actively building a new project from a `graph-engineering.md` spec (like we were doing with Lighthouse earlier today). For day-to-day work on a mature project, it's dead weight ne...
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: no jesus christ. If we add a new feature we should display the graph implementation for that new feature as its being built holy fuck
+
+---
+
+## 2026-08-09_11-25-20 (session c4e3cf60)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the frontend dropdown to use `<optgroup>` for grouped display.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: AOA now shows 2 graphs: Master Plan and graph-engineering-v2. The dropdown will group them under `aoa` with `optgroup`. Any project that creates `docs/graphs/<feature>.md` files will automatically appear.
+
+Let me commit this.
+
+**assistant**: [tool: Bash]
+
+---
+
