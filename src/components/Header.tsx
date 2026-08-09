@@ -49,7 +49,7 @@ export function Header() {
       <div className="flex items-center gap-3">
         {isAdmin && (
           <Link
-            to="/app/docs"
+            to="/app/admin"
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontSize: 10,
@@ -58,7 +58,7 @@ export function Header() {
               textDecoration: 'none',
             }}
           >
-            DOCS
+            ADMIN
           </Link>
         )}
         <span

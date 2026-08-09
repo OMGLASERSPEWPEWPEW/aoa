@@ -63,8 +63,8 @@ export default function App() {
             <Route path="play/:playId" element={<PlayDetail />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="docs" element={<Docs />} />
-            <Route path="docs/:page" element={<DocsViewer />} />
+            <Route path="admin" element={<Docs />} />
+            <Route path="admin/:page" element={<DocsViewer />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

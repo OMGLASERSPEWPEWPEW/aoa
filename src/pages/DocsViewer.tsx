@@ -11,7 +11,7 @@ export function DocsViewer() {
   const { page } = useParams<{ page: string }>()
   const entry = page ? pages[page] : undefined
 
-  if (!entry) return <Navigate to="/app/docs" replace />
+  if (!entry) return <Navigate to="/app/admin" replace />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -26,7 +26,7 @@ export function DocsViewer() {
         }}
       >
         <Link
-          to="/app/docs"
+          to="/app/admin"
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontSize: 11,
@@ -35,7 +35,7 @@ export function DocsViewer() {
             textDecoration: 'none',
           }}
         >
-          ← Docs
+          ← Admin
         </Link>
         <span
           style={{
