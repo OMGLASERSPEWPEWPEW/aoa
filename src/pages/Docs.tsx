@@ -421,6 +421,7 @@ function CoverageTab() {
         promoted += enrichData.promoted ?? 0
         remaining = enrichData.remaining ?? 0
         setProgress({ phase: 'enriching', found: venuesNew, enriched, promoted, total: enriched + remaining })
+        refetchMetrics()
       }
 
       setProgress({ phase: 'done', found: venuesNew, enriched, promoted, total: enriched })
