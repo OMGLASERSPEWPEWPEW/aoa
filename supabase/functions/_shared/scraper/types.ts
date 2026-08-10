@@ -60,3 +60,60 @@ export interface DeepSeekResponse {
     prompt_cache_miss_tokens: number;
   };
 }
+
+// --- Venue Discovery Pipeline types ---
+
+export interface DiscoveredVenue {
+  raw_name: string;
+  raw_address: string | null;
+  raw_website_url: string | null;
+  raw_genre_tags: string[];
+  raw_neighborhood: string | null;
+  raw_category: string | null;
+  raw_description: string | null;
+  raw_phone: string | null;
+  raw_photo_url: string | null;
+  detail_page_url: string | null;
+}
+
+export interface EnrichmentCandidate {
+  id: string;
+  raw_name: string;
+  raw_address: string | null;
+  raw_website_url: string | null;
+  raw_genre_tags: string[];
+  raw_category: string | null;
+}
+
+export interface VenueTypeResult {
+  venue_type: "storefront" | "institutional" | "experimental" | "school";
+  confidence: number;
+  method: "rule" | "ai";
+}
+
+export interface DiscoveryRunSummary {
+  run_id: string;
+  source_id: string;
+  venues_found: number;
+  venues_new: number;
+  venues_matched: number;
+  enrichment_success: number;
+  enrichment_failed: number;
+  ai_input_tokens: number;
+  ai_output_tokens: number;
+  fetch_status: "success" | "fetch_error" | "parse_error" | "parse_warning";
+  alert_admin: boolean;
+  error_message: string | null;
+}
+
+export interface VenueCoverageMetrics {
+  total_aoa_venues: number;
+  total_known_chicago: number;
+  coverage_pct: number;
+  venues_with_calendar_url: number;
+  venues_with_photo: number;
+  venues_zero_events: number;
+  pending_in_queue: number;
+  last_discovery_run: string | null;
+  last_run_alert: boolean;
+}

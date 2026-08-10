@@ -1,8 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCostDashboard } from '../hooks/useCostDashboard'
+import { supabase } from '../lib/supabase'
+import { useVenueCoverage } from '../hooks/useVenueCoverage'
+import { useDiscoveryQueue, type QueueItem } from '../hooks/useDiscoveryQueue'
+import { useVenueAudit } from '../hooks/useVenueAudit'
+import { CoverageMetricsCards } from '../components/admin/CoverageMetricsCards'
+import { VenueAuditTable } from '../components/admin/VenueAuditTable'
+import { DiscoveryQueueSection } from '../components/admin/DiscoveryQueueSection'
+import { VenuePromoteModal } from '../components/admin/VenuePromoteModal'
 
-const tabs = ['Design', 'AI Prompts', 'Costs'] as const
+const tabs = ['Design', 'AI Prompts', 'Costs', 'Coverage'] as const
 type Tab = (typeof tabs)[number]
 
 const prototypes = [
@@ -171,6 +179,7 @@ export function Docs() {
           <PromptsTab expanded={expanded} setExpanded={setExpanded} />
         )}
         {tab === 'Costs' && <CostsTab />}
+        {tab === 'Coverage' && <CoverageTab />}
       </div>
     </div>
   )
@@ -356,6 +365,110 @@ function CostsTab() {
         <div style={{ ...mono, fontSize: 11, color: 'var(--ink-faint)', textAlign: 'center', padding: '20px 0' }}>
           No AI usage recorded yet.
         </div>
+      )}
+    </>
+  )
+}
+
+function CoverageTab() {
+  const { metrics, loading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useVenueCoverage()
+  const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
+  const audit = useVenueAudit()
+  const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
+  const [running, setRunning] = useState(false)
+
+  const handleRunDiscovery = async () => {
+    setRunning(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/venue-discovery`
+      await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      refetchMetrics()
+      refetchQueue()
+    } catch (err) {
+      console.error('Discovery run failed:', err)
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div>
+          <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>
+            Venue Coverage
+          </div>
+          <p style={{ fontSize: 14, color: 'var(--ink-dim)', lineHeight: 1.5, marginTop: 4 }}>
+            Chicago theater venue discovery and data completeness.
+          </p>
+        </div>
+        <button
+          onClick={handleRunDiscovery}
+          disabled={running}
+          style={{
+            ...mono,
+            fontSize: 10,
+            padding: '6px 14px',
+            background: running ? 'var(--bg-chrome)' : 'var(--accent)',
+            color: running ? 'var(--ink-dim)' : 'var(--accent-on)',
+            border: 'none',
+            borderRadius: 2,
+            cursor: running ? 'default' : 'pointer',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          {running ? 'Running...' : 'Run Discovery'}
+        </button>
+      </div>
+
+      {metricsLoading && (
+        <div style={{ ...mono, fontSize: 11, color: 'var(--ink-faint)', textAlign: 'center', padding: '20px 0' }}>
+          Loading metrics...
+        </div>
+      )}
+
+      {metricsError && (
+        <div style={{ ...mono, fontSize: 11, color: '#ef4444', textAlign: 'center', padding: '20px 0' }}>
+          {metricsError} <button onClick={refetchMetrics} style={{ ...mono, fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button>
+        </div>
+      )}
+
+      {metrics && <CoverageMetricsCards metrics={metrics} />}
+
+      {!audit.loading && (
+        <VenueAuditTable
+          venues={audit.venues}
+          sort={audit.sort}
+          setSort={audit.setSort}
+          filters={audit.filters}
+          setFilters={audit.setFilters}
+        />
+      )}
+
+      {!queueLoading && (
+        <DiscoveryQueueSection
+          items={queueItems}
+          onPromote={(item) => setPromotingItem(item)}
+          onDismiss={(id) => dismiss(id)}
+        />
+      )}
+
+      {promotingItem && (
+        <VenuePromoteModal
+          item={promotingItem}
+          onClose={() => setPromotingItem(null)}
+          onPromoted={() => {
+            setPromotingItem(null)
+            refetchQueue()
+            refetchMetrics()
+          }}
+        />
       )}
     </>
   )
