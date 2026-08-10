@@ -307,17 +307,39 @@ async function enrichVenue(
   return result;
 }
 
+const ALLOWED_ORIGINS = [
+  "http://localhost:5204",
+  "https://aoa-nine.vercel.app",
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, x-scraper-key",
+    "Vary": "Origin",
+  };
+}
+
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: 204, headers: cors });
   }
 
-  // Shared secret auth (not JWT — this is a server-to-server cron call)
   const scraperKey = req.headers.get("x-scraper-key") ?? req.headers.get("Authorization")?.replace("Bearer ", "");
-  if (scraperKey !== SCRAPER_SECRET) {
+  let authed = scraperKey === SCRAPER_SECRET;
+  if (!authed && scraperKey) {
+    const { data: { user } } = await supabase.auth.getUser(scraperKey);
+    if (user) authed = true;
+  }
+  if (!authed) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -332,7 +354,7 @@ serve(async (req) => {
   if (venueError || !allVenues) {
     return new Response(
       JSON.stringify({ error: "Failed to load venues", detail: venueError?.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
 
@@ -419,6 +441,6 @@ serve(async (req) => {
 
   return new Response(stream, {
     status: 200,
-    headers: { "Content-Type": "application/x-ndjson" },
+    headers: { ...cors, "Content-Type": "application/x-ndjson" },
   });
 });

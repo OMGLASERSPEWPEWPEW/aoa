@@ -229,8 +229,16 @@ function formatCost(n: number): string {
   return `$${n.toFixed(2)}`
 }
 
+const COST_WINDOWS = [
+  { key: 1, label: 'TODAY' },
+  { key: 7, label: '7 DAYS' },
+  { key: 30, label: '30 DAYS' },
+  { key: 3650, label: 'ALL TIME' },
+] as const
+
 function CostsTab() {
-  const { today, rolling7d, rolling30d, byModel, byFeature, dailySeries, loading } = useCostDashboard()
+  const [costDays, setCostDays] = useState(7)
+  const { total, byModel, byFeature, dailySeries, loading } = useCostDashboard(costDays)
 
   if (loading) {
     return (
@@ -244,45 +252,47 @@ function CostsTab() {
 
   return (
     <>
-      <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>
-        AI Costs
-      </div>
-      <p style={{ fontSize: 14, color: 'var(--ink-dim)', lineHeight: 1.5, margin: '8px 0 20px' }}>
-        Token usage and estimated costs across all AI features.
-      </p>
-
-      {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
-        {[
-          { label: 'TODAY', value: today },
-          { label: '7 DAYS', value: rolling7d },
-          { label: '30 DAYS', value: rolling30d },
-        ].map((c) => (
-          <div
-            key={c.label}
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--rule)',
-              borderRadius: 3,
-              padding: '12px 8px',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-faint)', marginBottom: 4 }}>
-              {c.label}
-            </div>
-            <div style={{ ...mono, fontSize: 16, color: 'var(--ink)' }}>
-              {formatCost(c.value)}
-            </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div>
+          <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>
+            AI Costs
           </div>
-        ))}
+          <div style={{ ...mono, fontSize: 22, color: 'var(--ink)', marginTop: 4 }}>
+            {formatCost(total)}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {COST_WINDOWS.map((w) => {
+            const active = costDays === w.key
+            return (
+              <button
+                key={w.key}
+                onClick={() => setCostDays(w.key)}
+                style={{
+                  ...mono,
+                  fontSize: 9,
+                  letterSpacing: '0.08em',
+                  padding: '5px 10px',
+                  borderRadius: 3,
+                  border: active ? '1px solid var(--accent)' : '1px solid var(--rule)',
+                  backgroundColor: active ? 'var(--accent-bg)' : 'transparent',
+                  color: active ? 'var(--accent)' : 'var(--ink-dim)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {w.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Daily bar chart */}
       {dailySeries.length > 0 && (
         <div style={{ marginBottom: 20 }}>
           <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-faint)', textTransform: 'uppercase', marginBottom: 8 }}>
-            Daily Cost (14 days)
+            Daily Cost
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {dailySeries.map((d) => (
@@ -375,6 +385,67 @@ function CoverageTab() {
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
   const audit = useVenueAudit()
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
+  const [scraper, setScraper] = useState<{
+    phase: 'idle' | 'scraping' | 'done' | 'error'
+    scraped: number
+    events: number
+    error?: string
+  }>({ phase: 'idle', scraped: 0, events: 0 })
+
+  const handleRunScraper = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/event-scraper`
+      setScraper({ phase: 'scraping', scraped: 0, events: 0 })
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+
+      if (!res.ok || !res.body) {
+        setScraper({ phase: 'error', scraped: 0, events: 0, error: `HTTP ${res.status}` })
+        return
+      }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let scraped = 0
+      let events = 0
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.trim()) continue
+          try {
+            const msg = JSON.parse(line)
+            if (msg.type === 'venue') {
+              scraped++
+              events += msg.data?.events_found ?? 0
+              setScraper({ phase: 'scraping', scraped, events })
+            }
+            if (msg.type === 'summary') {
+              setScraper({ phase: 'done', scraped: msg.data?.venues_scraped ?? scraped, events: msg.data?.total_events_found ?? events })
+            }
+          } catch { /* skip malformed lines */ }
+        }
+      }
+
+      if (scraper.phase !== 'done') {
+        setScraper((prev) => ({ ...prev, phase: 'done' }))
+      }
+      refetchMetrics()
+    } catch (err) {
+      setScraper({ phase: 'error', scraped: 0, events: 0, error: err instanceof Error ? err.message : 'Unknown error' })
+    }
+  }
+
   const [progress, setProgress] = useState<{
     phase: 'idle' | 'discovering' | 'enriching' | 'done' | 'error'
     found: number
@@ -432,6 +503,8 @@ function CoverageTab() {
     }
   }
 
+  const busy = progress.phase === 'discovering' || progress.phase === 'enriching' || scraper.phase === 'scraping'
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -442,16 +515,16 @@ function CoverageTab() {
         </div>
         <button
           onClick={handleRunDiscovery}
-          disabled={progress.phase === 'discovering' || progress.phase === 'enriching'}
+          disabled={busy}
           style={{
             ...mono,
             fontSize: 10,
             padding: '6px 14px',
-            background: progress.phase === 'discovering' || progress.phase === 'enriching' ? 'var(--bg-chrome)' : 'var(--accent)',
-            color: progress.phase === 'discovering' || progress.phase === 'enriching' ? 'var(--ink-dim)' : 'var(--accent-on)',
+            background: busy ? 'var(--bg-chrome)' : 'var(--accent)',
+            color: busy ? 'var(--ink-dim)' : 'var(--accent-on)',
             border: 'none',
             borderRadius: 2,
-            cursor: progress.phase === 'discovering' || progress.phase === 'enriching' ? 'default' : 'pointer',
+            cursor: busy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
             flexShrink: 0,
           }}
@@ -460,6 +533,24 @@ function CoverageTab() {
           {progress.phase === 'enriching' && `Adding ${progress.promoted}...`}
           {(progress.phase === 'idle' || progress.phase === 'done' || progress.phase === 'error') && 'Run Discovery'}
         </button>
+        <button
+          onClick={handleRunScraper}
+          disabled={busy}
+          style={{
+            ...mono,
+            fontSize: 10,
+            padding: '6px 14px',
+            background: scraper.phase === 'scraping' ? 'var(--bg-chrome)' : 'var(--bg-card)',
+            color: scraper.phase === 'scraping' ? 'var(--ink-dim)' : 'var(--ink)',
+            border: '1px solid var(--rule)',
+            borderRadius: 2,
+            cursor: busy ? 'default' : 'pointer',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          {scraper.phase === 'scraping' ? `Scraping ${scraper.scraped}...` : 'Run Scraper'}
+        </button>
       </div>
       <div style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', marginBottom: 16 }}>
         {progress.phase === 'discovering' && 'Parsing ChicagoPlays...'}
@@ -467,7 +558,10 @@ function CoverageTab() {
         {progress.phase === 'done' && progress.promoted > 0 && `Done — ${progress.promoted} venues added to the app.`}
         {progress.phase === 'done' && progress.promoted === 0 && progress.total === 0 && 'All venues up to date.'}
         {progress.phase === 'error' && <span style={{ color: '#ef4444' }}>Error: {progress.error}</span>}
-        {progress.phase === 'idle' && 'Chicago theater venue discovery and data completeness.'}
+        {scraper.phase === 'scraping' && `Scanning venues for events... ${scraper.scraped} scraped, ${scraper.events} events found`}
+        {scraper.phase === 'done' && `Done — ${scraper.events} events found across ${scraper.scraped} venues.`}
+        {scraper.phase === 'error' && <span style={{ color: '#ef4444' }}>Scraper error: {scraper.error}</span>}
+        {progress.phase === 'idle' && scraper.phase === 'idle' && 'Chicago theater venue discovery and data completeness.'}
       </div>
 
       {metricsLoading && (

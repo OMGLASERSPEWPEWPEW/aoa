@@ -21,6 +21,13 @@
 - **Dependencies:** Venue Discovery Pipeline
 - **Summary:** Separate venue-enrich Edge Function processes queue items in batches of 5. Frontend drives a loop showing real-time progress. Handles dead websites gracefully. One button press enriches all discovered venues.
 
+## Admin Scraper + Costs Date Filter
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** Event scraper, Costs tab
+- **Summary:** Manual "Run Scraper" button on Coverage tab with live progress. Date range filter (Today/7d/30d/All) on Costs tab.
+
 ## Event Scraper Cron
 - **Status:** Planned
 - **Target:** August 2026
