@@ -401,17 +401,25 @@ function CoverageTab() {
       }
 
       const venuesNew = discoverData.venues_new ?? 0
-      setProgress({ phase: venuesNew > 0 ? 'enriching' : 'done', found: venuesNew, enriched: 0, total: venuesNew })
 
-      if (venuesNew === 0) {
+      // Phase 2: Check for ANY pending enrichment (this run or previous runs)
+      const checkRes = await fetch(`${baseUrl}/functions/v1/venue-enrich`, { method: 'POST', headers })
+      const checkData = await checkRes.json()
+
+      const totalPending = (checkData.remaining ?? 0) + (checkData.enriched ?? 0)
+
+      if (totalPending === 0 && venuesNew === 0) {
+        setProgress({ phase: 'done', found: 0, enriched: 0, total: 0 })
         refetchMetrics()
         refetchQueue()
         return
       }
 
-      // Phase 2: Enrichment loop
-      let enriched = 0
-      let remaining = venuesNew
+      let enriched = checkData.enriched ?? 0
+      let remaining = checkData.remaining ?? 0
+      const total = enriched + remaining
+      setProgress({ phase: 'enriching', found: venuesNew, enriched, total })
+
       while (remaining > 0) {
         const enrichRes = await fetch(`${baseUrl}/functions/v1/venue-enrich`, { method: 'POST', headers })
         const enrichData = await enrichRes.json()
@@ -465,9 +473,9 @@ function CoverageTab() {
       </div>
       <div style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', marginBottom: 16 }}>
         {progress.phase === 'discovering' && 'Parsing ChicagoPlays...'}
-        {progress.phase === 'enriching' && `Found ${progress.found} new theaters. Enriching with addresses, photos, coordinates...`}
-        {progress.phase === 'done' && progress.found > 0 && `${progress.enriched} venues enriched.`}
-        {progress.phase === 'done' && progress.found === 0 && 'No new theaters found.'}
+        {progress.phase === 'enriching' && `Enriching with addresses, photos, coordinates...`}
+        {progress.phase === 'done' && progress.total > 0 && `${progress.enriched} venues enriched.`}
+        {progress.phase === 'done' && progress.total === 0 && 'All venues up to date.'}
         {progress.phase === 'error' && <span style={{ color: '#ef4444' }}>Error: {progress.error}</span>}
         {progress.phase === 'idle' && 'Chicago theater venue discovery and data completeness.'}
       </div>
