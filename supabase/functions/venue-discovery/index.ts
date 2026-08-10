@@ -119,7 +119,7 @@ serve(async (req) => {
           ));
         } else {
           const html = await res.text();
-          const discovered = parseChicagoPlays(html);
+          const discovered = await parseChicagoPlays(html);
           venuesFound = discovered.length;
 
           // Zero-result guard
@@ -180,7 +180,7 @@ serve(async (req) => {
           // --- Phase 3: Enrichment ---
           const { data: candidates } = await supabase
             .from("venue_discovery_queue")
-            .select("id, raw_name, raw_address, raw_website_url, raw_genre_tags, raw_category")
+            .select("id, raw_name, raw_address, raw_website_url, raw_genre_tags, raw_category, detail_page_url")
             .eq("run_id", runId)
             .eq("dedup_status", "new")
             .eq("enrichment_status", "pending");
