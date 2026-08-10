@@ -26,7 +26,7 @@ describe('StatStrip', () => {
   it('ushered value always has green color', () => {
     render(<StatStrip shows={0} venues={0} wrote={0} ushered={0} />)
     const usheredValue = screen.getByText('0', {
-      selector: '[style*="oklch(0.68 0.13 150)"]',
+      selector: '[style*="var(--access)"]',
     })
     expect(usheredValue).toBeInTheDocument()
   })
