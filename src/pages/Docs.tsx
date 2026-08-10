@@ -396,54 +396,32 @@ function CoverageTab() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/event-scraper`
-      setScraper({ phase: 'scraping', scraped: 0, events: 0 })
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL
+      const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
-
-      if (!res.ok || !res.body) {
-        setScraper({ phase: 'error', scraped: 0, events: 0, error: `HTTP ${res.status}` })
-        return
-      }
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
       let scraped = 0
       let events = 0
+      let remaining = 1
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
-        for (const line of lines) {
-          if (!line.trim()) continue
-          try {
-            const msg = JSON.parse(line)
-            if (msg.type === 'enrichment') {
-              scraped++
-              setScraper({ phase: 'scraping', scraped, events })
-            }
-            if (msg.type === 'venue') {
-              scraped++
-              events += msg.data?.events_found ?? 0
-              setScraper({ phase: 'scraping', scraped, events })
-            }
-            if (msg.type === 'summary') {
-              setScraper({ phase: 'done', scraped: msg.data?.venues_scraped ?? scraped, events: msg.data?.total_events_found ?? events })
-            }
-          } catch { /* skip malformed lines */ }
+      setScraper({ phase: 'scraping', scraped: 0, events: 0 })
+
+      while (remaining > 0) {
+        const res = await fetch(`${baseUrl}/functions/v1/event-scrape-batch`, { method: 'POST', headers })
+        const data = await res.json()
+
+        if (data.error) {
+          setScraper({ phase: 'error', scraped, events, error: data.error })
+          return
         }
+
+        scraped += data.scraped ?? 0
+        events += data.events_found ?? 0
+        remaining = data.remaining ?? 0
+        setScraper({ phase: 'scraping', scraped, events })
+        refetchMetrics()
       }
 
-      if (scraper.phase !== 'done') {
-        setScraper((prev) => ({ ...prev, phase: 'done' }))
-      }
+      setScraper({ phase: 'done', scraped, events })
       refetchMetrics()
     } catch (err) {
       setScraper({ phase: 'error', scraped: 0, events: 0, error: err instanceof Error ? err.message : 'Unknown error' })

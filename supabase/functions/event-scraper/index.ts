@@ -104,7 +104,7 @@ async function extractEvents(
   };
 }
 
-async function processVenue(
+export async function processVenue(
   venue: VenueTarget,
   runId: string,
 ): Promise<ScrapeResult> {
