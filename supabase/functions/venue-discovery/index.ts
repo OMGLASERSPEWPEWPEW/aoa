@@ -4,6 +4,22 @@ import { parseChicagoPlays } from "./chicagoplays-parser.ts";
 import { deduplicateQueue } from "./dedup.ts";
 import { enrichBatch } from "./enrichment.ts";
 
+const ALLOWED_ORIGINS = [
+  "http://localhost:5204",
+  "https://aoa-nine.vercel.app",
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, x-scraper-key",
+    "Vary": "Origin",
+  };
+}
+
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -15,8 +31,10 @@ function delay(ms: number): Promise<void> {
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: 204, headers: cors });
   }
 
   // Dual auth: shared secret (cron) OR admin JWT (manual trigger)
@@ -34,7 +52,7 @@ serve(async (req) => {
   if (!authed) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -50,7 +68,7 @@ serve(async (req) => {
   if (!source) {
     return new Response(JSON.stringify({ error: "No active directory source" }), {
       status: 404,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -69,7 +87,7 @@ serve(async (req) => {
   if (inProgress) {
     return new Response(JSON.stringify({ status: "already_running" }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -260,6 +278,6 @@ serve(async (req) => {
 
   return new Response(stream, {
     status: 200,
-    headers: { "Content-Type": "application/x-ndjson" },
+    headers: { ...cors, "Content-Type": "application/x-ndjson" },
   });
 });
