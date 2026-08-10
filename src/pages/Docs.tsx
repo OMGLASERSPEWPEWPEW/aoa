@@ -379,9 +379,10 @@ function CoverageTab() {
     phase: 'idle' | 'discovering' | 'enriching' | 'done' | 'error'
     found: number
     enriched: number
+    promoted: number
     total: number
     error?: string
-  }>({ phase: 'idle', found: 0, enriched: 0, total: 0 })
+  }>({ phase: 'idle', found: 0, enriched: 0, promoted: 0, total: 0 })
 
   const handleRunDiscovery = async () => {
     try {
@@ -391,50 +392,38 @@ function CoverageTab() {
       const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
 
       // Phase 1: Discovery (parse + dedup)
-      setProgress({ phase: 'discovering', found: 0, enriched: 0, total: 0 })
+      setProgress({ phase: 'discovering', found: 0, enriched: 0, promoted: 0, total: 0 })
       const discoverRes = await fetch(`${baseUrl}/functions/v1/venue-discovery`, { method: 'POST', headers })
       const discoverData = await discoverRes.json()
 
       if (discoverData.error) {
-        setProgress({ phase: 'error', found: 0, enriched: 0, total: 0, error: discoverData.error })
+        setProgress({ phase: 'error', found: 0, enriched: 0, promoted: 0, total: 0, error: discoverData.error })
         return
       }
 
       const venuesNew = discoverData.venues_new ?? 0
 
-      // Phase 2: Check for ANY pending enrichment (this run or previous runs)
-      const checkRes = await fetch(`${baseUrl}/functions/v1/venue-enrich`, { method: 'POST', headers })
-      const checkData = await checkRes.json()
-
-      const totalPending = (checkData.remaining ?? 0) + (checkData.enriched ?? 0)
-
-      if (totalPending === 0 && venuesNew === 0) {
-        setProgress({ phase: 'done', found: 0, enriched: 0, total: 0 })
-        refetchMetrics()
-        refetchQueue()
-        return
-      }
-
-      let enriched = checkData.enriched ?? 0
-      let remaining = checkData.remaining ?? 0
-      const total = enriched + remaining
-      setProgress({ phase: 'enriching', found: venuesNew, enriched, total })
+      // Phase 2: Enrich + auto-promote loop
+      let enriched = 0
+      let promoted = 0
+      let remaining = 1
 
       while (remaining > 0) {
         const enrichRes = await fetch(`${baseUrl}/functions/v1/venue-enrich`, { method: 'POST', headers })
         const enrichData = await enrichRes.json()
 
         if (enrichData.error) {
-          setProgress({ phase: 'error', found: venuesNew, enriched, total: venuesNew, error: enrichData.error })
+          setProgress({ phase: 'error', found: venuesNew, enriched, promoted, total: enriched + remaining, error: enrichData.error })
           return
         }
 
-        enriched += enrichData.enriched
-        remaining = enrichData.remaining
-        setProgress({ phase: 'enriching', found: venuesNew, enriched, total: venuesNew })
+        enriched += enrichData.enriched ?? 0
+        promoted += enrichData.promoted ?? 0
+        remaining = enrichData.remaining ?? 0
+        setProgress({ phase: 'enriching', found: venuesNew, enriched, promoted, total: enriched + remaining })
       }
 
-      setProgress({ phase: 'done', found: venuesNew, enriched, total: venuesNew })
+      setProgress({ phase: 'done', found: venuesNew, enriched, promoted, total: enriched })
       refetchMetrics()
       refetchQueue()
     } catch (err) {
@@ -467,15 +456,15 @@ function CoverageTab() {
           }}
         >
           {progress.phase === 'discovering' && 'Discovering...'}
-          {progress.phase === 'enriching' && `Enriching ${progress.enriched}/${progress.total}`}
+          {progress.phase === 'enriching' && `Adding ${progress.promoted}...`}
           {(progress.phase === 'idle' || progress.phase === 'done' || progress.phase === 'error') && 'Run Discovery'}
         </button>
       </div>
       <div style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', marginBottom: 16 }}>
         {progress.phase === 'discovering' && 'Parsing ChicagoPlays...'}
-        {progress.phase === 'enriching' && `Enriching with addresses, photos, coordinates...`}
-        {progress.phase === 'done' && progress.total > 0 && `${progress.enriched} venues enriched.`}
-        {progress.phase === 'done' && progress.total === 0 && 'All venues up to date.'}
+        {progress.phase === 'enriching' && `Enriching & adding venues... ${progress.promoted} added so far`}
+        {progress.phase === 'done' && progress.promoted > 0 && `Done — ${progress.promoted} venues added to the app.`}
+        {progress.phase === 'done' && progress.promoted === 0 && progress.total === 0 && 'All venues up to date.'}
         {progress.phase === 'error' && <span style={{ color: '#ef4444' }}>Error: {progress.error}</span>}
         {progress.phase === 'idle' && 'Chicago theater venue discovery and data completeness.'}
       </div>
