@@ -7,6 +7,13 @@
 - **Dependencies:** None (builds on existing scraper infra)
 - **Summary:** Systematic ingestion of Chicago theater venues from ChicagoPlays (League of Chicago Theatres). Replaces hand-curated SQL INSERTs with automated discovery, deduplication, enrichment, and admin promotion. Covers Problem 1 of the data strategy: "What theaters exist?"
 
+## Map Time Filter Pills
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** None
+- **Summary:** Today/This Week/This Month pill row on the map that hides venues with no active events in the selected window. Replaces showing all venues regardless of activity.
+
 ## Event Scraper Cron
 - **Status:** Planned
 - **Target:** August 2026

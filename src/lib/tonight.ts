@@ -40,3 +40,41 @@ export function isUpTonight(event: Event): boolean {
   const times = event.show_times[chicagoDay] as string[] | undefined
   return !!times && times.length > 0
 }
+
+function chicagoToday(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
+}
+
+function endOfWeek(): string {
+  const now = new Date()
+  const chicago = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }))
+  const day = chicago.getDay()
+  const diff = day === 0 ? 0 : 7 - day
+  const sunday = new Date(chicago)
+  sunday.setDate(chicago.getDate() + diff)
+  return sunday.toISOString().slice(0, 10)
+}
+
+function endOfMonth(): string {
+  const now = new Date()
+  const chicago = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }))
+  const last = new Date(chicago.getFullYear(), chicago.getMonth() + 1, 0)
+  return last.toISOString().slice(0, 10)
+}
+
+function overlapsWindow(event: Event, windowEnd: string): boolean {
+  const today = chicagoToday()
+  if (!event.start_date) return false
+  if (event.start_date > windowEnd) return false
+  const end = event.end_date ?? event.start_date
+  if (end < today) return false
+  return true
+}
+
+export function isThisWeek(event: Event): boolean {
+  return overlapsWindow(event, endOfWeek())
+}
+
+export function isThisMonth(event: Event): boolean {
+  return overlapsWindow(event, endOfMonth())
+}

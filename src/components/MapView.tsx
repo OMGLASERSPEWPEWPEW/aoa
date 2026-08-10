@@ -8,6 +8,8 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { createMarkerElement } from './MapMarker'
 import { MapFilterChips } from './MapFilterChips'
+import { MapTimePills, type TimeFilter } from './MapTimePills'
+import { isThisWeek, isThisMonth } from '../lib/tonight'
 import { MapKey } from './MapKey'
 import { VenueSheet } from './VenueSheet'
 import { isUpTonight } from '../lib/tonight'
@@ -26,6 +28,7 @@ export function MapView() {
   const { getStatus } = useWatchlist()
 
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('week')
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
 
   const hasToken = !!import.meta.env.VITE_MAPBOX_TOKEN
@@ -77,6 +80,24 @@ export function MapView() {
   const lastVisitDates = mapData?.lastVisitDates ?? {}
   const venueEmotionColors = mapData?.venueEmotionColors ?? {}
 
+  const timeFilterFn = useCallback((e: Event) => {
+    if (timeFilter === 'today') return isUpTonight(e)
+    if (timeFilter === 'week') return isThisWeek(e)
+    return isThisMonth(e)
+  }, [timeFilter])
+
+  const venueIdsInTimeWindow = new Set(
+    events.filter(timeFilterFn).map(e => e.venue_id)
+  )
+
+  const timeFilteredVenues = venues.filter(v => venueIdsInTimeWindow.has(v.id))
+
+  const timePillCounts = {
+    today: new Set(events.filter(e => isUpTonight(e)).map(e => e.venue_id)).size,
+    week: new Set(events.filter(e => isThisWeek(e)).map(e => e.venue_id)).size,
+    month: new Set(events.filter(e => isThisMonth(e)).map(e => e.venue_id)).size,
+  }
+
   const tonightEventsByVenue = useCallback((venueId: string) => {
     return events.filter(e => e.venue_id === venueId && isUpTonight(e))
   }, [events])
@@ -96,11 +117,11 @@ export function MapView() {
   }, [activeFilters, events, tonightEventsByVenue, visitCounts])
 
   const filterCounts = {
-    tonight: venues.filter(v => tonightEventsByVenue(v.id).length > 0).length,
-    under20: venues.filter(v => events.some(e => e.venue_id === v.id && e.price_min !== null && e.price_min <= 20)).length,
-    storefront: venues.filter(v => v.venue_type === 'storefront').length,
-    never: venues.filter(v => (visitCounts[v.id] ?? 0) === 0).length,
-    pwyc: venues.filter(v => v.pay_what_you_can_days && v.pay_what_you_can_days.length > 0).length,
+    tonight: timeFilteredVenues.filter(v => tonightEventsByVenue(v.id).length > 0).length,
+    under20: timeFilteredVenues.filter(v => events.some(e => e.venue_id === v.id && e.price_min !== null && e.price_min <= 20)).length,
+    storefront: timeFilteredVenues.filter(v => v.venue_type === 'storefront').length,
+    never: timeFilteredVenues.filter(v => (visitCounts[v.id] ?? 0) === 0).length,
+    pwyc: timeFilteredVenues.filter(v => v.pay_what_you_can_days && v.pay_what_you_can_days.length > 0).length,
   }
 
   useEffect(() => {
@@ -143,7 +164,7 @@ export function MapView() {
     for (const { marker } of markersRef.current.values()) marker.remove()
     markersRef.current.clear()
 
-    for (const venue of venues) {
+    for (const venue of timeFilteredVenues) {
       if (venue.latitude == null || venue.longitude == null) continue
 
       const venueEvents = events.filter(e => e.venue_id === venue.id)
@@ -172,7 +193,7 @@ export function MapView() {
       markersRef.current.set(venue.id, { marker, el, venue })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [venues, events, activeFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors])
+  }, [timeFilteredVenues, events, activeFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors])
 
   useEffect(() => {
     const map = mapRef.current
@@ -211,6 +232,12 @@ export function MapView() {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }} />
+
+      <MapTimePills
+        selected={timeFilter}
+        onSelect={setTimeFilter}
+        counts={timePillCounts}
+      />
 
       <MapFilterChips
         activeFilters={activeFilters}
