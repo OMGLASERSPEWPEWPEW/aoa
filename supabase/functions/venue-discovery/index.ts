@@ -151,6 +151,12 @@ serve(async (req) => {
             alertAdmin = true;
           }
 
+          // Update run record with parse results immediately (survives timeout)
+          await supabase.from("discovery_runs").update({
+            venues_found: venuesFound,
+            fetch_status: fetchStatus === "running" ? "success" : fetchStatus,
+          }).eq("run_id", runId);
+
           controller.enqueue(encoder.encode(
             JSON.stringify({ type: "parse", data: { venues_found: venuesFound } }) + "\n"
           ));
@@ -190,6 +196,12 @@ serve(async (req) => {
           const dedupStats = await deduplicateQueue(supabase, runId);
           venuesNew = dedupStats.newCount;
           venuesMatched = dedupStats.matchedCount;
+
+          // Update run record with dedup results (survives timeout)
+          await supabase.from("discovery_runs").update({
+            venues_new: venuesNew,
+            venues_matched: venuesMatched,
+          }).eq("run_id", runId);
 
           controller.enqueue(encoder.encode(
             JSON.stringify({ type: "dedup", data: { new: venuesNew, matched: venuesMatched, pending: dedupStats.pendingCount } }) + "\n"
