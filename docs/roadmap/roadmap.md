@@ -14,6 +14,13 @@
 - **Dependencies:** None
 - **Summary:** Today/This Week/This Month pill row on the map that hides venues with no active events in the selected window. Replaces showing all venues regardless of activity.
 
+## Venue Enrichment Pipeline
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** Venue Discovery Pipeline
+- **Summary:** Separate venue-enrich Edge Function processes queue items in batches of 5. Frontend drives a loop showing real-time progress. Handles dead websites gracefully. One button press enriches all discovered venues.
+
 ## Event Scraper Cron
 - **Status:** Planned
 - **Target:** August 2026

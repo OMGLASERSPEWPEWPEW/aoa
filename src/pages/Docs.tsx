@@ -375,56 +375,101 @@ function CoverageTab() {
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
   const audit = useVenueAudit()
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
-  const [running, setRunning] = useState(false)
+  const [progress, setProgress] = useState<{
+    phase: 'idle' | 'discovering' | 'enriching' | 'done' | 'error'
+    found: number
+    enriched: number
+    total: number
+    error?: string
+  }>({ phase: 'idle', found: 0, enriched: 0, total: 0 })
 
   const handleRunDiscovery = async () => {
-    setRunning(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/venue-discovery`
-      await fetch(url, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL
+      const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
+
+      // Phase 1: Discovery (parse + dedup)
+      setProgress({ phase: 'discovering', found: 0, enriched: 0, total: 0 })
+      const discoverRes = await fetch(`${baseUrl}/functions/v1/venue-discovery`, { method: 'POST', headers })
+      const discoverData = await discoverRes.json()
+
+      if (discoverData.error) {
+        setProgress({ phase: 'error', found: 0, enriched: 0, total: 0, error: discoverData.error })
+        return
+      }
+
+      const venuesNew = discoverData.venues_new ?? 0
+      setProgress({ phase: venuesNew > 0 ? 'enriching' : 'done', found: venuesNew, enriched: 0, total: venuesNew })
+
+      if (venuesNew === 0) {
+        refetchMetrics()
+        refetchQueue()
+        return
+      }
+
+      // Phase 2: Enrichment loop
+      let enriched = 0
+      let remaining = venuesNew
+      while (remaining > 0) {
+        const enrichRes = await fetch(`${baseUrl}/functions/v1/venue-enrich`, { method: 'POST', headers })
+        const enrichData = await enrichRes.json()
+
+        if (enrichData.error) {
+          setProgress({ phase: 'error', found: venuesNew, enriched, total: venuesNew, error: enrichData.error })
+          return
+        }
+
+        enriched += enrichData.enriched
+        remaining = enrichData.remaining
+        setProgress({ phase: 'enriching', found: venuesNew, enriched, total: venuesNew })
+      }
+
+      setProgress({ phase: 'done', found: venuesNew, enriched, total: venuesNew })
       refetchMetrics()
       refetchQueue()
     } catch (err) {
-      console.error('Discovery run failed:', err)
-    } finally {
-      setRunning(false)
+      setProgress((prev) => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
     }
   }
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <div>
           <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>
             Venue Coverage
           </div>
-          <p style={{ fontSize: 14, color: 'var(--ink-dim)', lineHeight: 1.5, marginTop: 4 }}>
-            Chicago theater venue discovery and data completeness.
-          </p>
         </div>
         <button
           onClick={handleRunDiscovery}
-          disabled={running}
+          disabled={progress.phase === 'discovering' || progress.phase === 'enriching'}
           style={{
             ...mono,
             fontSize: 10,
             padding: '6px 14px',
-            background: running ? 'var(--bg-chrome)' : 'var(--accent)',
-            color: running ? 'var(--ink-dim)' : 'var(--accent-on)',
+            background: progress.phase === 'discovering' || progress.phase === 'enriching' ? 'var(--bg-chrome)' : 'var(--accent)',
+            color: progress.phase === 'discovering' || progress.phase === 'enriching' ? 'var(--ink-dim)' : 'var(--accent-on)',
             border: 'none',
             borderRadius: 2,
-            cursor: running ? 'default' : 'pointer',
+            cursor: progress.phase === 'discovering' || progress.phase === 'enriching' ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
             flexShrink: 0,
           }}
         >
-          {running ? 'Running...' : 'Run Discovery'}
+          {progress.phase === 'discovering' && 'Discovering...'}
+          {progress.phase === 'enriching' && `Enriching ${progress.enriched}/${progress.total}`}
+          {(progress.phase === 'idle' || progress.phase === 'done' || progress.phase === 'error') && 'Run Discovery'}
         </button>
+      </div>
+      <div style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', marginBottom: 16 }}>
+        {progress.phase === 'discovering' && 'Parsing ChicagoPlays...'}
+        {progress.phase === 'enriching' && `Found ${progress.found} new theaters. Enriching with addresses, photos, coordinates...`}
+        {progress.phase === 'done' && progress.found > 0 && `${progress.enriched} venues enriched.`}
+        {progress.phase === 'done' && progress.found === 0 && 'No new theaters found.'}
+        {progress.phase === 'error' && <span style={{ color: '#ef4444' }}>Error: {progress.error}</span>}
+        {progress.phase === 'idle' && 'Chicago theater venue discovery and data completeness.'}
       </div>
 
       {metricsLoading && (
