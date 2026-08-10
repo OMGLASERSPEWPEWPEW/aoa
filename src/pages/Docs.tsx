@@ -425,6 +425,10 @@ function CoverageTab() {
           if (!line.trim()) continue
           try {
             const msg = JSON.parse(line)
+            if (msg.type === 'enrichment') {
+              scraped++
+              setScraper({ phase: 'scraping', scraped, events })
+            }
             if (msg.type === 'venue') {
               scraped++
               events += msg.data?.events_found ?? 0
