@@ -61,6 +61,49 @@ export interface DeepSeekResponse {
   };
 }
 
+// --- Multi-Pass Extraction types ---
+
+export interface Pass1Event {
+  title: string;
+  event_type: string;
+  start_date: string | null;
+  end_date: string | null;
+  price_min: number | null;
+  price_max: number | null;
+  ticket_url: string | null;
+  show_times: Record<string, string[]> | null;
+}
+
+export interface Pass2Verification {
+  title: string;
+  status: "verified" | "corrected" | "rejected";
+  rejection_reason: string | null;
+  confidence: number;
+  description: string | null;
+  genre_tags: string[];
+  cast_members: Array<{ name: string; role: string | null }> | null;
+  photo_url: string | null;
+  corrections: {
+    price_min?: number | null;
+    price_max?: number | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    event_type?: string | null;
+  };
+}
+
+export interface ExtractionResult {
+  events: Pass1Event[];
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface VerificationResult {
+  events: Pass2Verification[];
+  inputTokens: number;
+  outputTokens: number;
+}
+
 // --- Venue Discovery Pipeline types ---
 
 export interface DiscoveredVenue {

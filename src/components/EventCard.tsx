@@ -19,7 +19,7 @@ function formatDateRange(start: string | null, end: string | null): string {
 }
 
 function formatPrice(min: number | null, max: number | null): string {
-  if (min === null && max === null) return 'Free'
+  if (min === null && max === null) return '$ TBD'
   if (min === 0 && (max === null || max === 0)) return 'Free'
   if (min === max) return `$${min}`
   if (min === 0) return `Free–$${max}`

@@ -35,6 +35,13 @@
 - **Dependencies:** Venue Discovery Pipeline (more venues to scrape)
 - **Summary:** Set up daily 6 AM CST cron for the existing event-scraper Edge Function. Problem 2 of the data strategy: "What's playing at each venue?"
 
+## Multi-Pass AI Event Extraction
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** Batch event scraper
+- **Summary:** Two-pass DeepSeek pipeline: Pass 1 extracts structural data with explicit price/venue/date rules, Pass 2 verifies and enriches with descriptions and confidence scores. Fixes false-free prices, venue misattribution, and overly broad dates.
+
 ## Belt Progression System
 - **Status:** Planned
 - **Target:** September 2026

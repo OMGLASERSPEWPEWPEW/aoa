@@ -73,6 +73,7 @@ export interface Event {
   photo_url: string | null
   cast_members: Array<{ name: string; role: string | null }> | null
   play_id: string | null
+  extraction_confidence: number | null
   created_at: string
   venue?: Venue
   play?: Play

@@ -19,7 +19,7 @@ export function TonightHero({ event, spectrum, totalCards }: Props) {
 
   const priceStr =
     event.price_min === null && event.price_max === null
-      ? 'Free'
+      ? '$ TBD'
       : event.price_min === 0 && (event.price_max === null || event.price_max === 0)
         ? 'Free'
         : event.price_min === event.price_max
