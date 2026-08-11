@@ -4,8 +4,7 @@ import { LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../hooks/useProfile'
 import { VersionStamp } from './VersionStamp'
-
-const ADMINS = ['darklight', 'matti']
+import { ADMINS } from '../lib/constants'
 
 function formatNow(): string {
   const d = new Date()

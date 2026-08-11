@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCostDashboard } from '../hooks/useCostDashboard'
-import { supabase } from '../lib/supabase'
 import { useVenueCoverage } from '../hooks/useVenueCoverage'
 import { useDiscoveryQueue, type QueueItem } from '../hooks/useDiscoveryQueue'
 import { useVenueAudit } from '../hooks/useVenueAudit'
+import { useScrape } from '../contexts/ScrapeContext'
 import { CoverageMetricsCards } from '../components/admin/CoverageMetricsCards'
 import { VenueAuditTable } from '../components/admin/VenueAuditTable'
 import { DiscoveryQueueSection } from '../components/admin/DiscoveryQueueSection'
@@ -385,107 +385,18 @@ function CoverageTab() {
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
   const audit = useVenueAudit()
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
-  const [scraper, setScraper] = useState<{
-    phase: 'idle' | 'scraping' | 'done' | 'error'
-    scraped: number
-    events: number
-    error?: string
-  }>({ phase: 'idle', scraped: 0, events: 0 })
-
-  const handleRunScraper = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-      const baseUrl = import.meta.env.VITE_SUPABASE_URL
-      const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
-
-      let scraped = 0
-      let events = 0
-      let remaining = 1
-
-      setScraper({ phase: 'scraping', scraped: 0, events: 0 })
-
-      while (remaining > 0) {
-        const res = await fetch(`${baseUrl}/functions/v1/event-scrape-batch`, { method: 'POST', headers })
-        const data = await res.json()
-
-        if (data.error) {
-          setScraper({ phase: 'error', scraped, events, error: data.error })
-          return
-        }
-
-        scraped += data.scraped ?? 0
-        events += data.events_found ?? 0
-        remaining = data.remaining ?? 0
-        setScraper({ phase: 'scraping', scraped, events })
-        refetchMetrics()
-      }
-
-      setScraper({ phase: 'done', scraped, events })
-      refetchMetrics()
-    } catch (err) {
-      setScraper({ phase: 'error', scraped: 0, events: 0, error: err instanceof Error ? err.message : 'Unknown error' })
-    }
-  }
-
-  const [progress, setProgress] = useState<{
-    phase: 'idle' | 'discovering' | 'enriching' | 'done' | 'error'
-    found: number
-    enriched: number
-    promoted: number
-    total: number
-    error?: string
-  }>({ phase: 'idle', found: 0, enriched: 0, promoted: 0, total: 0 })
+  const { discovery: progress, scraper, busy, runDiscovery, runScraper } = useScrape()
 
   const handleRunDiscovery = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-      const baseUrl = import.meta.env.VITE_SUPABASE_URL
-      const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
-
-      // Phase 1: Discovery (parse + dedup)
-      setProgress({ phase: 'discovering', found: 0, enriched: 0, promoted: 0, total: 0 })
-      const discoverRes = await fetch(`${baseUrl}/functions/v1/venue-discovery`, { method: 'POST', headers })
-      const discoverData = await discoverRes.json()
-
-      if (discoverData.error) {
-        setProgress({ phase: 'error', found: 0, enriched: 0, promoted: 0, total: 0, error: discoverData.error })
-        return
-      }
-
-      const venuesNew = discoverData.venues_new ?? 0
-
-      // Phase 2: Enrich + auto-promote loop
-      let enriched = 0
-      let promoted = 0
-      let remaining = 1
-
-      while (remaining > 0) {
-        const enrichRes = await fetch(`${baseUrl}/functions/v1/venue-enrich`, { method: 'POST', headers })
-        const enrichData = await enrichRes.json()
-
-        if (enrichData.error) {
-          setProgress({ phase: 'error', found: venuesNew, enriched, promoted, total: enriched + remaining, error: enrichData.error })
-          return
-        }
-
-        enriched += enrichData.enriched ?? 0
-        promoted += enrichData.promoted ?? 0
-        remaining = enrichData.remaining ?? 0
-        setProgress({ phase: 'enriching', found: venuesNew, enriched, promoted, total: enriched + remaining })
-        refetchMetrics()
-      }
-
-      setProgress({ phase: 'done', found: venuesNew, enriched, promoted, total: enriched })
-      refetchMetrics()
-      refetchQueue()
-    } catch (err) {
-      setProgress((prev) => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
-    }
+    await runDiscovery()
+    refetchMetrics()
+    refetchQueue()
   }
 
-  const busy = progress.phase === 'discovering' || progress.phase === 'enriching' || scraper.phase === 'scraping'
+  const handleRunScraper = async () => {
+    await runScraper()
+    refetchMetrics()
+  }
 
   return (
     <>

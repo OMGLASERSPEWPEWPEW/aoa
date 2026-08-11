@@ -32,13 +32,17 @@ import { PlayDetail } from './pages/PlayDetail'
 import { Docs } from './pages/Docs'
 import { DocsViewer } from './pages/DocsViewer'
 import { UpdateBanner } from './components/UpdateBanner'
+import { ScrapeProvider } from './contexts/ScrapeContext'
+import { AdminScrapeRibbon } from './components/AdminScrapeRibbon'
 export default function App() {
   return (
     <ThemeProvider>
     <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
+        <ScrapeProvider>
         <UpdateBanner />
+        <AdminScrapeRibbon />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -68,6 +72,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ScrapeProvider>
       </AuthProvider>
     </BrowserRouter>
     </QueryClientProvider>

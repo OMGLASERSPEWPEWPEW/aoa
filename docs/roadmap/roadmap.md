@@ -42,6 +42,13 @@
 - **Dependencies:** Batch event scraper
 - **Summary:** Two-pass DeepSeek pipeline: Pass 1 extracts structural data with explicit price/venue/date rules, Pass 2 verifies and enriches with descriptions and confidence scores. Fixes false-free prices, venue misattribution, and overly broad dates.
 
+## Admin Scrape Ribbon
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P1
+- **Dependencies:** Batch event scraper, venue enrichment
+- **Summary:** Persistent ribbon in App.tsx showing scraper/discovery progress from any page. Moves batch loops into React context so navigating away doesn't kill them. Admin-only.
+
 ## Belt Progression System
 - **Status:** Planned
 - **Target:** September 2026
