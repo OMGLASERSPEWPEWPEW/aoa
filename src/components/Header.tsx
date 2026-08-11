@@ -27,11 +27,8 @@ export function Header() {
   }, [])
 
   return (
-    <header
-      className="flex items-center justify-between px-5 py-3"
-      style={{ backgroundColor: 'var(--bg)', borderBottom: '1px solid var(--rule)' }}
-    >
-      <div className="flex items-baseline gap-2">
+    <header style={{ backgroundColor: 'var(--bg)', borderBottom: '1px solid var(--rule)', padding: '10px 20px 8px' }}>
+      <div className="flex items-center justify-between">
         <h1
           style={{
             fontFamily: "'Newsreader', Georgia, serif",
@@ -41,45 +38,46 @@ export function Header() {
             color: 'var(--ink)',
           }}
         >
-          The Art of Art
+          House
         </h1>
-        <VersionStamp />
-      </div>
-      <div className="flex items-center gap-3">
-        {isAdmin && (
-          <Link
-            to="/app/admin"
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 10,
-              letterSpacing: '0.06em',
-              color: 'var(--accent)',
-              textDecoration: 'none',
-            }}
+        <div className="flex items-center gap-3">
+          {isAdmin && (
+            <Link
+              to="/app/admin"
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontSize: 10,
+                letterSpacing: '0.06em',
+                color: 'var(--accent)',
+                textDecoration: 'none',
+              }}
+            >
+              ADMIN
+            </Link>
+          )}
+          <button
+            onClick={signOut}
+            className="p-1 transition-colors"
+            style={{ color: 'var(--ink-dim)' }}
+            aria-label="Sign out"
           >
-            ADMIN
-          </Link>
-        )}
-        <span
-          style={{
-            fontFamily: "'Courier Prime', monospace",
-            fontSize: 10,
-            letterSpacing: '0.06em',
-            color: 'var(--ink-dim)',
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-          }}
-        >
-          {now}
-        </span>
-        <button
-          onClick={signOut}
-          className="p-2 transition-colors"
-          style={{ color: 'var(--ink-dim)' }}
-          aria-label="Sign out"
-        >
-          <LogOut size={18} />
-        </button>
+            <LogOut size={16} />
+          </button>
+        </div>
+      </div>
+      <div
+        style={{
+          fontFamily: "'Courier Prime', monospace",
+          fontSize: 10,
+          letterSpacing: '0.06em',
+          color: 'var(--ink-faint)',
+          marginTop: 2,
+          display: 'flex',
+          gap: 0,
+        }}
+      >
+        <VersionStamp />
+        <span> · chicago · {now}</span>
       </div>
     </header>
   )

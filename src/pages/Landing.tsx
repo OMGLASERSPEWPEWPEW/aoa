@@ -15,7 +15,7 @@ export function Landing() {
           marginBottom: 8,
         }}
       >
-        The Art of Art
+        House
       </h1>
       <p
         style={{

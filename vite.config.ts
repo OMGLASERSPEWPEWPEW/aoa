@@ -13,8 +13,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'The Art of Art',
-        short_name: 'Art of Art',
+        name: 'House',
+        short_name: 'House',
         description: 'Your guide to the scene.',
         theme_color: '#1a1a2e',
         background_color: '#0f0f23',

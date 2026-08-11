@@ -92,39 +92,6 @@ export function Tonight() {
 
   return (
     <div ref={scrollRef} className="flex flex-col h-full overflow-y-auto" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      {/* Masthead */}
-      <div
-        className="flex items-center justify-between"
-        style={{
-          padding: '8px 20px 12px',
-          borderBottom: '1px solid var(--rule)',
-        }}
-      >
-        <div className="flex items-baseline gap-1.5">
-          <span
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontWeight: 700,
-              fontSize: 19,
-              letterSpacing: '-0.01em',
-              color: 'var(--ink)',
-            }}
-          >
-            The Art of Art
-          </span>
-          <span
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 10,
-              color: 'var(--ink-faint)',
-            }}
-          >
-            • chicago
-          </span>
-        </div>
-        <span style={{ fontSize: 18, color: 'var(--ink-dim)' }}>⊙</span>
-      </div>
-
       <MarqueeTicker
         tonightCount={tonightCount}
         under20Count={under20Count}
