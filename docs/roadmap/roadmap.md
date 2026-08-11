@@ -35,12 +35,12 @@
 - **Dependencies:** Venue Discovery Pipeline (more venues to scrape)
 - **Summary:** Set up daily 6 AM CST cron for the existing event-scraper Edge Function. Problem 2 of the data strategy: "What's playing at each venue?"
 
-## Multi-Pass AI Event Extraction
+## Intelligent Event Scraper (Multi-Pass Extraction v2)
 - **Status:** In Progress
 - **Target:** August 2026
 - **Priority:** P0
-- **Dependencies:** Batch event scraper
-- **Summary:** Two-pass DeepSeek pipeline: Pass 1 extracts structural data with explicit price/venue/date rules, Pass 2 verifies and enriches with descriptions and confidence scores. Fixes false-free prices, venue misattribution, and overly broad dates.
+- **Dependencies:** Batch event scraper (v1 two-pass pipeline — shipped v0.6.0)
+- **Summary:** Replaces the linear two-pass scraper with a deterministic mini-crawler. Follows links from calendar pages to show detail pages, uses targeted prompts to fill missing dates/prices, annotates why data is incomplete. Gap-priority batch query processes venues with NULL-date events first. Informed by multi-model architecture review (GPT-5.5, Gemini 3.1 Pro, DeepSeek V4 Pro, Claude Opus 4.8).
 
 ## Admin Scrape Ribbon
 - **Status:** In Progress

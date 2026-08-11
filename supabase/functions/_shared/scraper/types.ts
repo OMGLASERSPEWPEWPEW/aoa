@@ -104,6 +104,56 @@ export interface VerificationResult {
   outputTokens: number;
 }
 
+// --- Intelligent Event Scraper v2 types ---
+
+export interface EventCompleteness {
+  eventIndex: number;
+  title: string;
+  score: number;
+  missingFields: string[];
+  needsFollow: boolean;
+}
+
+export interface CandidateLink {
+  url: string;
+  anchorText: string;
+  score: number;
+  matchedEventTitles: string[];
+}
+
+export interface StrategyStep {
+  step: "initial_extract" | "link_follow" | "website_fallback" | "verify";
+  url: string;
+  aiCalls: number;
+  inputTokens: number;
+  outputTokens: number;
+  eventsAffected: number;
+  fieldsFilledIn: string[];
+  durationMs: number;
+}
+
+export interface StrategyTrace {
+  steps: StrategyStep[];
+  totalAiCalls: number;
+  totalFetches: number;
+  budgetUsed: number;
+  budgetLimit: number;
+  linksFollowed: string[];
+  completenessBeforeFollows: number;
+  completenessAfterFollows: number;
+  stopReason: string;
+}
+
+export interface TargetedEnrichment {
+  title: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  price_min?: number | null;
+  price_max?: number | null;
+  ticket_url?: string | null;
+  show_times?: Record<string, string[]> | null;
+}
+
 // --- Venue Discovery Pipeline types ---
 
 export interface DiscoveredVenue {

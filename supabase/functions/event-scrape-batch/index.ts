@@ -23,7 +23,7 @@ const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const BATCH_SIZE = 2;
+const BATCH_SIZE = 1;
 
 serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -54,13 +54,37 @@ serve(async (req) => {
   try {
     const runId = crypto.randomUUID();
 
-    const { data: venues } = await supabase
-      .from("venues")
-      .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
-      .not("calendar_url", "is", null)
-      .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .order("scraped_at", { ascending: true, nullsFirst: true })
-      .limit(BATCH_SIZE);
+    // Priority 1: venues with events missing start_date (gap-fill)
+    const { data: gapVenueRows } = await supabase
+      .from("events")
+      .select("venue_id")
+      .is("start_date", null)
+      .eq("source", "scraped");
+    const gapVenueIds = [...new Set((gapVenueRows ?? []).map((r: { venue_id: string }) => r.venue_id))];
+
+    let venues: VenueTarget[] | null = null;
+
+    if (gapVenueIds.length > 0) {
+      const { data } = await supabase
+        .from("venues")
+        .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
+        .not("calendar_url", "is", null)
+        .in("id", gapVenueIds)
+        .limit(BATCH_SIZE);
+      venues = (data as VenueTarget[]) ?? null;
+    }
+
+    // Priority 2+3: never scraped or stale (existing logic)
+    if (!venues || venues.length === 0) {
+      const { data } = await supabase
+        .from("venues")
+        .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
+        .not("calendar_url", "is", null)
+        .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order("scraped_at", { ascending: true, nullsFirst: true })
+        .limit(BATCH_SIZE);
+      venues = (data as VenueTarget[]) ?? null;
+    }
 
     if (!venues || venues.length === 0) {
       return new Response(
@@ -85,11 +109,21 @@ serve(async (req) => {
         .eq("id", venue.id);
     }
 
-    const { count } = await supabase
+    // Count remaining: gap venues + stale/unscraped venues
+    const { data: remainingGaps } = await supabase
+      .from("events")
+      .select("venue_id")
+      .is("start_date", null)
+      .eq("source", "scraped");
+    const remainingGapIds = [...new Set((remainingGaps ?? []).map((r: { venue_id: string }) => r.venue_id))];
+
+    const { count: staleCount } = await supabase
       .from("venues")
       .select("id", { count: "exact", head: true })
       .not("calendar_url", "is", null)
       .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+    const count = Math.max(remainingGapIds.length, staleCount ?? 0);
 
     return new Response(
       JSON.stringify({

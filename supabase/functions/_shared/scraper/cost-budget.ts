@@ -1,0 +1,65 @@
+const DEEPSEEK_FLASH_INPUT = 0.10;
+const DEEPSEEK_FLASH_OUTPUT = 0.40;
+
+interface BudgetOpts {
+  maxAiCalls: number;
+  maxFetches: number;
+  maxUsd: number;
+  wallClockMs: number;
+}
+
+const DEFAULTS: BudgetOpts = {
+  maxAiCalls: 6,
+  maxFetches: 5,
+  maxUsd: 0.012,
+  wallClockMs: 120_000,
+};
+
+export class CostBudget {
+  private opts: BudgetOpts;
+  private startTime: number;
+  private _aiCallsMade = 0;
+  private _fetchesMade = 0;
+  private _spent = 0;
+  private _stopReason: string | null = null;
+
+  constructor(opts?: Partial<BudgetOpts>) {
+    this.opts = { ...DEFAULTS, ...opts };
+    this.startTime = Date.now();
+  }
+
+  get aiCallsMade(): number { return this._aiCallsMade; }
+  get fetchesMade(): number { return this._fetchesMade; }
+  get spent(): number { return this._spent; }
+  get stopReason(): string | null { return this._stopReason; }
+
+  isExhausted(): boolean {
+    if (this._stopReason) return true;
+    if (this._aiCallsMade >= this.opts.maxAiCalls) { this._stopReason = "budget_calls"; return true; }
+    if (this._fetchesMade >= this.opts.maxFetches) { this._stopReason = "budget_fetches"; return true; }
+    if (this._spent >= this.opts.maxUsd) { this._stopReason = "budget_cost"; return true; }
+    if (Date.now() - this.startTime >= this.opts.wallClockMs) { this._stopReason = "budget_time"; return true; }
+    return false;
+  }
+
+  canAffordAiCall(): boolean {
+    return !this.isExhausted() && this._aiCallsMade < this.opts.maxAiCalls;
+  }
+
+  canAffordFetch(): boolean {
+    return !this.isExhausted() && this._fetchesMade < this.opts.maxFetches;
+  }
+
+  recordAiCall(inputTokens: number, outputTokens: number): void {
+    this._aiCallsMade++;
+    this._spent += (inputTokens * DEEPSEEK_FLASH_INPUT + outputTokens * DEEPSEEK_FLASH_OUTPUT) / 1_000_000;
+  }
+
+  recordFetch(): void {
+    this._fetchesMade++;
+  }
+
+  setStopReason(reason: string): void {
+    if (!this._stopReason) this._stopReason = reason;
+  }
+}
