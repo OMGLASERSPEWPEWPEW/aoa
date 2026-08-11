@@ -23,7 +23,7 @@ const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const BATCH_SIZE = 3;
+const BATCH_SIZE = 2;
 
 serve(async (req) => {
   const cors = getCorsHeaders(req);
