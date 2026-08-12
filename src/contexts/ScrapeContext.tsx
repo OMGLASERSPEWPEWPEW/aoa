@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
+import { queryClient } from '../App'
 
 export interface DiscoveryProgress {
   phase: 'idle' | 'discovering' | 'enriching' | 'done' | 'error'
@@ -104,10 +105,19 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
         error: job.error ?? undefined,
       }
 
-      setScraper(progress)
+      setScraper(prev => {
+        if (progress.scraped > prev.scraped || progress.phase === 'done') {
+          queryClient.invalidateQueries({ queryKey: ['map-data'] })
+          queryClient.invalidateQueries({ queryKey: ['tonight-events'] })
+          queryClient.invalidateQueries({ queryKey: ['events'] })
+          queryClient.invalidateQueries({ queryKey: ['discover'] })
+        }
+        return progress
+      })
 
       if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
         stopPolling()
+        queryClient.invalidateQueries()
       }
     }, 5000)
   }, [stopPolling])
