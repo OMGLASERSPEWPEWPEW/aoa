@@ -42,6 +42,8 @@ async function getNextVenue(supabase: ReturnType<typeof createClient>): Promise<
       .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
       .not("calendar_url", "is", null)
       .in("id", gapVenueIds)
+      .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .order("scraped_at", { ascending: true, nullsFirst: true })
       .limit(BATCH_SIZE);
     venues = (data as VenueTarget[]) ?? null;
   }
