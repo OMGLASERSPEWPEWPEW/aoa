@@ -62,6 +62,7 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
         extraction_confidence: event.confidence,
         extraction_status: event.extraction_status,
         missing_fields: event.missing_fields,
+        found_by: event.found_by,
       };
 
       if (existing) {

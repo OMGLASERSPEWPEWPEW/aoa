@@ -87,6 +87,7 @@ interface MergedEvent {
   confidence: number;
   extraction_status: string;
   missing_fields: string[];
+  found_by: string[];
 }
 
 function mergeExtractionResults(pass1Events: Pass1Event[], pass2Events: Pass2Verification[]): MergedEvent[] {
@@ -97,7 +98,7 @@ function mergeExtractionResults(pass1Events: Pass1Event[], pass2Events: Pass2Ver
 
     if (!p2) {
       const comp = evaluateCompleteness(p1, i);
-      merged.push({ ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null, description: null, genre_tags: [], cast_members: null, photo_url: null, confidence: 0.5, extraction_status: comp.needsFollow ? "partial" : "complete", missing_fields: comp.missingFields });
+      merged.push({ ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null, description: null, genre_tags: [], cast_members: null, photo_url: null, confidence: 0.5, extraction_status: comp.needsFollow ? "partial" : "complete", missing_fields: comp.missingFields, found_by: [] });
       continue;
     }
     if (p2.status === "rejected") continue;
@@ -124,6 +125,7 @@ function mergeExtractionResults(pass1Events: Pass1Event[], pass2Events: Pass2Ver
       confidence: p2.confidence,
       extraction_status: comp.needsFollow ? "partial" : "complete",
       missing_fields: comp.missingFields,
+      found_by: [],
     });
   }
   return merged;
@@ -141,15 +143,20 @@ export async function executeStrategyTree(
 
   let events: Pass1Event[] = [];
   let rawHtml = "";
+  const foundByMap = new Map<string, Set<string>>();
 
-  // STEP 1: Initial extraction from calendar_url
+  // STEP 1: Parallel fetch — venue calendar + TIC lookup simultaneously
   const step1Start = Date.now();
-  rawHtml = await fetchHtml(venue.calendar_url);
+  const [venueHtml, ticResult] = await Promise.all([
+    fetchHtml(venue.calendar_url),
+    lookupVenueOnTic(venue.name).catch(() => ({ shows: [] as import("./types.ts").TicShow[], source: null as string | null })),
+  ]);
+  rawHtml = venueHtml;
   visitedUrls.add(venue.calendar_url);
   budget.recordFetch();
+  budget.recordFetch();
 
-  const candidateLinksInitial = extractCandidateLinks(rawHtml, venue.calendar_url, []);
-
+  // Extract events from venue calendar
   const cleaned = cleanHtml(rawHtml);
   if (cleaned.length >= 100 && budget.canAffordAiCall()) {
     const result = await callDeepSeek(buildExtractionPrompt(venue.name), cleaned);
@@ -161,8 +168,10 @@ export async function executeStrategyTree(
       try {
         const parsed = JSON.parse(result.content);
         events = parsed.events ?? [];
-      } catch { /* parse error — events stays empty */ }
+      } catch { /* parse error */ }
     }
+
+    for (const e of events) foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
 
     steps.push({
       step: "initial_extract", url: venue.calendar_url, aiCalls: 1,
@@ -171,7 +180,53 @@ export async function executeStrategyTree(
     });
   }
 
-  // STEP 5 (early): Website fallback if 0 events
+  // Merge TIC results (ran in parallel, now available)
+  const ticShows = ticResult.shows;
+  if (ticShows.length > 0) {
+    const ticStart = Date.now();
+    const enrichments = ticShowsToEnrichments(ticShows);
+    const { events: updated, fieldsFilledIn } = mergeTargetedExtraction(events, enrichments);
+
+    for (const enrichment of enrichments) {
+      const key = enrichment.title.toLowerCase();
+      const existing = foundByMap.get(key);
+      if (existing) existing.add("tic");
+    }
+
+    const matchedTitles = new Set(events.map(e => e.title.toLowerCase()));
+    const ticOnlyShows = ticShows.filter(s =>
+      !matchedTitles.has(s.title.toLowerCase()) &&
+      !events.some(e => e.title.toLowerCase().includes(s.title.toLowerCase()) || s.title.toLowerCase().includes(e.title.toLowerCase())),
+    );
+
+    for (const ticOnly of ticOnlyShows) {
+      if (ticOnly.startDate || ticOnly.endDate) {
+        updated.push({
+          title: ticOnly.title,
+          event_type: "show",
+          start_date: ticOnly.startDate,
+          end_date: ticOnly.endDate,
+          price_min: null,
+          price_max: null,
+          ticket_url: ticOnly.detailUrl,
+          show_times: null,
+        });
+        foundByMap.set(ticOnly.title.toLowerCase(), new Set(["tic"]));
+      }
+    }
+
+    events = updated;
+
+    steps.push({
+      step: "aggregator_crossref", url: "theatreinchicago.com",
+      aiCalls: 0, inputTokens: 0, outputTokens: 0,
+      eventsAffected: fieldsFilledIn.length + ticOnlyShows.length,
+      fieldsFilledIn: [...fieldsFilledIn, ...ticOnlyShows.map(() => "tic_only_event")],
+      durationMs: Date.now() - ticStart,
+    });
+  }
+
+  // Website fallback if 0 events from both sources
   if (events.length === 0 && venue.website_url && venue.website_url !== venue.calendar_url && budget.canAffordFetch() && budget.canAffordAiCall()) {
     const fbStart = Date.now();
     try {
@@ -191,6 +246,7 @@ export async function executeStrategyTree(
             const parsed = JSON.parse(fbResult.content);
             events = parsed.events ?? [];
             rawHtml = fbHtml;
+            for (const e of events) foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
           } catch { /* parse error */ }
         }
 
@@ -209,7 +265,7 @@ export async function executeStrategyTree(
     budget.setStopReason("no_events");
     return {
       mergedEvents: [],
-      trace: buildTrace(steps, budget, [], averageCompleteness(events), averageCompleteness(events)),
+      trace: buildTrace(steps, budget, [], 0, 0),
       totalInputTokens, totalOutputTokens,
     };
   }
@@ -281,29 +337,6 @@ export async function executeStrategyTree(
     }
   }
 
-  // STEP 3.5: Aggregator cross-reference (theatreinchicago.com)
-  const stillIncomplete = events.filter((e, i) => evaluateCompleteness(e, i).needsFollow);
-  if (stillIncomplete.length > 0 && budget.canAffordFetch()) {
-    const ticStart = Date.now();
-    try {
-      const { shows } = await lookupVenueOnTic(venue.name);
-      if (shows.length > 0) {
-        const enrichments = ticShowsToEnrichments(shows);
-        const { events: updated, fieldsFilledIn } = mergeTargetedExtraction(events, enrichments);
-        events = updated;
-        steps.push({
-          step: "aggregator_crossref", url: "theatreinchicago.com",
-          aiCalls: 0, inputTokens: 0, outputTokens: 0,
-          eventsAffected: fieldsFilledIn.length, fieldsFilledIn,
-          durationMs: Date.now() - ticStart,
-        });
-        budget.recordFetch();
-      }
-    } catch (e) {
-      console.warn(`[scraper-v2] TIC lookup failed for ${venue.name}:`, e);
-    }
-  }
-
   const completenessAfterFollows = averageCompleteness(events);
 
   // STEP 4: Conditional verification
@@ -338,7 +371,7 @@ export async function executeStrategyTree(
           return {
             ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
             description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
-            confidence: 0.4, extraction_status: "no_dates_on_site", missing_fields: comp.missingFields,
+            confidence: 0.4, extraction_status: "no_dates_on_site", missing_fields: comp.missingFields, found_by: [],
           } as MergedEvent;
         });
         mergedEvents = [...verifiedMerged, ...unverifiedMerged];
@@ -354,7 +387,7 @@ export async function executeStrategyTree(
           return {
             ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
             description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
-            confidence: 0.4, extraction_status: "no_dates_on_site", missing_fields: comp.missingFields,
+            confidence: 0.4, extraction_status: "no_dates_on_site", missing_fields: comp.missingFields, found_by: [],
           } as MergedEvent;
         });
       }
@@ -365,7 +398,7 @@ export async function executeStrategyTree(
         return {
           ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
           description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
-          confidence: 0.5, extraction_status: comp.needsFollow ? "partial" : "complete", missing_fields: comp.missingFields,
+          confidence: 0.5, extraction_status: comp.needsFollow ? "partial" : "complete", missing_fields: comp.missingFields, found_by: [],
         } as MergedEvent;
       });
     }
@@ -377,9 +410,15 @@ export async function executeStrategyTree(
         description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
         confidence: 0.4,
         extraction_status: comp.needsFollow ? "budget_exhausted" : "complete",
-        missing_fields: comp.missingFields,
+        missing_fields: comp.missingFields, found_by: [],
       } as MergedEvent;
     });
+  }
+
+  // Apply found_by from the map
+  for (const event of mergedEvents) {
+    const sources = foundByMap.get(event.title.toLowerCase());
+    event.found_by = sources ? [...sources] : ["venue_website"];
   }
 
   if (!budget.stopReason) budget.setStopReason("complete");
