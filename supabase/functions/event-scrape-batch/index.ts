@@ -223,13 +223,14 @@ serve(async (req) => {
         last_strategy: lastStrategyStr,
       }).eq("id", currentJobId);
 
-      // Self-chain: if more venues remain, trigger next batch
+      // Self-chain: if more venues remain, trigger next batch via direct fetch
       if (remainingAfter > 0) {
-        try {
-          await supabase.rpc("trigger_next_scrape_batch", { p_job_id: currentJobId });
-        } catch (e) {
-          console.error("[event-scrape-batch] Self-chain failed:", e);
-        }
+        const selfUrl = `${SUPABASE_URL}/functions/v1/event-scrape-batch`;
+        fetch(selfUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-scraper-key": SCRAPER_SECRET },
+          body: JSON.stringify({ job_id: currentJobId }),
+        }).catch(e => console.error("[event-scrape-batch] Self-chain failed:", e));
       } else {
         await supabase.from("scrape_jobs").update({
           status: "completed",
