@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useProfile } from '../hooks/useProfile'
 import { useScrape } from '../contexts/ScrapeContext'
+import { ScraperDashboard } from './ScraperDashboard'
 import { ADMINS } from '../lib/constants'
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 
 export function AdminScrapeRibbon() {
   const { profile } = useProfile()
-  const { discovery, scraper, busy } = useScrape()
+  const { discovery, scraper, busy, dashboardOpen, setDashboardOpen } = useScrape()
   const location = useLocation()
   const [hidden, setHidden] = useState(true)
 
@@ -59,41 +60,50 @@ export function AdminScrapeRibbon() {
     color = '#ef4444'
   }
 
-  if (!message) return null
+  if (!message && !dashboardOpen) return null
 
   return (
-    <div
-      style={{
-        background: 'var(--bg-chrome)',
-        borderBottom: '1px solid var(--rule)',
-        overflow: 'hidden',
-      }}
-    >
-      {isRunning && (
-        <div
-          style={{
-            height: 2,
-            background: `linear-gradient(90deg, transparent, var(--accent), transparent)`,
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 2.5s ease-in-out infinite',
-          }}
-        />
+    <>
+      {dashboardOpen && (scraper.phase === 'scraping' || scraper.phase === 'done' || scraper.phase === 'error') && (
+        <ScraperDashboard onMinimize={() => setDashboardOpen(false)} />
       )}
-      <div
-        style={{
-          ...mono,
-          fontSize: 10,
-          letterSpacing: '0.06em',
-          padding: '6px 16px',
-          color,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
-      >
-        {message}
-      </div>
-      <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
-    </div>
+      {message && !dashboardOpen && (
+        <div
+          onClick={() => setDashboardOpen(true)}
+          style={{
+            background: 'var(--bg-chrome)',
+            borderBottom: '1px solid var(--rule)',
+            overflow: 'hidden',
+            cursor: 'pointer',
+          }}
+        >
+          {isRunning && (
+            <div
+              style={{
+                height: 2,
+                background: `linear-gradient(90deg, transparent, var(--accent), transparent)`,
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 2.5s ease-in-out infinite',
+              }}
+            />
+          )}
+          <div
+            style={{
+              ...mono,
+              fontSize: 10,
+              letterSpacing: '0.06em',
+              padding: '6px 16px',
+              color,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {message}
+          </div>
+          <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
+        </div>
+      )}
+    </>
   )
 }

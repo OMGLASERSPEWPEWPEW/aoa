@@ -10,6 +10,13 @@ export interface DiscoveryProgress {
   error?: string
 }
 
+export interface RecentVenueEntry {
+  name: string
+  events_found: number
+  strategy: string
+  timestamp: string
+}
+
 export interface ScraperProgress {
   phase: 'idle' | 'scraping' | 'done' | 'error'
   scraped: number
@@ -17,6 +24,8 @@ export interface ScraperProgress {
   total: number
   currentVenue?: string
   lastStrategy?: string
+  recentVenues: RecentVenueEntry[]
+  startedAt?: string
   error?: string
 }
 
@@ -24,6 +33,8 @@ interface ScrapeContextType {
   discovery: DiscoveryProgress
   scraper: ScraperProgress
   busy: boolean
+  dashboardOpen: boolean
+  setDashboardOpen: (open: boolean) => void
   runDiscovery: () => Promise<void>
   runScraper: () => Promise<void>
 }
@@ -57,7 +68,8 @@ async function fetchWithRetry(url: string, init: RequestInit): Promise<Response>
 
 export function ScrapeProvider({ children }: { children: ReactNode }) {
   const [discovery, setDiscovery] = useState<DiscoveryProgress>({ phase: 'idle', found: 0, enriched: 0, promoted: 0, total: 0 })
-  const [scraper, setScraper] = useState<ScraperProgress>({ phase: 'idle', scraped: 0, events: 0, total: 0 })
+  const [scraper, setScraper] = useState<ScraperProgress>({ phase: 'idle', scraped: 0, events: 0, total: 0, recentVenues: [] })
+  const [dashboardOpen, setDashboardOpen] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const busy = discovery.phase === 'discovering' || discovery.phase === 'enriching' || scraper.phase === 'scraping'
@@ -87,6 +99,8 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
         total: job.total_venues ?? 0,
         currentVenue: job.current_venue ?? undefined,
         lastStrategy: job.last_strategy ?? undefined,
+        recentVenues: (job.recent_venues as RecentVenueEntry[]) ?? [],
+        startedAt: job.started_at ?? undefined,
         error: job.error ?? undefined,
       }
 
@@ -117,6 +131,8 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
           total: runningJob.total_venues ?? 0,
           currentVenue: runningJob.current_venue ?? undefined,
           lastStrategy: runningJob.last_strategy ?? undefined,
+          recentVenues: (runningJob.recent_venues as RecentVenueEntry[]) ?? [],
+          startedAt: runningJob.started_at ?? undefined,
         })
         pollJob(runningJob.id)
       }
@@ -184,7 +200,8 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       const baseUrl = import.meta.env.VITE_SUPABASE_URL
       const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
 
-      setScraper({ phase: 'scraping', scraped: 0, events: 0, total: 0 })
+      setScraper({ phase: 'scraping', scraped: 0, events: 0, total: 0, recentVenues: [] })
+      setDashboardOpen(true)
 
       const res = await fetchWithRetry(`${baseUrl}/functions/v1/event-scrape-batch`, {
         method: 'POST',
@@ -194,7 +211,7 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       const data = await res.json()
 
       if (data.error && !data.job_id) {
-        setScraper({ phase: 'error', scraped: 0, events: 0, total: 0, error: data.error })
+        setScraper({ phase: 'error', scraped: 0, events: 0, total: 0, recentVenues: [], error: data.error })
         return
       }
 
@@ -205,7 +222,7 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
 
       const jobId = data.job_id
       if (!jobId) {
-        setScraper({ phase: 'done', scraped: 0, events: 0, total: 0 })
+        setScraper({ phase: 'done', scraped: 0, events: 0, total: 0, recentVenues: [] })
         return
       }
 
@@ -216,16 +233,17 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
         total: (data.scraped ?? 0) + (data.remaining ?? 0),
         currentVenue: data.venue_name,
         lastStrategy: data.strategy?.stop_reason,
+        recentVenues: [],
       })
 
       pollJob(jobId)
     } catch (err) {
-      setScraper({ phase: 'error', scraped: 0, events: 0, total: 0, error: err instanceof Error ? err.message : 'Unknown error' })
+      setScraper((prev) => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
     }
   }, [pollJob])
 
   return (
-    <ScrapeContext.Provider value={{ discovery, scraper, busy, runDiscovery, runScraper }}>
+    <ScrapeContext.Provider value={{ discovery, scraper, busy, dashboardOpen, setDashboardOpen, runDiscovery, runScraper }}>
       {children}
     </ScrapeContext.Provider>
   )

@@ -385,7 +385,7 @@ function CoverageTab() {
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
   const audit = useVenueAudit()
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
-  const { discovery: progress, scraper, busy, runDiscovery, runScraper } = useScrape()
+  const { discovery: progress, scraper, busy, dashboardOpen: _dbOpen, setDashboardOpen: _setDbOpen, runDiscovery, runScraper } = useScrape()
 
   const handleRunDiscovery = async () => {
     await runDiscovery()

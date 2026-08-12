@@ -212,18 +212,28 @@ serve(async (req) => {
     if (currentJobId) {
       const { data: currentJob } = await supabase
         .from("scrape_jobs")
-        .select("venues_processed, events_found")
+        .select("venues_processed, events_found, recent_venues")
         .eq("id", currentJobId)
         .single();
 
       const newProcessed = (currentJob?.venues_processed ?? 0) + venues.length;
       const newEventsFound = (currentJob?.events_found ?? 0) + totalFound;
 
+      const recentVenues = (currentJob?.recent_venues as Array<Record<string, unknown>> ?? []);
+      recentVenues.unshift({
+        name: lastVenueName,
+        events_found: totalFound,
+        strategy: lastStrategyStr,
+        timestamp: new Date().toISOString(),
+      });
+      if (recentVenues.length > 15) recentVenues.length = 15;
+
       await supabase.from("scrape_jobs").update({
         venues_processed: newProcessed,
         events_found: newEventsFound,
         current_venue: lastVenueName,
         last_strategy: lastStrategyStr,
+        recent_venues: recentVenues,
       }).eq("id", currentJobId);
 
       // Self-chain: if more venues remain, trigger next batch
