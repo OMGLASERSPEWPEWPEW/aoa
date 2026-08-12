@@ -442,7 +442,7 @@ function CoverageTab() {
             flexShrink: 0,
           }}
         >
-          {scraper.phase === 'scraping' ? `Scraping ${scraper.scraped}...` : 'Run Scraper'}
+          {scraper.phase === 'scraping' ? `Scraping ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : `${scraper.scraped}`}...` : 'Run Scraper'}
         </button>
       </div>
       <div style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', marginBottom: 16 }}>
@@ -451,7 +451,7 @@ function CoverageTab() {
         {progress.phase === 'done' && progress.promoted > 0 && `Done — ${progress.promoted} venues added to the app.`}
         {progress.phase === 'done' && progress.promoted === 0 && progress.total === 0 && 'All venues up to date.'}
         {progress.phase === 'error' && <span style={{ color: '#ef4444' }}>Error: {progress.error}</span>}
-        {scraper.phase === 'scraping' && `Scanning venues for events... ${scraper.scraped} scraped, ${scraper.events} events found`}
+        {scraper.phase === 'scraping' && (<>{scraper.currentVenue && <><strong>{scraper.currentVenue}</strong> → {scraper.lastStrategy ?? 'processing...'}<br /></>}{scraper.scraped} of {scraper.total || '?'} venues · {scraper.events} events found</>)}
         {scraper.phase === 'done' && `Done — ${scraper.events} events found across ${scraper.scraped} venues.`}
         {scraper.phase === 'error' && <span style={{ color: '#ef4444' }}>Scraper error: {scraper.error}</span>}
         {progress.phase === 'idle' && scraper.phase === 'idle' && 'Chicago theater venue discovery and data completeness.'}

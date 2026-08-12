@@ -35,6 +35,9 @@ export interface ScrapeResult {
   ai_input_tokens: number;
   ai_output_tokens: number;
   duration_ms: number;
+  strategy_links_followed?: number;
+  strategy_fields_filled?: string[];
+  strategy_stop_reason?: string;
 }
 
 export interface EnrichmentResult {

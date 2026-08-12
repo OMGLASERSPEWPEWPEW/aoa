@@ -96,12 +96,20 @@ serve(async (req) => {
     let totalFound = 0;
     let totalCreated = 0;
     let totalUpdated = 0;
+    let lastVenueName = "";
+    let lastStrategy: { links_followed: number; fields_filled: string[]; stop_reason: string } | null = null;
 
     for (const venue of venues as VenueTarget[]) {
       const result = await processVenue(venue, runId);
       totalFound += result.events_found;
       totalCreated += result.events_created;
       totalUpdated += result.events_updated;
+      lastVenueName = venue.name;
+      lastStrategy = {
+        links_followed: result.strategy_links_followed ?? 0,
+        fields_filled: result.strategy_fields_filled ?? [],
+        stop_reason: result.strategy_stop_reason ?? "unknown",
+      };
 
       await supabase
         .from("venues")
@@ -131,6 +139,8 @@ serve(async (req) => {
         events_found: totalFound,
         events_created: totalCreated + totalUpdated,
         remaining: count ?? 0,
+        venue_name: lastVenueName,
+        strategy: lastStrategy,
       }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );

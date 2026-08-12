@@ -39,7 +39,10 @@ export function AdminScrapeRibbon() {
   let color = 'var(--ink-dim)'
 
   if (scraper.phase === 'scraping') {
-    message = `Scraping... ${scraper.scraped} venues, ${scraper.events} events found`
+    const progress = scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : `${scraper.scraped}`
+    const venue = scraper.currentVenue ? ` · ${scraper.currentVenue}` : ''
+    const strategy = scraper.lastStrategy ? ` → ${scraper.lastStrategy}` : ''
+    message = `Scraping ${progress}${venue}${strategy}`
   } else if (discovery.phase === 'discovering') {
     message = 'Discovering theaters...'
   } else if (discovery.phase === 'enriching') {

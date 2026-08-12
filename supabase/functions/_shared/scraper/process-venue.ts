@@ -25,6 +25,9 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
     result.ai_input_tokens = totalInputTokens;
     result.ai_output_tokens = totalOutputTokens;
     result.events_found = mergedEvents.length;
+    result.strategy_links_followed = trace.linksFollowed.length;
+    result.strategy_fields_filled = trace.steps.flatMap(s => s.fieldsFilledIn);
+    result.strategy_stop_reason = trace.stopReason;
 
     for (const step of trace.steps) {
       if (step.aiCalls > 0) {

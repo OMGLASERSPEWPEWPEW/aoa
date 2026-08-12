@@ -14,6 +14,9 @@ export interface ScraperProgress {
   phase: 'idle' | 'scraping' | 'done' | 'error'
   scraped: number
   events: number
+  total: number
+  currentVenue?: string
+  lastStrategy?: string
   error?: string
 }
 
@@ -54,7 +57,7 @@ async function fetchWithRetry(url: string, init: RequestInit): Promise<Response>
 
 export function ScrapeProvider({ children }: { children: ReactNode }) {
   const [discovery, setDiscovery] = useState<DiscoveryProgress>({ phase: 'idle', found: 0, enriched: 0, promoted: 0, total: 0 })
-  const [scraper, setScraper] = useState<ScraperProgress>({ phase: 'idle', scraped: 0, events: 0 })
+  const [scraper, setScraper] = useState<ScraperProgress>({ phase: 'idle', scraped: 0, events: 0, total: 0 })
 
   const busy = discovery.phase === 'discovering' || discovery.phase === 'enriching' || scraper.phase === 'scraping'
 
@@ -120,9 +123,10 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       let scraped = 0
       let events = 0
       let remaining = 1
+      let total = 0
       let consecutiveFails = 0
 
-      setScraper({ phase: 'scraping', scraped: 0, events: 0 })
+      setScraper({ phase: 'scraping', scraped: 0, events: 0, total: 0 })
 
       while (remaining > 0) {
         try {
@@ -130,7 +134,7 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
           const data = await res.json()
 
           if (data.error) {
-            setScraper({ phase: 'error', scraped, events, error: data.error })
+            setScraper({ phase: 'error', scraped, events, total, error: data.error })
             return
           }
 
@@ -138,17 +142,32 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
           scraped += data.scraped ?? 0
           events += data.events_found ?? 0
           remaining = data.remaining ?? 0
-          setScraper({ phase: 'scraping', scraped, events })
+          if (total === 0) total = scraped + remaining
+
+          const strategy = data.strategy
+          let lastStrategy: string | undefined
+          if (strategy) {
+            const links = strategy.links_followed ?? 0
+            const filled = (strategy.fields_filled ?? []) as string[]
+            const dates = filled.filter((f: string) => f === 'start_date').length
+            if (links > 0 && dates > 0) lastStrategy = `followed ${links} link${links > 1 ? 's' : ''}, found ${dates} date${dates > 1 ? 's' : ''}`
+            else if (links > 0) lastStrategy = `followed ${links} link${links > 1 ? 's' : ''}, ${filled.length} fields filled`
+            else if (strategy.stop_reason === 'complete') lastStrategy = 'complete — no links needed'
+            else if (strategy.stop_reason === 'no_events') lastStrategy = 'no events found'
+            else lastStrategy = strategy.stop_reason ?? undefined
+          }
+
+          setScraper({ phase: 'scraping', scraped, events, total, currentVenue: data.venue_name, lastStrategy })
         } catch {
           consecutiveFails++
           if (consecutiveFails >= 3) {
-            setScraper({ phase: 'error', scraped, events, error: 'Network error — retries exhausted' })
+            setScraper({ phase: 'error', scraped, events, total, error: 'Network error — retries exhausted' })
             return
           }
         }
       }
 
-      setScraper({ phase: 'done', scraped, events })
+      setScraper({ phase: 'done', scraped, events, total })
     } catch (err) {
       setScraper((prev) => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
     }
