@@ -125,7 +125,7 @@ export interface CandidateLink {
 }
 
 export interface StrategyStep {
-  step: "initial_extract" | "link_follow" | "website_fallback" | "verify";
+  step: "initial_extract" | "link_follow" | "website_fallback" | "verify" | "aggregator_crossref";
   url: string;
   aiCalls: number;
   inputTokens: number;
@@ -155,6 +155,27 @@ export interface TargetedEnrichment {
   price_max?: number | null;
   ticket_url?: string | null;
   show_times?: Record<string, string[]> | null;
+}
+
+// --- TheatreInChicago.com types ---
+
+export interface TicShow {
+  title: string;
+  venueName: string;
+  detailUrl: string;
+  startDate: string | null;
+  endDate: string | null;
+  photoUrl: string | null;
+}
+
+export interface TicDetailData {
+  title: string;
+  startDate: string | null;
+  endDate: string | null;
+  showTimes: Record<string, string[]> | null;
+  ticketUrl: string | null;
+  cast: Array<{ name: string; role: string | null }> | null;
+  genre: string | null;
 }
 
 // --- Venue Discovery Pipeline types ---

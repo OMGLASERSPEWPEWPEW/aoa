@@ -49,6 +49,13 @@
 - **Dependencies:** Batch event scraper, venue enrichment
 - **Summary:** Persistent ribbon in App.tsx showing scraper/discovery progress from any page. Moves batch loops into React context so navigating away doesn't kill them. Admin-only.
 
+## TheatreInChicago.com Aggregator Source
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** Intelligent Event Scraper v2
+- **Summary:** Integrates theatreinchicago.com as a cross-reference and fallback data source. The site has ~114 Chicago shows with exact dates, times, cast, and ticket URLs. Used as Step 3.5 in the strategy tree (after link following, before verification) to fill NULL dates at zero AI cost. Also provides a standalone bulk cross-reference operation.
+
 ## Belt Progression System
 - **Status:** Planned
 - **Target:** September 2026

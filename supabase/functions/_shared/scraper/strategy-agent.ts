@@ -5,6 +5,7 @@ import { buildTargetedExtractionPrompt } from "./targeted-prompt.ts";
 import { extractCandidateLinks, prioritizeLinks } from "./link-extractor.ts";
 import { shouldFollowLinks, mergeTargetedExtraction, averageCompleteness, evaluateCompleteness } from "./completeness-evaluator.ts";
 import { CostBudget } from "./cost-budget.ts";
+import { lookupVenueOnTic, ticShowsToEnrichments } from "./tic-lookup.ts";
 import type {
   VenueTarget,
   Pass1Event,
@@ -277,6 +278,29 @@ export async function executeStrategyTree(
         console.warn(`[scraper-v2] Link follow failed for ${link.url}:`, e);
         continue;
       }
+    }
+  }
+
+  // STEP 3.5: Aggregator cross-reference (theatreinchicago.com)
+  const stillIncomplete = events.filter((e, i) => evaluateCompleteness(e, i).needsFollow);
+  if (stillIncomplete.length > 0 && budget.canAffordFetch()) {
+    const ticStart = Date.now();
+    try {
+      const { shows } = await lookupVenueOnTic(venue.name);
+      if (shows.length > 0) {
+        const enrichments = ticShowsToEnrichments(shows);
+        const { events: updated, fieldsFilledIn } = mergeTargetedExtraction(events, enrichments);
+        events = updated;
+        steps.push({
+          step: "aggregator_crossref", url: "theatreinchicago.com",
+          aiCalls: 0, inputTokens: 0, outputTokens: 0,
+          eventsAffected: fieldsFilledIn.length, fieldsFilledIn,
+          durationMs: Date.now() - ticStart,
+        });
+        budget.recordFetch();
+      }
+    } catch (e) {
+      console.warn(`[scraper-v2] TIC lookup failed for ${venue.name}:`, e);
     }
   }
 
