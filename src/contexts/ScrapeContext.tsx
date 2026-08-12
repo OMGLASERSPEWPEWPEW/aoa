@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 
 export interface DiscoveryProgress {
@@ -58,8 +58,72 @@ async function fetchWithRetry(url: string, init: RequestInit): Promise<Response>
 export function ScrapeProvider({ children }: { children: ReactNode }) {
   const [discovery, setDiscovery] = useState<DiscoveryProgress>({ phase: 'idle', found: 0, enriched: 0, promoted: 0, total: 0 })
   const [scraper, setScraper] = useState<ScraperProgress>({ phase: 'idle', scraped: 0, events: 0, total: 0 })
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const busy = discovery.phase === 'discovering' || discovery.phase === 'enriching' || scraper.phase === 'scraping'
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }, [])
+
+  const pollJob = useCallback((jobId: string) => {
+    stopPolling()
+    pollRef.current = setInterval(async () => {
+      const { data: job } = await supabase
+        .from('scrape_jobs')
+        .select('*')
+        .eq('id', jobId)
+        .single()
+
+      if (!job) return
+
+      const progress: ScraperProgress = {
+        phase: job.status === 'completed' ? 'done' : job.status === 'failed' ? 'error' : 'scraping',
+        scraped: job.venues_processed ?? 0,
+        events: job.events_found ?? 0,
+        total: job.total_venues ?? 0,
+        currentVenue: job.current_venue ?? undefined,
+        lastStrategy: job.last_strategy ?? undefined,
+        error: job.error ?? undefined,
+      }
+
+      setScraper(progress)
+
+      if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
+        stopPolling()
+      }
+    }, 5000)
+  }, [stopPolling])
+
+  // On mount, check for any running job
+  useEffect(() => {
+    async function checkRunningJob() {
+      const { data: runningJob } = await supabase
+        .from('scrape_jobs')
+        .select('*')
+        .eq('status', 'running')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (runningJob) {
+        setScraper({
+          phase: 'scraping',
+          scraped: runningJob.venues_processed ?? 0,
+          events: runningJob.events_found ?? 0,
+          total: runningJob.total_venues ?? 0,
+          currentVenue: runningJob.current_venue ?? undefined,
+          lastStrategy: runningJob.last_strategy ?? undefined,
+        })
+        pollJob(runningJob.id)
+      }
+    }
+    checkRunningJob()
+    return stopPolling
+  }, [pollJob, stopPolling])
 
   const runDiscovery = useCallback(async () => {
     try {
@@ -120,58 +184,45 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       const baseUrl = import.meta.env.VITE_SUPABASE_URL
       const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
 
-      let scraped = 0
-      let events = 0
-      let remaining = 1
-      let total = 0
-      let consecutiveFails = 0
-
       setScraper({ phase: 'scraping', scraped: 0, events: 0, total: 0 })
 
-      while (remaining > 0) {
-        try {
-          const res = await fetchWithRetry(`${baseUrl}/functions/v1/event-scrape-batch`, { method: 'POST', headers })
-          const data = await res.json()
+      const res = await fetchWithRetry(`${baseUrl}/functions/v1/event-scrape-batch`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'start' }),
+      })
+      const data = await res.json()
 
-          if (data.error) {
-            setScraper({ phase: 'error', scraped, events, total, error: data.error })
-            return
-          }
-
-          consecutiveFails = 0
-          scraped += data.scraped ?? 0
-          events += data.events_found ?? 0
-          remaining = data.remaining ?? 0
-          if (total === 0) total = scraped + remaining
-
-          const strategy = data.strategy
-          let lastStrategy: string | undefined
-          if (strategy) {
-            const links = strategy.links_followed ?? 0
-            const filled = (strategy.fields_filled ?? []) as string[]
-            const dates = filled.filter((f: string) => f === 'start_date').length
-            if (links > 0 && dates > 0) lastStrategy = `followed ${links} link${links > 1 ? 's' : ''}, found ${dates} date${dates > 1 ? 's' : ''}`
-            else if (links > 0) lastStrategy = `followed ${links} link${links > 1 ? 's' : ''}, ${filled.length} fields filled`
-            else if (strategy.stop_reason === 'complete') lastStrategy = 'complete — no links needed'
-            else if (strategy.stop_reason === 'no_events') lastStrategy = 'no events found'
-            else lastStrategy = strategy.stop_reason ?? undefined
-          }
-
-          setScraper({ phase: 'scraping', scraped, events, total, currentVenue: data.venue_name, lastStrategy })
-        } catch {
-          consecutiveFails++
-          if (consecutiveFails >= 3) {
-            setScraper({ phase: 'error', scraped, events, total, error: 'Network error — retries exhausted' })
-            return
-          }
-        }
+      if (data.error && !data.job_id) {
+        setScraper({ phase: 'error', scraped: 0, events: 0, total: 0, error: data.error })
+        return
       }
 
-      setScraper({ phase: 'done', scraped, events, total })
+      if (data.error && data.job_id) {
+        pollJob(data.job_id)
+        return
+      }
+
+      const jobId = data.job_id
+      if (!jobId) {
+        setScraper({ phase: 'done', scraped: 0, events: 0, total: 0 })
+        return
+      }
+
+      setScraper({
+        phase: 'scraping',
+        scraped: data.scraped ?? 0,
+        events: data.events_found ?? 0,
+        total: (data.scraped ?? 0) + (data.remaining ?? 0),
+        currentVenue: data.venue_name,
+        lastStrategy: data.strategy?.stop_reason,
+      })
+
+      pollJob(jobId)
     } catch (err) {
-      setScraper((prev) => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
+      setScraper({ phase: 'error', scraped: 0, events: 0, total: 0, error: err instanceof Error ? err.message : 'Unknown error' })
     }
-  }, [])
+  }, [pollJob])
 
   return (
     <ScrapeContext.Provider value={{ discovery, scraper, busy, runDiscovery, runScraper }}>

@@ -25,6 +25,55 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const BATCH_SIZE = 1;
 
+async function getNextVenue(supabase: ReturnType<typeof createClient>): Promise<{ venues: VenueTarget[]; remaining: number }> {
+  const { data: gapVenueRows } = await supabase
+    .from("events")
+    .select("venue_id")
+    .is("start_date", null)
+    .eq("source", "scraped");
+  const gapVenueIds = [...new Set((gapVenueRows ?? []).map((r: { venue_id: string }) => r.venue_id))];
+
+  let venues: VenueTarget[] | null = null;
+
+  if (gapVenueIds.length > 0) {
+    const { data } = await supabase
+      .from("venues")
+      .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
+      .not("calendar_url", "is", null)
+      .in("id", gapVenueIds)
+      .limit(BATCH_SIZE);
+    venues = (data as VenueTarget[]) ?? null;
+  }
+
+  if (!venues || venues.length === 0) {
+    const { data } = await supabase
+      .from("venues")
+      .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
+      .not("calendar_url", "is", null)
+      .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .order("scraped_at", { ascending: true, nullsFirst: true })
+      .limit(BATCH_SIZE);
+    venues = (data as VenueTarget[]) ?? null;
+  }
+
+  const { data: remainingGaps } = await supabase
+    .from("events")
+    .select("venue_id")
+    .is("start_date", null)
+    .eq("source", "scraped");
+  const remainingGapIds = [...new Set((remainingGaps ?? []).map((r: { venue_id: string }) => r.venue_id))];
+
+  const { count: staleCount } = await supabase
+    .from("venues")
+    .select("id", { count: "exact", head: true })
+    .not("calendar_url", "is", null)
+    .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+  const remaining = Math.max(remainingGapIds.length, staleCount ?? 0);
+
+  return { venues: venues ?? [], remaining };
+}
+
 serve(async (req) => {
   const cors = getCorsHeaders(req);
 
@@ -52,43 +101,77 @@ serve(async (req) => {
   }
 
   try {
+    let body: Record<string, unknown> = {};
+    try { body = await req.json(); } catch { /* no body is fine */ }
+
+    const jobId = body.job_id as string | undefined;
+    const action = body.action as string | undefined;
+
+    // If starting a new job
+    if (action === "start" || (!jobId && !action)) {
+      const { data: existingJob } = await supabase
+        .from("scrape_jobs")
+        .select("id")
+        .eq("status", "running")
+        .maybeSingle();
+
+      if (existingJob) {
+        return new Response(
+          JSON.stringify({ error: "A scrape job is already running", job_id: existingJob.id }),
+          { status: 409, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
+    let currentJobId = jobId;
+
+    // Create job if starting fresh
+    if (action === "start") {
+      const { venues: firstCheck } = await getNextVenue(supabase);
+      const { data: remainingGaps } = await supabase.from("events").select("venue_id").is("start_date", null).eq("source", "scraped");
+      const gapCount = [...new Set((remainingGaps ?? []).map((r: { venue_id: string }) => r.venue_id))].length;
+      const { count: staleCount } = await supabase.from("venues").select("id", { count: "exact", head: true }).not("calendar_url", "is", null).or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      const totalVenues = Math.max(gapCount, staleCount ?? 0);
+
+      if (firstCheck.length === 0) {
+        return new Response(
+          JSON.stringify({ scraped: 0, events_found: 0, remaining: 0, job_id: null }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+
+      const { data: newJob } = await supabase
+        .from("scrape_jobs")
+        .insert({ status: "running", total_venues: totalVenues })
+        .select("id")
+        .single();
+      currentJobId = newJob?.id;
+    }
+
+    // If we have a job_id, verify it's still running
+    if (currentJobId) {
+      const { data: job } = await supabase
+        .from("scrape_jobs")
+        .select("status")
+        .eq("id", currentJobId)
+        .maybeSingle();
+      if (job?.status === "cancelled" || job?.status === "completed") {
+        return new Response(
+          JSON.stringify({ scraped: 0, events_found: 0, remaining: 0, job_status: job.status }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const runId = crypto.randomUUID();
+    const { venues, remaining } = await getNextVenue(supabase);
 
-    // Priority 1: venues with events missing start_date (gap-fill)
-    const { data: gapVenueRows } = await supabase
-      .from("events")
-      .select("venue_id")
-      .is("start_date", null)
-      .eq("source", "scraped");
-    const gapVenueIds = [...new Set((gapVenueRows ?? []).map((r: { venue_id: string }) => r.venue_id))];
-
-    let venues: VenueTarget[] | null = null;
-
-    if (gapVenueIds.length > 0) {
-      const { data } = await supabase
-        .from("venues")
-        .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
-        .not("calendar_url", "is", null)
-        .in("id", gapVenueIds)
-        .limit(BATCH_SIZE);
-      venues = (data as VenueTarget[]) ?? null;
-    }
-
-    // Priority 2+3: never scraped or stale (existing logic)
-    if (!venues || venues.length === 0) {
-      const { data } = await supabase
-        .from("venues")
-        .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
-        .not("calendar_url", "is", null)
-        .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order("scraped_at", { ascending: true, nullsFirst: true })
-        .limit(BATCH_SIZE);
-      venues = (data as VenueTarget[]) ?? null;
-    }
-
-    if (!venues || venues.length === 0) {
+    if (venues.length === 0) {
+      if (currentJobId) {
+        await supabase.from("scrape_jobs").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", currentJobId);
+      }
       return new Response(
-        JSON.stringify({ scraped: 0, events_found: 0, events_created: 0, remaining: 0 }),
+        JSON.stringify({ scraped: 0, events_found: 0, events_created: 0, remaining: 0, job_id: currentJobId }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
@@ -97,19 +180,22 @@ serve(async (req) => {
     let totalCreated = 0;
     let totalUpdated = 0;
     let lastVenueName = "";
-    let lastStrategy: { links_followed: number; fields_filled: string[]; stop_reason: string } | null = null;
+    let lastStrategyStr = "";
 
-    for (const venue of venues as VenueTarget[]) {
+    for (const venue of venues) {
       const result = await processVenue(venue, runId);
       totalFound += result.events_found;
       totalCreated += result.events_created;
       totalUpdated += result.events_updated;
       lastVenueName = venue.name;
-      lastStrategy = {
-        links_followed: result.strategy_links_followed ?? 0,
-        fields_filled: result.strategy_fields_filled ?? [],
-        stop_reason: result.strategy_stop_reason ?? "unknown",
-      };
+
+      const links = result.strategy_links_followed ?? 0;
+      const filled = result.strategy_fields_filled ?? [];
+      const dates = filled.filter(f => f === "start_date").length;
+      if (links > 0 && dates > 0) lastStrategyStr = `followed ${links} link${links > 1 ? "s" : ""}, found ${dates} date${dates > 1 ? "s" : ""}`;
+      else if (links > 0) lastStrategyStr = `followed ${links} link${links > 1 ? "s" : ""}, ${filled.length} fields`;
+      else if (result.strategy_stop_reason === "complete") lastStrategyStr = "complete";
+      else lastStrategyStr = result.strategy_stop_reason ?? "";
 
       await supabase
         .from("venues")
@@ -117,30 +203,54 @@ serve(async (req) => {
         .eq("id", venue.id);
     }
 
-    // Count remaining: gap venues + stale/unscraped venues
-    const { data: remainingGaps } = await supabase
-      .from("events")
-      .select("venue_id")
-      .is("start_date", null)
-      .eq("source", "scraped");
-    const remainingGapIds = [...new Set((remainingGaps ?? []).map((r: { venue_id: string }) => r.venue_id))];
+    const remainingAfter = remaining - venues.length;
 
-    const { count: staleCount } = await supabase
-      .from("venues")
-      .select("id", { count: "exact", head: true })
-      .not("calendar_url", "is", null)
-      .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+    // Update job progress
+    if (currentJobId) {
+      const { data: currentJob } = await supabase
+        .from("scrape_jobs")
+        .select("venues_processed, events_found")
+        .eq("id", currentJobId)
+        .single();
 
-    const count = Math.max(remainingGapIds.length, staleCount ?? 0);
+      const newProcessed = (currentJob?.venues_processed ?? 0) + venues.length;
+      const newEventsFound = (currentJob?.events_found ?? 0) + totalFound;
+
+      await supabase.from("scrape_jobs").update({
+        venues_processed: newProcessed,
+        events_found: newEventsFound,
+        current_venue: lastVenueName,
+        last_strategy: lastStrategyStr,
+      }).eq("id", currentJobId);
+
+      // Self-chain: if more venues remain, trigger next batch
+      if (remainingAfter > 0) {
+        try {
+          await supabase.rpc("trigger_next_scrape_batch", { p_job_id: currentJobId });
+        } catch (e) {
+          console.error("[event-scrape-batch] Self-chain failed:", e);
+        }
+      } else {
+        await supabase.from("scrape_jobs").update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+        }).eq("id", currentJobId);
+      }
+    }
 
     return new Response(
       JSON.stringify({
         scraped: venues.length,
         events_found: totalFound,
         events_created: totalCreated + totalUpdated,
-        remaining: count ?? 0,
+        remaining: Math.max(remainingAfter, 0),
         venue_name: lastVenueName,
-        strategy: lastStrategy,
+        strategy: {
+          links_followed: venues[0] ? (venues[0] as any).strategy_links_followed ?? 0 : 0,
+          fields_filled: [],
+          stop_reason: lastStrategyStr,
+        },
+        job_id: currentJobId,
       }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );
