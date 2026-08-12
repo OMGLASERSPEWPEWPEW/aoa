@@ -22,6 +22,7 @@ function getCorsHeaders(req: Request): Record<string, string> {
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const BATCH_SIZE = 1;
 
@@ -223,14 +224,25 @@ serve(async (req) => {
         last_strategy: lastStrategyStr,
       }).eq("id", currentJobId);
 
-      // Self-chain: if more venues remain, trigger next batch via direct fetch
+      // Self-chain: if more venues remain, trigger next batch
       if (remainingAfter > 0) {
         const selfUrl = `${SUPABASE_URL}/functions/v1/event-scrape-batch`;
-        fetch(selfUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-scraper-key": SCRAPER_SECRET },
-          body: JSON.stringify({ job_id: currentJobId }),
-        }).catch(e => console.error("[event-scrape-batch] Self-chain failed:", e));
+        const chainController = new AbortController();
+        setTimeout(() => chainController.abort(), 8000);
+        try {
+          await fetch(selfUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+              "x-scraper-key": SCRAPER_SECRET,
+            },
+            body: JSON.stringify({ job_id: currentJobId }),
+            signal: chainController.signal,
+          });
+        } catch {
+          // Timeout or abort is expected — the next invocation runs independently
+        }
       } else {
         await supabase.from("scrape_jobs").update({
           status: "completed",
