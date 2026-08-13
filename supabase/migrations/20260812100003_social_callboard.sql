@@ -145,7 +145,7 @@ create policy "Thread posts writable by viewers" on thread_posts for insert
     auth.uid() = user_id
     and exists (
       select 1 from threads t
-      join watchlist w on w.event_id = t.event_id
+      join watchlist_items w on w.event_id = t.event_id
       where t.id = thread_id
         and w.user_id = auth.uid()
         and w.status = 'seen'
