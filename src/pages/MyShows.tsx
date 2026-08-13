@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { useEmotionAggregates, personalInsight } from '../hooks/useEmotionAggregates'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import { base, emotionBySlug } from '../lib/emotions'
 import { genreHue } from '../lib/genre'
 import { SpectrumBar } from '../components/SpectrumBar'
+import { EmotionDots } from '../components/EmotionDots'
 import type { WatchlistItem, WatchlistStatus } from '../lib/types'
 
 type View = 'marquee' | 'ledger'
@@ -735,23 +735,7 @@ function ShowRow({ item, tab, onLog }: { item: WatchlistItem; tab: WatchlistStat
         )}
       </div>
 
-      {/* Emotion dots */}
-      <div className="flex items-start gap-0.5 pt-1" style={{ gap: 3 }}>
-        {(item.emotions ?? []).map((slug, i) => {
-          const e = emotionBySlug(slug)
-          return (
-            <div
-              key={`${slug}-${i}`}
-              style={{
-                width: 9,
-                height: 9,
-                borderRadius: '50%',
-                backgroundColor: base(e),
-              }}
-            />
-          )
-        })}
-      </div>
+      <EmotionDots emotions={item.emotions ?? []} size={9} />
     </div>
   )
 }

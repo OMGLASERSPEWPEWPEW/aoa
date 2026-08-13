@@ -24,11 +24,13 @@ import { MyShows } from './pages/MyShows'
 import { MentorChat } from './pages/MentorChat'
 import { Profile } from './pages/Profile'
 import { Settings } from './pages/Settings'
-import { Social } from './pages/Social'
 import { LogShow } from './pages/LogShow'
 import { WriteReview } from './pages/WriteReview'
 import { ProductionDetail } from './pages/ProductionDetail'
 import { PlayDetail } from './pages/PlayDetail'
+import { ArtistDetail } from './pages/ArtistDetail'
+import { Callboard } from './pages/Callboard'
+import { Lobby } from './pages/Lobby'
 import { Docs } from './pages/Docs'
 import { DocsViewer } from './pages/DocsViewer'
 import { UpdateBanner } from './components/UpdateBanner'
@@ -56,16 +58,20 @@ export default function App() {
             }
           >
             <Route index element={<Tonight />} />
+            <Route path="callboard" element={<Callboard />} />
+            <Route path="lobby" element={<Lobby />} />
+            <Route path="you" element={<Profile />} />
             <Route path="discover" element={<Discover />} />
             <Route path="map" element={<MapHome />} />
             <Route path="watchlist" element={<MyShows />} />
             <Route path="mentor" element={<MentorChat />} />
-            <Route path="social" element={<Social />} />
+            <Route path="social" element={<Navigate to="/app/lobby" replace />} />
             <Route path="log/:eventId" element={<LogShow />} />
             <Route path="log/:eventId/review" element={<WriteReview />} />
             <Route path="show/:eventId" element={<ProductionDetail />} />
             <Route path="play/:playId" element={<PlayDetail />} />
-            <Route path="profile" element={<Profile />} />
+            <Route path="artist/:artistId" element={<ArtistDetail />} />
+            <Route path="profile" element={<Navigate to="/app/you" replace />} />
             <Route path="settings" element={<Settings />} />
             <Route path="admin" element={<Docs />} />
             <Route path="admin/:page" element={<DocsViewer />} />

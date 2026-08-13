@@ -1,4 +1,5 @@
-import { base, emotionBySlug, type SpectrumSlice } from '../lib/emotions'
+import { base, ink, emotionBySlug, type SpectrumSlice } from '../lib/emotions'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface Props {
   slices: SpectrumSlice[]
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function SpectrumBar({ slices, height, totalCards }: Props) {
+  const { resolved: theme } = useTheme()
   if (totalCards < 5) {
     return (
       <div className="flex items-center gap-2">
@@ -77,7 +79,7 @@ export function SpectrumBar({ slices, height, totalCards }: Props) {
                 style={{
                   fontFamily: "'Courier Prime', monospace",
                   fontSize: 10.5,
-                  color: base(e),
+                  color: theme === 'dark' ? base(e) : ink(e),
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
                 }}
