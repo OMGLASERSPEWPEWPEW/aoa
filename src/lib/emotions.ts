@@ -30,10 +30,6 @@ export const fill   = (e: EmotionDef) => `oklch(0.21 ${(e.c * 0.3).toFixed(3)} $
 export const edge   = (e: EmotionDef) => `oklch(0.36 ${(e.c * 0.5).toFixed(3)} ${e.h})`
 export const bright = (e: EmotionDef) => `oklch(${(e.l + 0.12).toFixed(2)} ${(e.c - 0.03).toFixed(2)} ${e.h})`
 
-export const ink       = (e: EmotionDef) => `oklch(${Math.min(e.l - 0.14, 0.48).toFixed(2)} ${e.c} ${e.h})`
-export const fillLight = (e: EmotionDef) => `oklch(0.94 ${(e.c * 0.25).toFixed(3)} ${e.h})`
-export const edgeLight = (e: EmotionDef) => `oklch(0.72 ${(e.c * 0.5).toFixed(3)} ${e.h})`
-
 export function emotionBySlug(slug: Emotion): EmotionDef {
   return EMOTIONS.find(e => e.slug === slug)!
 }

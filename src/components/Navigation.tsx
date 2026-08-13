@@ -2,9 +2,9 @@ import { NavLink, useNavigate } from 'react-router-dom'
 
 const tabs = [
   { to: '/app', glyph: '◉', label: 'TONIGHT', end: true },
-  { to: '/app/callboard', glyph: '▥', label: 'CALLBOARD' },
-  { to: '/app/lobby', glyph: '◍', label: 'LOBBY' },
-  { to: '/app/you', glyph: '◇', label: 'YOU' },
+  { to: '/app/map', glyph: '⌖', label: 'MAP' },
+  { to: '/app/discover', glyph: '◎', label: 'DISCOVER' },
+  { to: '/app/profile', glyph: '◇', label: 'YOU' },
 ]
 
 export function Navigation() {
@@ -19,11 +19,12 @@ export function Navigation() {
         padding: '8px 6px 22px',
       }}
     >
+      {/* Slot 1-2 */}
       {tabs.slice(0, 2).map(tab => (
         <NavSlot key={tab.to} {...tab} />
       ))}
 
-      {/* Slot 3: Gold FAB — log a show */}
+      {/* Slot 3: Gold FAB */}
       <div className="flex justify-center" style={{ flex: 1 }}>
         <button
           onClick={() => navigate('/app/watchlist')}
@@ -41,12 +42,13 @@ export function Navigation() {
             color: 'var(--accent-on)',
             border: 'none',
           }}
-          aria-label="Log a show"
+          aria-label="My Shows"
         >
           ✦
         </button>
       </div>
 
+      {/* Slot 4-5 */}
       {tabs.slice(2).map(tab => (
         <NavSlot key={tab.to} {...tab} />
       ))}

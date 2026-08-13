@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { ReviewBadge } from './ReviewBadge'
-import { EmotionDots } from './EmotionDots'
+import { ThumbsUp, AlertTriangle, Trash2 } from 'lucide-react'
+import { HOUSE_RANKS } from '../lib/types'
 import type { Review } from '../lib/types'
 
 interface Props {
@@ -14,103 +14,59 @@ export function ReviewCard({ review, isOwn, onVoteHelpful, onDelete }: Props) {
   const [spoilerRevealed, setSpoilerRevealed] = useState(false)
 
   return (
-    <div style={{ padding: '12px 0' }}>
-      <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
+    <div className="bg-slate-800/50 rounded-lg p-3.5">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span
-            style={{
-              fontFamily: "'Newsreader', Georgia, serif",
-              fontStyle: 'italic',
-              fontSize: 15,
-              color: 'var(--ink)',
-            }}
-          >
+          <span className="text-white text-sm font-medium">
             {review.profile?.username ?? 'Anonymous'}
           </span>
           {review.profile && (
-            <ReviewBadge rank={review.profile.house_rank} />
+            <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-amber-400/10 text-amber-400">
+              {HOUSE_RANKS[review.profile.house_rank]}
+            </span>
           )}
         </div>
-        {review.emotions && review.emotions.length > 0 && (
-          <EmotionDots emotions={review.emotions} size={8} />
-        )}
       </div>
+
+      {review.title && (
+        <p className="text-white text-sm font-medium mb-1">{review.title}</p>
+      )}
 
       {review.body && (
         <>
           {review.contains_spoilers && !spoilerRevealed ? (
             <button
               onClick={() => setSpoilerRevealed(true)}
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: 11,
-                color: 'var(--danger)',
-                backgroundColor: 'var(--danger-bg)',
-                padding: '6px 10px',
-                borderRadius: 2,
-                border: 'none',
-                cursor: 'pointer',
-                minHeight: 44,
-              }}
+              className="flex items-center gap-1.5 text-orange-400 text-xs bg-orange-400/10 px-2 py-1.5 rounded-md hover:bg-orange-400/20 transition-colors"
             >
-              Contains spoilers — tap to reveal
+              <AlertTriangle size={12} />
+              Contains spoilers - tap to reveal
             </button>
           ) : (
-            <p
-              style={{
-                fontFamily: "'Newsreader', Georgia, serif",
-                fontSize: 14.5,
-                lineHeight: 1.45,
-                color: 'var(--ink-dim)',
-                margin: 0,
-              }}
-            >
-              {review.body}
-            </p>
+            <p className="text-slate-400 text-sm leading-relaxed">{review.body}</p>
           )}
         </>
       )}
 
-      <div className="flex items-center justify-between" style={{ marginTop: 8 }}>
+      <div className="flex items-center justify-between mt-3">
         <div className="flex items-center gap-3">
           <button
             onClick={onVoteHelpful}
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 10,
-              color: 'var(--ink-ghost)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-            }}
+            className="flex items-center gap-1 text-slate-500 text-xs hover:text-slate-300 transition-colors"
           >
-            {review.helpful_count > 0 ? `${review.helpful_count} HELPFUL` : 'HELPFUL'}
+            <ThumbsUp size={12} />
+            {review.helpful_count > 0 ? review.helpful_count : 'Helpful'}
           </button>
-          <span
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
-              color: 'var(--ink-ghost)',
-            }}
-          >
-            {new Date(review.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          <span className="text-slate-600 text-[10px]">
+            {new Date(review.created_at).toLocaleDateString()}
           </span>
         </div>
         {isOwn && (
           <button
             onClick={onDelete}
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 9,
-              color: 'var(--danger)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '4px 0',
-            }}
+            className="text-red-400/50 hover:text-red-400 transition-colors"
           >
-            DELETE
+            <Trash2 size={14} />
           </button>
         )}
       </div>

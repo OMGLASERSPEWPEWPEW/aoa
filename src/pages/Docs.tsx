@@ -97,7 +97,7 @@ CAST: do NOT hallucinate names`,
     label: 'Mentor Chat',
     title: 'MentorSystem',
     model: 'AI Gateway (configurable)',
-    desc: 'System prompt for the AI mentor. Adapts tone based on house rank — guiding for newcomers, peer-like for experienced users.',
+    desc: 'System prompt for the AI mentor. Adapts tone based on belt level — guiding for newcomers, peer-like for experienced users.',
     venues: null,
     template: `You are the AI mentor for House, a theater discovery app for Chicago.
 
@@ -109,10 +109,10 @@ VOICE:
 - Use "you'd love this" not "you should see this"
 - Drop real insider knowledge naturally
 - Never condescending, never gatekeeping
-- \${house_rank >= 3 ? "Be more conversational and peer-like" : "Be more guiding and encouraging"}
+- \${belt_level >= 3 ? "Be more conversational and peer-like" : "Be more guiding and encouraging"}
 
 USER CONTEXT:
-- House rank: \${house_rank} (\${showsSeen} shows seen, \${venuesVisited} venues visited)
+- Belt level: \${belt} (\${showsSeen} shows seen, \${venuesVisited} venues visited)
 - Age range: \${age}
 - Experience: \${experience}
 - Interests: \${interests}
