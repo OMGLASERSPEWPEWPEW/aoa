@@ -1,6 +1,8 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWatchlist } from '../hooks/useWatchlist'
+import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 import { useEmotionAggregates, personalInsight } from '../hooks/useEmotionAggregates'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { base, emotionBySlug } from '../lib/emotions'
@@ -18,19 +20,30 @@ const TABS: { key: WatchlistStatus; label: string }[] = [
 
 export function MyShows() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { items, loading, refetch } = useWatchlist()
   const scrollRef = useRef<HTMLDivElement>(null)
   const { onTouchStart, onTouchEnd } = usePullToRefresh(scrollRef, async () => { await refetch() })
   const { slices: paletteSlices, totalCards: paletteTotalCards } = useEmotionAggregates('all-time')
   const [view, setView] = useState<View>('marquee')
   const [tab, setTab] = useState<WatchlistStatus>('want_to_see')
+  const [playInterestCount, setPlayInterestCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from('play_interest')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .then(({ count }) => setPlayInterestCount(count ?? 0))
+  }, [user])
 
   const filtered = useMemo(() => items.filter(i => i.status === tab), [items, tab])
   const counts = useMemo(() => ({
-    want_to_see: items.filter(i => i.status === 'want_to_see').length,
+    want_to_see: items.filter(i => i.status === 'want_to_see').length + playInterestCount,
     booked: items.filter(i => i.status === 'booked').length,
     seen: items.filter(i => i.status === 'seen').length,
-  }), [items])
+  }), [items, playInterestCount])
 
   const wantItems = useMemo(() => items.filter(i => i.status === 'want_to_see'), [items])
   const bookedItems = useMemo(() => items.filter(i => i.status === 'booked'), [items])
