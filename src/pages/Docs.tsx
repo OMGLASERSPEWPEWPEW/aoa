@@ -385,7 +385,7 @@ function CoverageTab() {
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
   const audit = useVenueAudit()
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
-  const { discovery: progress, scraper, busy, dashboardOpen: _dbOpen, setDashboardOpen: _setDbOpen, runDiscovery, runScraper } = useScrape()
+  const { discovery: progress, scraper, busy, setDashboardOpen, runDiscovery, runScraper } = useScrape()
 
   const handleRunDiscovery = async () => {
     await runDiscovery()
@@ -427,22 +427,22 @@ function CoverageTab() {
           {(progress.phase === 'idle' || progress.phase === 'done' || progress.phase === 'error') && 'Run Discovery'}
         </button>
         <button
-          onClick={handleRunScraper}
-          disabled={busy}
+          onClick={scraper.phase === 'scraping' ? () => setDashboardOpen(true) : handleRunScraper}
+          disabled={busy && scraper.phase !== 'scraping'}
           style={{
             ...mono,
             fontSize: 10,
             padding: '6px 14px',
-            background: scraper.phase === 'scraping' ? 'var(--bg-chrome)' : 'var(--bg-card)',
-            color: scraper.phase === 'scraping' ? 'var(--ink-dim)' : 'var(--ink)',
-            border: '1px solid var(--rule)',
+            background: scraper.phase === 'scraping' ? 'var(--accent-bg)' : 'var(--bg-card)',
+            color: scraper.phase === 'scraping' ? 'var(--accent-text)' : 'var(--ink)',
+            border: scraper.phase === 'scraping' ? '1px solid var(--accent-border)' : '1px solid var(--rule)',
             borderRadius: 2,
-            cursor: busy ? 'default' : 'pointer',
+            cursor: scraper.phase === 'scraping' ? 'pointer' : busy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
             flexShrink: 0,
           }}
         >
-          {scraper.phase === 'scraping' ? `Scraping ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : `${scraper.scraped}`}...` : 'Run Scraper'}
+          {scraper.phase === 'scraping' ? `View Progress ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : ''}` : 'Run Scraper'}
         </button>
       </div>
       <div style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', marginBottom: 16 }}>
