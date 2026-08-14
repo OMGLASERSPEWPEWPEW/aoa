@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 import { useCostDashboard } from '../hooks/useCostDashboard'
 import { useVenueCoverage } from '../hooks/useVenueCoverage'
@@ -386,6 +387,43 @@ function CoverageTab() {
   const audit = useVenueAudit()
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
   const { discovery: progress, scraper, busy, setDashboardOpen, runDiscovery, runScraper } = useScrape()
+  const [backfillRunning, setBackfillRunning] = useState(false)
+  const [backfillResult, setBackfillResult] = useState<{ exact_matches: number; fuzzy_matches: number; ai_matches: number; plays_created: number; events_unmatched: number; events_processed: number } | null>(null)
+  const [unlinkedCount, setUnlinkedCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    supabase
+      .from('events')
+      .select('id', { count: 'exact', head: true })
+      .is('play_id', null)
+      .eq('event_type', 'show')
+      .then(({ count }) => setUnlinkedCount(count ?? 0))
+  }, [backfillResult])
+
+  const handleRunBackfill = async () => {
+    setBackfillRunning(true)
+    setBackfillResult(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/play-catalog-backfill`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ batch_size: 100 }),
+        },
+      )
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setBackfillResult(data)
+    } catch (e) {
+      setBackfillResult({ exact_matches: 0, fuzzy_matches: 0, ai_matches: 0, plays_created: 0, events_unmatched: 0, events_processed: -1 })
+    }
+    setBackfillRunning(false)
+  }
 
   const handleRunDiscovery = async () => {
     await runDiscovery()
@@ -444,7 +482,35 @@ function CoverageTab() {
         >
           {scraper.phase === 'scraping' ? `View Progress ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : ''}` : 'Run Scraper'}
         </button>
+        <button
+          onClick={handleRunBackfill}
+          disabled={backfillRunning || busy}
+          style={{
+            ...mono,
+            fontSize: 10,
+            padding: '6px 14px',
+            background: backfillRunning ? 'var(--bg-chrome)' : 'var(--bg-card)',
+            color: backfillRunning ? 'var(--ink-dim)' : 'var(--ink)',
+            border: '1px solid var(--rule)',
+            borderRadius: 2,
+            cursor: backfillRunning || busy ? 'default' : 'pointer',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          {backfillRunning ? 'Matching...' : `Play Backfill${unlinkedCount !== null ? ` (${unlinkedCount})` : ''}`}
+        </button>
       </div>
+      {backfillResult && backfillResult.events_processed >= 0 && (
+        <div style={{ ...mono, fontSize: 10, color: 'var(--accent)', marginBottom: 8 }}>
+          {backfillResult.exact_matches} exact · {backfillResult.fuzzy_matches} fuzzy · {backfillResult.ai_matches} AI · {backfillResult.plays_created} new plays · {backfillResult.events_unmatched} unmatched
+        </div>
+      )}
+      {backfillResult && backfillResult.events_processed < 0 && (
+        <div style={{ ...mono, fontSize: 10, color: 'var(--danger)', marginBottom: 8 }}>
+          Backfill failed — check Edge Function logs
+        </div>
+      )}
       <div style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', marginBottom: 16 }}>
         {progress.phase === 'discovering' && 'Parsing ChicagoPlays...'}
         {progress.phase === 'enriching' && `Enriching & adding venues... ${progress.promoted} added so far`}
