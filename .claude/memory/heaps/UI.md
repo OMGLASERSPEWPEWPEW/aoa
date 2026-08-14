@@ -1505,3 +1505,55 @@ Red Orchid's `scraped_at` is reset. Hit "Run Scraper" — it should pick up Red 
 
 ---
 
+## 2026-08-14_14-14-21 (session ddbeaf17)
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Two logical groups here:
+
+**Proposed commits (2):**
+
+1. `perf(ui): prefetch map data on app shell mount with scraper-aware cache`
+   - Why: Map page showed empty pills (0 counts) for ~2s while data loaded. Prefetch on shell mount + scrape-timestamp cache key makes it instant and auto-refreshes after scraper runs.
+   - Files: `src/pages/AppShell.tsx`, `src/components/MapView.tsx`, `src/hooks/useLastScrape.ts`, `src/lib/mapData.ts`
+
+2. `docs(graphs): full-depth play-catalog graph engineering spec`...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

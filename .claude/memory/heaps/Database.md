@@ -2649,3 +2649,109 @@ Let me fix th...
 
 ---
 
+## 2026-08-14_14-07-09 (session 451fc35e)
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Proposed commits (2):
+
+**1.** `fix(gateway): resolve 'result not defined' in batch endpoint`
+```
+Why: result was const-scoped inside the for loop but referenced outside
+     it when building the recent_venues entry. Saved as lastResult.
+Files: supabase/functions/event-scrape-batch/index.ts
+```
+
+**2.** `chore(infra): session journals, daily log, heap updates`
+```
+Files: .claude/journals/*, .claude/memory/daily/2026-08-14.md, .claude/memory/heaps/*
+```
+
+Excluding: `.zip` files, `docs/design/` dire...
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-28-29 (session ddbeaf17)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Migrations applied. Let me verify the seed worked.
+
+**assistant**: [tool: Bash]
+
+**assistant**: 177 plays (59 existing + 118 new — some duplicates from overlapping slugs). Let me verify the three user-searched plays.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All three found. Now commit and deploy using `/cap`.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploy the scraper Edge Function so the play-matcher hook is live.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-29-15 (session ddbeaf17)
+
+**assistant**: ## Implementation Summary
+
+**Files created:**
+- `supabase/migrations/20260815000001_plays_source_column.sql` — source column on plays
+- `supabase/migrations/20260815000002_seed_plays_v2.sql` — 118 new plays (177 total)
+- `supabase/functions/_shared/scraper/play-matcher.ts` — 654-line matcher (exact→fuzzy→AI)
+- `.claude/docs/prd/play-catalog.md` — PRD
+- `.claude/rules/ai-operations.md` — AI ops standard
+
+**Files modified:**
+- `supabase/functions/_shared/scraper/types.ts` — PlayRecord, AiPlayIdent...
+
+**user**: <task-notification>
+<task-id>bz93wvzl9</task-id>
+<tool-use-id>toolu_01Be9k6FjYuDYrJmuQMYrLmK</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/ddbeaf17-a5a9-44c4-9de7-5c67df7f0227/tasks/bz93wvzl9.output</output-file>
+<status>completed</status>
+<summary>Background command "Deploy updated event-scraper with play-matcher hook" completed (exit code 0)</summary>
+</task-notification>
+
+---
+

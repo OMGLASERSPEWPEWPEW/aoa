@@ -4240,3 +4240,142 @@ You are executing the **design overhaul graph engineer**. This skill reads the d
 
 ---
 
+## 2026-08-14_14-14-21 (session ddbeaf17)
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Two logical groups here:
+
+**Proposed commits (2):**
+
+1. `perf(ui): prefetch map data on app shell mount with scraper-aware cache`
+   - Why: Map page showed empty pills (0 counts) for ~2s while data loaded. Prefetch on shell mount + scrape-timestamp cache key makes it instant and auto-refreshes after scraper runs.
+   - Files: `src/pages/AppShell.tsx`, `src/components/MapView.tsx`, `src/hooks/useLastScrape.ts`, `src/lib/mapData.ts`
+
+2. `docs(graphs): full-depth play-catalog graph engineering spec`...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-15-09 (session 451fc35e)
+
+**assistant**: Pushed clean. The `result not defined` bug is fixed — hit "Run Scraper" again and it should work now.
+
+---
+[timestamp] 2026-08-14 CST
+
+**user**: on my end its stuck at 0 / 110
+
+**assistant**: [tool: Bash]
+
+**assistant**: Job created at 19:04 but stuck at 0 processed. The first batch call ran but the self-chain isn't firing. The `result not defined` error was in the job update section — the first venue processed but crashed before it could update the job or chain. Let me check the Edge Function logs.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The first call returned **500** (crashed after 31 seconds). The fix I deployed might not have taken effect, or there's a different error. Let me test directly and clear the stuck job.
+
+**assistant**: [tool: Bash]
+
+**assistant**: It works now via curl — processed 1 venue, 2 events, self-chaining to the next. The fix IS deployed. The 500 crash was from the OLD deployed code (before the fix). Let me verify the chain is running.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-21-29 (session ddbeaf17)
+
+**assistant**: Pushed and deployed. Two commits:
+
+1. **`perf(ui): prefetch map data on app shell mount with scraper-aware cache`** — map data loads in the background as soon as you enter the app. Cache key includes `lastScrapeTs` from `scrape_logs`, rechecked on window focus. When the scraper runs (scheduled or manual), the next time you open the app the key changes and data refetches automatically.
+
+2. **`docs(graphs): full-depth play-catalog graph engineering spec`** — 1,976-line graph matching the venue-dis...
+
+**user**: we should already be on 13 is that a mistake? Did you check past commits we have multiple sessions
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-28-29 (session ddbeaf17)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Migrations applied. Let me verify the seed worked.
+
+**assistant**: [tool: Bash]
+
+**assistant**: 177 plays (59 existing + 118 new — some duplicates from overlapping slugs). Let me verify the three user-searched plays.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All three found. Now commit and deploy using `/cap`.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploy the scraper Edge Function so the play-matcher hook is live.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-29-15 (session ddbeaf17)
+
+**assistant**: ## Implementation Summary
+
+**Files created:**
+- `supabase/migrations/20260815000001_plays_source_column.sql` — source column on plays
+- `supabase/migrations/20260815000002_seed_plays_v2.sql` — 118 new plays (177 total)
+- `supabase/functions/_shared/scraper/play-matcher.ts` — 654-line matcher (exact→fuzzy→AI)
+- `.claude/docs/prd/play-catalog.md` — PRD
+- `.claude/rules/ai-operations.md` — AI ops standard
+
+**Files modified:**
+- `supabase/functions/_shared/scraper/types.ts` — PlayRecord, AiPlayIdent...
+
+**user**: <task-notification>
+<task-id>bz93wvzl9</task-id>
+<tool-use-id>toolu_01Be9k6FjYuDYrJmuQMYrLmK</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/ddbeaf17-a5a9-44c4-9de7-5c67df7f0227/tasks/bz93wvzl9.output</output-file>
+<status>completed</status>
+<summary>Background command "Deploy updated event-scraper with play-matcher hook" completed (exit code 0)</summary>
+</task-notification>
+
+---
+

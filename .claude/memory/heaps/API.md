@@ -2492,3 +2492,61 @@ You are executing the **design overhaul graph engineer**. This skill reads the d
 
 ---
 
+## 2026-08-14_14-07-09 (session 451fc35e)
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Proposed commits (2):
+
+**1.** `fix(gateway): resolve 'result not defined' in batch endpoint`
+```
+Why: result was const-scoped inside the for loop but referenced outside
+     it when building the recent_venues entry. Saved as lastResult.
+Files: supabase/functions/event-scrape-batch/index.ts
+```
+
+**2.** `chore(infra): session journals, daily log, heap updates`
+```
+Files: .claude/journals/*, .claude/memory/daily/2026-08-14.md, .claude/memory/heaps/*
+```
+
+Excluding: `.zip` files, `docs/design/` dire...
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

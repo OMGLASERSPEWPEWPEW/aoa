@@ -3473,3 +3473,137 @@ v0.13.0 shipped. `/cap` memory saved — I'll use it for all future commits.
 
 ---
 
+## 2026-08-14_14-07-09 (session 451fc35e)
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Proposed commits (2):
+
+**1.** `fix(gateway): resolve 'result not defined' in batch endpoint`
+```
+Why: result was const-scoped inside the for loop but referenced outside
+     it when building the recent_venues entry. Saved as lastResult.
+Files: supabase/functions/event-scrape-batch/index.ts
+```
+
+**2.** `chore(infra): session journals, daily log, heap updates`
+```
+Files: .claude/journals/*, .claude/memory/daily/2026-08-14.md, .claude/memory/heaps/*
+```
+
+Excluding: `.zip` files, `docs/design/` dire...
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-14-21 (session ddbeaf17)
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Two logical groups here:
+
+**Proposed commits (2):**
+
+1. `perf(ui): prefetch map data on app shell mount with scraper-aware cache`
+   - Why: Map page showed empty pills (0 counts) for ~2s while data loaded. Prefetch on shell mount + scrape-timestamp cache key makes it instant and auto-refreshes after scraper runs.
+   - Files: `src/pages/AppShell.tsx`, `src/components/MapView.tsx`, `src/hooks/useLastScrape.ts`, `src/lib/mapData.ts`
+
+2. `docs(graphs): full-depth play-catalog graph engineering spec`...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-28-29 (session ddbeaf17)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Migrations applied. Let me verify the seed worked.
+
+**assistant**: [tool: Bash]
+
+**assistant**: 177 plays (59 existing + 118 new — some duplicates from overlapping slugs). Let me verify the three user-searched plays.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All three found. Now commit and deploy using `/cap`.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploy the scraper Edge Function so the play-matcher hook is live.
+
+**assistant**: [tool: Bash]
+
+---
+
