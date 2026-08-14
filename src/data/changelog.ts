@@ -8,6 +8,23 @@ export interface PatchNote {
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.13.0',
+    date: '2026-08-14',
+    title: 'Intelligent scraper v2.1 — TIC detail pages + field visibility',
+    summary: 'Scraper now fetches TIC detail pages for Now Playing shows, searches both Coming Soon and Now Playing, and the dashboard shows per-venue field completeness.',
+    details: [
+      'Fixed: TIC lookup searched Coming Soon only — Now Playing shows like Abuela\'s Follies were missed',
+      'New: TIC detail page fetch for shows without dates on listing (zero AI cost)',
+      'New: Dashboard field pills — DATES/PRICE/TIMES/TICKET/CAST with check/miss per venue',
+      'New: Source tags — VENUE (gold) / TIC (teal) show where data came from',
+      'New: "View Progress" button on Coverage tab to reopen dashboard',
+      'Fixed: Dashboard now visible on admin/coverage page',
+      'Fixed: isUpTonight no longer counts events with NULL start_date',
+      'New: AI venue matching with trainable match_decisions table',
+      'New: TIC pagination — fetches all 6 pages (113 shows, up from 17)',
+    ],
+  },
+  {
     version: '0.4.25',
     date: '2026-08-03',
     title: 'Version stamp on auth pages + admin docs link',
