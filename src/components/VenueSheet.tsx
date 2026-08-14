@@ -185,25 +185,43 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
             </span>
           </div>
           {tonightEvents.map(e => (
-            <button
-              key={e.id}
-              onClick={() => navigate(`/app/show/${e.id}`)}
-              style={{
-                display: 'block',
-                fontFamily: "'Newsreader', Georgia, serif",
-                fontStyle: 'italic',
-                fontSize: 14,
-                color: 'var(--ink)',
-                marginTop: 8,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                textAlign: 'left',
-              }}
-            >
-              {e.title}
-            </button>
+            <div key={e.id} style={{ marginTop: 8 }}>
+              <button
+                onClick={() => navigate(`/app/show/${e.id}`)}
+                style={{
+                  display: 'block',
+                  fontFamily: "'Newsreader', Georgia, serif",
+                  fontStyle: 'italic',
+                  fontSize: 14,
+                  color: 'var(--ink)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  textAlign: 'left',
+                }}
+              >
+                {e.title}
+              </button>
+              {e.ticket_url && /^https?:\/\//i.test(e.ticket_url) && !e.ticket_url.includes('theatreinchicago') && (
+                <a
+                  href={e.ticket_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontFamily: "'Courier Prime', monospace",
+                    fontSize: 8.5,
+                    letterSpacing: '0.08em',
+                    color: 'var(--accent-text)',
+                    textDecoration: 'none',
+                    marginTop: 2,
+                    display: 'inline-block',
+                  }}
+                >
+                  TICKETS →
+                </a>
+              )}
+            </div>
           ))}
         </div>
 
@@ -287,6 +305,55 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
             </a>
           )}
         </div>
+
+        {(() => {
+          const tonightIds = new Set(tonightEvents.map(e => e.id))
+          const upcomingEvents = allEvents
+            .filter(e => e.venue_id === venue.id && !tonightIds.has(e.id))
+            .filter(e => !e.end_date || e.end_date >= today)
+            .sort((a, b) => (a.start_date ?? 'z').localeCompare(b.start_date ?? 'z'))
+            .slice(0, 5)
+
+          if (upcomingEvents.length === 0) return null
+
+          const fmtDate = (d: string | null) => {
+            if (!d) return null
+            const [, m, day] = d.split('-')
+            const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            return `${months[parseInt(m)]} ${parseInt(day)}`
+          }
+
+          return (
+            <div style={{ marginTop: 14, marginBottom: 14 }}>
+              <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, letterSpacing: '0.1em', color: 'var(--ink-ghost)', marginBottom: 8 }}>
+                COMING UP AT {venue.name.toUpperCase().slice(0, 30)}
+              </div>
+              {upcomingEvents.map((e, i) => (
+                <div key={e.id}>
+                  {i > 0 && <div style={{ borderTop: '1px dotted var(--rule)', margin: '6px 0' }} />}
+                  <button
+                    onClick={() => navigate(`/app/show/${e.id}`)}
+                    style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}
+                  >
+                    <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontStyle: 'italic', fontSize: 14, color: 'var(--ink)' }}>
+                      {e.title}
+                    </div>
+                    <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: 9, color: 'var(--ink-faint)', marginTop: 1 }}>
+                      {e.start_date ? `${fmtDate(e.start_date)}${e.end_date ? ` – ${fmtDate(e.end_date)}` : '+'}` : 'DATES TBD'}
+                      {e.price_min != null ? ` · $${e.price_min}${e.price_max && e.price_max !== e.price_min ? `–$${e.price_max}` : ''}` : ''}
+                    </div>
+                  </button>
+                  {e.ticket_url && /^https?:\/\//i.test(e.ticket_url) && !e.ticket_url.includes('theatreinchicago') && (
+                    <a href={e.ticket_url} target="_blank" rel="noopener noreferrer"
+                      style={{ fontFamily: "'Courier Prime', monospace", fontSize: 8, letterSpacing: '0.08em', color: 'var(--accent-text)', textDecoration: 'none', display: 'inline-block', marginTop: 1 }}>
+                      TICKETS →
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
+        })()}
 
         {nearbyVenues.length > 0 && (
           <div style={{ marginTop: 18 }}>
