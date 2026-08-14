@@ -21,7 +21,7 @@ export function formatShowTime(time24: string): string {
 }
 
 export function isUpTonight(event: Event): boolean {
-  if (!event.start_date) return false
+  if (!event.start_date && !event.end_date) return false
 
   const now = new Date()
   const chicagoDate = now.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
@@ -31,9 +31,9 @@ export function isUpTonight(event: Event): boolean {
   if (event.end_date && chicagoDate > event.end_date) return false
 
   if (!event.show_times) {
-    if (!event.start_date) return false
-    const end = event.end_date ?? event.start_date
-    return event.start_date <= chicagoDate && end >= chicagoDate
+    const start = event.start_date ?? chicagoDate
+    const end = event.end_date ?? start
+    return start <= chicagoDate && end >= chicagoDate
   }
 
   const exceptions = event.show_times.exceptions as Record<string, string[]> | undefined
@@ -66,9 +66,9 @@ function endOfMonth(): string {
 
 function overlapsWindow(event: Event, windowEnd: string): boolean {
   const today = chicagoToday()
-  if (!event.start_date) return false
-  if (event.start_date > windowEnd) return false
-  const end = event.end_date ?? event.start_date
+  if (!event.start_date && !event.end_date) return false
+  if (event.start_date && event.start_date > windowEnd) return false
+  const end = event.end_date ?? event.start_date ?? today
   if (end < today) return false
   return true
 }

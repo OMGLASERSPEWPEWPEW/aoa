@@ -117,6 +117,8 @@ export function parseTicDetailPage(html: string): TicDetailData {
     const thruMatch = dateText.match(/thru\s*-?\s*(.+)/i);
     if (thruMatch) {
       endDate = parseDate(thruMatch[1]);
+      const now = new Date();
+      startDate = now.toISOString().slice(0, 10);
     } else {
       const rangeParts = dateText.split(/\s*-\s*/);
       if (rangeParts.length === 2) {
