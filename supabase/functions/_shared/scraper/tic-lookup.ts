@@ -22,19 +22,57 @@ async function fetchTicPage(url: string): Promise<string> {
   }
 }
 
+async function fetchAllPages(
+  basePath: string,
+  pageParam: string,
+  totalParam: string,
+): Promise<TicShow[]> {
+  const page0Html = await fetchTicPage(`${TIC_BASE}${basePath}`);
+  let allShows = parseTicListingPage(page0Html);
+
+  const totalMatch = page0Html.match(new RegExp(`${totalParam}=(\\d+)`));
+  const total = totalMatch ? parseInt(totalMatch[1]) : 0;
+  if (total <= 0) return allShows;
+
+  const pageCount = Math.ceil(total / 16);
+
+  for (let i = 1; i < pageCount; i++) {
+    await new Promise(r => setTimeout(r, 500));
+    try {
+      const pageHtml = await fetchTicPage(`${TIC_BASE}${basePath}?${pageParam}=${i}&${totalParam}=${total}`);
+      allShows.push(...parseTicListingPage(pageHtml));
+    } catch (e) {
+      console.warn(`[tic-lookup] Page ${i} fetch failed:`, e);
+    }
+  }
+
+  return allShows;
+}
+
 async function getComingSoon(): Promise<TicShow[]> {
   if (cachedComingSoon && Date.now() - cacheTime < CACHE_TTL) return cachedComingSoon;
-  const html = await fetchTicPage(`${TIC_BASE}/comingsoonrs.php?viewall=1`);
-  cachedComingSoon = parseTicListingPage(html);
+  cachedComingSoon = await fetchAllPages(
+    "/comingsoonrs.php",
+    "pageNum_rsComingSoon",
+    "totalRows_rsComingSoon",
+  );
   cacheTime = Date.now();
   return cachedComingSoon;
 }
 
 async function getNowPlaying(): Promise<TicShow[]> {
   if (cachedNowPlaying && Date.now() - cacheTime < CACHE_TTL) return cachedNowPlaying;
-  const html = await fetchTicPage(`${TIC_BASE}/nowplayingrs.php?viewall=1`);
-  cachedNowPlaying = parseTicListingPage(html);
+  cachedNowPlaying = await fetchAllPages(
+    "/nowplayingrs.php",
+    "pageNum_rsNowPlaying",
+    "totalRows_rsNowPlaying",
+  );
   return cachedNowPlaying;
+}
+
+export async function getAllTicShows(): Promise<TicShow[]> {
+  const [comingSoon, nowPlaying] = await Promise.all([getComingSoon(), getNowPlaying()]);
+  return [...comingSoon, ...nowPlaying];
 }
 
 export async function lookupVenueOnTic(
@@ -69,3 +107,4 @@ export async function enrichFromTicDetail(detailUrl: string): Promise<TicDetailD
     return null;
   }
 }
+

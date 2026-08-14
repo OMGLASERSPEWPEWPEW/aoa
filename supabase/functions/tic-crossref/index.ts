@@ -1,7 +1,12 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { parseTicListingPage } from "../_shared/scraper/tic-parser.ts";
-import { matchVenueName } from "../_shared/scraper/venue-name-matcher.ts";
+import { getAllTicShows } from "../_shared/scraper/tic-lookup.ts";
+import {
+  matchVenueName,
+  lookupKnownPair,
+  logMatchDecision,
+  aiMatchVenues,
+} from "../_shared/scraper/venue-name-matcher.ts";
 import type { TicShow } from "../_shared/scraper/types.ts";
 
 const ALLOWED_ORIGINS = [
@@ -23,20 +28,6 @@ function getCorsHeaders(req: Request): Record<string, string> {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
-const TIC_BASE = "https://www.theatreinchicago.com";
-const UA = "Mozilla/5.0 (compatible; ArtOfArt-EventBot/1.0; +https://aoa-nine.vercel.app)";
-
-async function fetchPage(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
-  try {
-    const res = await fetch(url, { headers: { "User-Agent": UA }, signal: controller.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
-  } finally {
-    clearTimeout(timeout);
-  }
-}
 
 serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -55,51 +46,141 @@ serve(async (req) => {
   }
 
   try {
-    const allShows: TicShow[] = [];
-
-    const comingSoonHtml = await fetchPage(`${TIC_BASE}/comingsoonrs.php?viewall=1`);
-    allShows.push(...parseTicListingPage(comingSoonHtml));
-
-    await new Promise(r => setTimeout(r, 500));
-
-    const nowPlayingHtml = await fetchPage(`${TIC_BASE}/nowplayingrs.php?viewall=1`);
-    allShows.push(...parseTicListingPage(nowPlayingHtml));
+    const allShows = await getAllTicShows();
 
     const { data: events } = await supabase
       .from("events")
-      .select("id, title, venue_id, start_date, end_date, source, venues(name)")
+      .select("id, title, venue_id, start_date, end_date, source, found_by, venues(id, name)")
       .is("start_date", null)
       .eq("source", "scraped");
 
+    const { data: venues } = await supabase
+      .from("venues")
+      .select("id, name")
+      .not("calendar_url", "is", null);
+
+    const venueMap = new Map((venues ?? []).map((v: { id: string; name: string }) => [v.id, v.name]));
+
     let enriched = 0;
     let unmatched = 0;
+    let cachedMatches = 0;
+    let aiMatches = 0;
+
+    interface AmbiguousPair {
+      ourName: string;
+      ourId: string;
+      ticName: string;
+      heuristicScore: number;
+      eventId: string;
+      ticShow: TicShow;
+    }
+    const ambiguousPairs: AmbiguousPair[] = [];
+
+    const eventMatches: Array<{ eventId: string; show: TicShow; decision: string }> = [];
 
     for (const event of events ?? []) {
-      const venueName = (event as any).venues?.name ?? "";
-      const matchingShows = allShows.filter(
-        s => matchVenueName(venueName, s.venueName) >= 0.6 &&
-          matchVenueName(event.title, s.title) >= 0.6,
+      const venueName = (event as any).venues?.name ?? venueMap.get(event.venue_id) ?? "";
+      const venueId = (event as any).venues?.id ?? event.venue_id;
+
+      let bestShow: TicShow | null = null;
+      let bestScore = 0;
+      let matchDecision = "rejected";
+
+      for (const show of allShows) {
+        const titleScore = matchVenueName(event.title, show.title);
+        if (titleScore < 0.5) continue;
+
+        const known = await lookupKnownPair(venueName, show.venueName, "tic", supabase);
+        if (known !== null) {
+          if (known.matched) {
+            bestShow = show;
+            bestScore = 1.0;
+            matchDecision = "matched";
+            cachedMatches++;
+            break;
+          }
+          continue;
+        }
+
+        const venueScore = matchVenueName(venueName, show.venueName);
+
+        if (venueScore >= 0.6) {
+          if (venueScore > bestScore) {
+            bestShow = show;
+            bestScore = venueScore;
+            matchDecision = "matched";
+          }
+          await logMatchDecision(supabase, {
+            ourName: venueName,
+            ourId: venueId,
+            externalName: show.venueName,
+            source: "tic",
+            heuristicScore: venueScore,
+            finalDecision: "matched",
+          });
+        } else if (venueScore >= 0.3 && titleScore >= 0.6) {
+          ambiguousPairs.push({
+            ourName: venueName,
+            ourId: venueId,
+            ticName: show.venueName,
+            heuristicScore: venueScore,
+            eventId: event.id,
+            ticShow: show,
+          });
+        } else {
+          await logMatchDecision(supabase, {
+            ourName: venueName,
+            ourId: venueId,
+            externalName: show.venueName,
+            source: "tic",
+            heuristicScore: venueScore,
+            finalDecision: "rejected",
+          });
+        }
+      }
+
+      if (bestShow) {
+        eventMatches.push({ eventId: event.id, show: bestShow, decision: matchDecision });
+      } else if (ambiguousPairs.filter(p => p.eventId === event.id).length === 0) {
+        unmatched++;
+      }
+    }
+
+    if (ambiguousPairs.length > 0) {
+      const uniquePairs = Array.from(
+        new Map(ambiguousPairs.map(p => [`${p.ourName}|||${p.ticName}`, p])).values(),
       );
+      const aiResults = await aiMatchVenues(uniquePairs, supabase);
 
-      if (matchingShows.length === 0) {
-        unmatched++;
-        continue;
+      for (const pair of ambiguousPairs) {
+        const key = `${pair.ourName}|||${pair.ticName}`;
+        const matched = aiResults.get(key);
+        if (matched) {
+          eventMatches.push({ eventId: pair.eventId, show: pair.ticShow, decision: "ai_matched" });
+          aiMatches++;
+        } else {
+          unmatched++;
+        }
       }
+    }
 
-      const best = matchingShows[0];
-      if (!best.startDate && !best.endDate) {
-        unmatched++;
-        continue;
-      }
+    for (const { eventId, show } of eventMatches) {
+      if (!show.startDate && !show.endDate) { unmatched++; continue; }
 
       const updates: Record<string, unknown> = {};
-      if (best.startDate) updates.start_date = best.startDate;
-      if (best.endDate) updates.end_date = best.endDate;
+      if (show.startDate) updates.start_date = show.startDate;
+      if (show.endDate) updates.end_date = show.endDate;
       updates.extraction_status = "complete";
       updates.missing_fields = [];
-      updates.source_url = best.detailUrl;
+      updates.source_url = show.detailUrl;
 
-      await supabase.from("events").update(updates).eq("id", event.id);
+      const event = (events ?? []).find((e: any) => e.id === eventId);
+      const existingFoundBy = (event as any)?.found_by ?? [];
+      if (!existingFoundBy.includes("tic")) {
+        updates.found_by = [...existingFoundBy, "tic"];
+      }
+
+      await supabase.from("events").update(updates).eq("id", eventId);
       enriched++;
     }
 
@@ -109,6 +190,8 @@ serve(async (req) => {
         events_with_null_dates: (events ?? []).length,
         enriched,
         unmatched,
+        cached_matches: cachedMatches,
+        ai_matches: aiMatches,
       }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );
