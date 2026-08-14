@@ -21,6 +21,8 @@ export function formatShowTime(time24: string): string {
 }
 
 export function isUpTonight(event: Event): boolean {
+  if (!event.start_date) return false
+
   const now = new Date()
   const chicagoDate = now.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
   const chicagoDay = now.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Chicago' }).toLowerCase()
