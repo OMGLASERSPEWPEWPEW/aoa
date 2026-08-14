@@ -56,6 +56,20 @@
 - **Dependencies:** Intelligent Event Scraper v2
 - **Summary:** Integrates theatreinchicago.com as a cross-reference and fallback data source. The site has ~114 Chicago shows with exact dates, times, cast, and ticket URLs. Used as Step 3.5 in the strategy tree (after link following, before verification) to fill NULL dates at zero AI cost. Also provides a standalone bulk cross-reference operation.
 
+## AI-Powered Venue Matching + Trainable Logs
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** TheatreInChicago.com Aggregator Source
+- **Summary:** Fixes TIC pagination (17→90+ shows), adds "Company at Venue" format splitting, AI judgment for ambiguous venue pairs, and trainable match_decisions logging table. Enables known-pair caching so AI costs decrease over time. Goal: TIC matches 30+ events (up from 7), NULL date rate drops below 50%.
+
+## Play Page — Frames 4a and 4b
+- **Status:** Planned
+- **Target:** September 2026
+- **Priority:** P1
+- **Dependencies:** plays table (shipped), event_emotion_counts trigger (shipped), friendships table (shipped)
+- **Summary:** Two-state PlayDetail page upgrade. Introduces play_interest primitive (want a work, not just a production), 8-bar waiting trend, EVERY ROOM emotion spectrum across all-time productions, JUST ANNOUNCED section for staged plays, UNTIL SOMEBODY STAGES IT with library access for unstaged plays, and YOUR PEOPLE social layer. Adds PLAYS YOU'RE WAITING FOR shelf to MyShows.
+
 ## Belt Progression System
 - **Status:** Planned
 - **Target:** September 2026
