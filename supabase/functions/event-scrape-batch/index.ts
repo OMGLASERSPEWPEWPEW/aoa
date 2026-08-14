@@ -184,9 +184,11 @@ serve(async (req) => {
     let totalUpdated = 0;
     let lastVenueName = "";
     let lastStrategyStr = "";
+    let lastResult: Awaited<ReturnType<typeof processVenue>> | null = null;
 
     for (const venue of venues) {
       const result = await processVenue(venue, runId);
+      lastResult = result;
       totalFound += result.events_found;
       totalCreated += result.events_created;
       totalUpdated += result.events_updated;
@@ -225,10 +227,10 @@ serve(async (req) => {
         events_found: totalFound,
         strategy: lastStrategyStr,
         timestamp: new Date().toISOString(),
-        fields_complete: result.field_summary?.with_dates ?? 0,
-        events_total: result.field_summary?.total ?? totalFound,
-        missing: result.field_summary?.missing ?? [],
-        sources: result.field_summary?.sources ?? [],
+        fields_complete: lastResult?.field_summary?.with_dates ?? 0,
+        events_total: lastResult?.field_summary?.total ?? totalFound,
+        missing: lastResult?.field_summary?.missing ?? [],
+        sources: lastResult?.field_summary?.sources ?? [],
       });
       if (recentVenues.length > 15) recentVenues.length = 15;
 
