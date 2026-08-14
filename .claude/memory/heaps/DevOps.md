@@ -2687,3 +2687,1498 @@ Want me to set up the daily 6 AM CST cron now?
 
 ---
 
+## 2026-08-09_12-14-45 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Proposed commits (2):
+
+**1.** `feat(ui): rename Docs to Admin, add AI Prompts tab with prompt viewer`
+```
+Why: User needs visibility into the AI prompts (scraper + mentor) from within
+     the app. Admin page now has Design and AI Prompts tabs with expandable prompt cards.
+Files: src/pages/Docs.tsx, src/App.tsx, src/components/Header.tsx, src/pages/DocsViewer.tsx
+```
+
+**2.** `chore(infra): update journals and memory heaps`
+```
+Files: .claude/journals/*, .claude/memory/*
+```
+
+Skipping untracked d...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Pushed and deployed. v0.4.30 now has the Admin page with Design + AI Prompts tabs. The UpdateBanner should prompt you to reload on your iPhone.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-09_13-29-47 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the CostsTab component at the end of the file.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now push the migration and build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean, migration applied. Now commit, push, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_13-45-47 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now I have the full picture. Here's what's going on:
+
+**Total venues in the database: 37**
+- Original seed (`seed_venues_events.sql`): **12 venues** — Steppenwolf, Neo-Futurists, Lookingglass, Annoyance, Court, Den, Victory Gardens, iO, Collaboraction, Chicago Shakespeare, Steep, Second City
+- Expansion (`expand_venues.sql`): **25 more venues** — Goodman, Writers Theatre, TimeLine, American Blues, CIBC, Cadillac Palace, Nederlander, Shattered Globe, A Red Orchid, Griffin, Jackalope, Redtwist, Tr...
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_20-29-57 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now Phase 7 — handoff review. Let me verify the doc package is complete.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The graph engineering doc has exact TypeScript interfaces, file paths, and build phases. Let me verify the full handoff checklist.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All five documents created. Let me commit, push, and deploy.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_21-59-14 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build, no warnings. Now let me bump the version, commit, deploy the edge function, and push.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Edge function deployed. Now commit and push everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_08-56-05 (session 66f33189)
+
+**assistant**: ## Implementation Summary
+
+**v0.5.0 — Venue Discovery Pipeline**
+
+**Files created (17):**
+- `supabase/migrations/20260809000002_venue_discovery.sql` — 3 tables, pg_trgm, coverage RPC, venue provenance columns
+- `supabase/functions/venue-discovery/index.ts` — Edge Function orchestrator (NDJSON stream, dual auth, 3-phase pipeline)
+- `supabase/functions/venue-discovery/chicagoplays-parser.ts` — Parses 231 member theaters from directory + detail pages
+- `supabase/functions/venue-discovery/dedup.ts` ...
+
+**user**: I dont fully understand what will it do?  It just looks at chicagoplays?  Is there a way to see what theaters are inactive and stuff? Every time we hit run discovery it checks chicagoplays?
+
+---
+
+## 2026-08-10_11-15-07 (session 66f33189)
+
+**assistant**: Now add the `MapTimePills` render above `MapFilterChips`, and push the filter chips down to make room.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now move the filter chips down so they don't overlap with the time pills.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build to verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now bump version, commit, push, deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_11-33-44 (session 66f33189)
+
+**assistant**: I need to add a "Step 0" that fetches the ChicagoPlays detail page to get address/website/description, then updates the queue row before running the rest of enrichment.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the index.ts to pass `detail_page_url` to the enrichment candidates.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Excellent! The previous run (before the refactor) actually completed! It found **231 venues**, matched **36** against existing, flagged **195 as new**, and started enriching successfully. Let me see the full output.
+
+**assistant**: [tool: Bash]
+
+**assistant**: It actually worked — **231 parsed, 36 matched, 195 new, 30 enriched** before timing out. The user saw nothing because the auth was failing silently. Now let me deploy the refactored version (faster parse, detail pages in enrichment) and push everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_11-47-03 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add CORS headers to all responses — the 401, the "already_running", the 404, and the streaming response.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now deploy and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_11-50-23 (session 66f33189)
+
+**assistant**: The diagnostics showed the exact problem: `POST /functions/v1/venue-discovery FAILED (1377ms): Load failed` — that's iOS Safari blocking a cross-origin request with no CORS headers. Fixed by adding the same `getCorsHeaders` pattern used by mentor-chat and ai-gateway.
+
+Try "Run Discovery" again. Now the browser can actually reach the function. You'll see the queue populate (it may already have 195 from the curl test earlier) and the metrics update.
+
+To your point about seeing pipeline state as a ...
+
+**user**: But im asking a different thing... Like do you have the ability to see and read a user's state as they use the app
+
+---
+
+## 2026-08-10_11-57-03 (session 66f33189)
+
+**assistant**: The `total_known_chicago` is 0 because the function was timing out during enrichment before it could write the final `venues_found` count to the run record. Let me fix the function to update the run record right after parsing, not at the end.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: I need to add a run record update right after `venuesFound` is set, and again after dedup completes.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now also update after dedup so the run record has accurate new/matched counts even if enrichment times out.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now deploy the function, commit everything, and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-09-14 (session 66f33189)
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — new Edge Function (reuses existing enrichment modules), frontend loop logic in one file. < 1 day. Using shortcuts.
+
+Let me explore the existing code to write precise specs.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got the full picture. No new schema needed — the queue already has all enrichment columns. Let me write the doc package.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_12-12-32 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the button and status display.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Build check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy both Edge Functions, bump version, commit, push, deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-18-13 (session 66f33189)
+
+**user**: ok now it says parsing chicagokays... no new theaters found.[Image #2]
+
+Ok this looks like progress but still like... i dont understand we have 231 venues known in chicago... but none are added to the calender, 18 with photos... I just? 
+
+What's going on?
+
+**user**: [Image: source: /Users/dericortiz/Downloads/IMG_4285.PNG]
+
+**user**: ok now it says parsing chicagokays... no new theaters found.[Image #2]
+
+Ok this looks like progress but still like... i dont understand we have 231 venues known in chicago... but none are added to the calender, 18 with photos... I just? 
+
+What's going on?  we now have 231 known in chicago but liek queue is 195... did we not retreive any?
+
+**user**: [Image: source: /Users/dericortiz/.claude/image-cache/66f33189-8bdd-40f9-b079-a9090de0e5fa/2.jpeg]
+
+**assistant**: I see the bug. The discovery says "no new theaters found" because those 195 are already in the queue from previous runs — the unique constraint correctly skips re-inserting them. But the frontend then skips enrichment because `venues_new = 0`. It should check for pending enrichment items regardless.
+
+The 195 theaters are sitting there un-enriched from the earlier runs. The button just needs to enrich them.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also update the status text to show enrichment progress even when `found` is 0 (from a previous run).
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-27-51 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean. Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-48-26 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also update the discovery button's style to use `busy` instead of the inline check.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_15-58-09 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the frontend to use the batch loop instead of NDJSON streaming.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_16-02-20 (session 66f33189)
+
+**assistant**: It's pushed and deployed. Hit "Run Scraper" — you should see "Scanning... 3 scraped, X events found" incrementing every ~30 seconds as each batch of 3 venues gets processed by DeepSeek.
+
+---
+[timestamp] 2026-08-10 14:42 CST
+
+**user**: Stop says: [Hook: Test Results]
+             </div>
+             <div
+               style="font-family: \"Courier Prime\", monospace; font-size: 9px; letter-spacing:
+      0.1em; color: var(--ink-faint); margin-top: 2px;"
+             >
+               USHERED
+             </div>
+           </div>
+         </div>
+       </div>
+     </body>
+      ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+      ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+  ...
+
+**assistant**: That's a pre-commit hook running tests. The `StatStrip` test is failing — it's looking for a `0` with a specific inline style selector that doesn't match. Let me fix it.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The component uses `var(--access)` for the ushered color, but the test expects the raw `oklch(0.68 0.13 150)` value. CSS variables don't resolve in jsdom (the test environment). The test selector will never match.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 4 tests pass. The test was checking for a raw `oklch()` color value but the component uses a CSS variable `var(--access)` — jsdom doesn't resolve CSS variables so the selector never matched. Fixed to match the actual inline style.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_16-20-50 (session 66f33189)
+
+**assistant**: Here's the picture:
+
+**135 total events** scraped across 135 venues. The data is there. Here's what the map is showing:
+
+- **This Week (7 venues):** Events with dates between today (Aug 10) and Sunday (Aug 16). That matches — Leopoldstadt, Iceboy!, The Notebook, The Outsiders, The Lizard y El Sol, etc. are all running this week. 7 unique venues sounds right.
+
+- **This Month (8 venues):** Events through Aug 31. You see 25 events this month, but many are at the same venues, so 8 unique venues trac...
+
+**user**: [Image #4]  here we have several events listed as free and tonight ... are they fake or?
+
+**user**: [Image: source: /Users/dericortiz/Downloads/IMG_4286.PNG]
+
+**assistant**: They're real events — the scraper pulled them from actual venue websites. But there are data quality issues:
+
+**"100 Free Acts of Theater"** — This is a real Goodman Theatre program (citywide free performances across all 50 wards). It IS free. But its date range is `2025-07-01` to `2026-08-31` — a year-long event. It shows as "tonight" because today falls within that range.
+
+**"Free" label problem** — Leopoldstadt, The Outsiders, The Notebook are NOT free. They show as "Free" because DeepSeek se...
+
+---
+
+## 2026-08-10_20-37-37 (session 66f33189)
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The test file needs `extraction_confidence` added to mock Event objects.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_21-04-11 (session 66f33189)
+
+**assistant**: v0.6.0 live. Here's what changed:
+
+**Two-pass AI pipeline:**
+- **Pass 1 (Extract)**: Focused prompt with explicit rules — "null if unknown, NOT 0" for prices, "only events AT this venue" for attribution, "next performance, not season span" for dates. Returns only structural data (no descriptions/genres — smaller output, less truncation risk).
+- **Pass 2 (Verify & Enrich)**: Receives the extracted JSON, verifies each event, adds descriptions + genres + cast, scores confidence 0-1. Rejects misattr...
+
+**user**: yo where are we at
+
+---
+
+## 2026-08-11_11-40-04 (session 66f33189)
+
+**assistant**: Here's everything we built today:
+
+**v0.4.30** — Fixed PWA auto-update (UpdateBanner), moved docs inside the app shell
+
+**v0.5.0** — Venue Discovery Pipeline: scrapes ChicagoPlays (231 theaters), deduplicates against existing DB, auto-promotes with geocoding/photos/calendar URLs. Admin Coverage tab with metrics.
+
+**v0.5.1** — Map time filter pills (Today / This Week / This Month) — hides venues with no active events
+
+**v0.5.2-0.5.3** — Separated enrichment into its own batch function, auto-promo...
+
+**user**: I'm running the scrapper but its stuck on 0 scraped 0 events found
+
+**assistant**: [tool: Bash]
+
+**assistant**: The batch returned 200 in 4.8 seconds with no errors. The issue is likely that all venues were scraped within the last 24 hours — the `scraped_at` filter skips them. Let me check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: Found it. The `event-scrape-batch` function is calling the OLD `event-scraper` — which runs the enrichment phase first (all 135 venue photo checks) before doing any event scraping. The batch function imports `processVenue` from event-scraper, but the event-scraper itself runs the full NDJSON flow including enrichment when called directly.
+
+Wait — actually the `event-scrape-batch` calls `processVenue()` which only processes one venue. The output I'm seeing is from the direct curl test hitting the...
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-45-32 (session 66f33189)
+
+**assistant**: Now I'll create the shared module and update both functions. The `processVenue` function uses `supabase` and `DEEPSEEK_API_KEY` from module-level constants — I'll need to pass those as parameters or create the supabase client inside the shared module.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update `event-scrape-batch` to import from the shared module instead of from event-scraper.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now deploy both functions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me verify the batch function works now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: It works. `{"scraped":3,"events_found":6,"events_created":6,"remaining":108}` — the two-pass pipeline processed 3 venues, found 6 events, created all 6, and 108 venues remain.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-45-58 (session 66f33189)
+
+**assistant**: Fixed and deployed. The bug was that importing `processVenue` from `event-scraper/index.ts` executed the `serve()` call in that file — Deno runs top-level code on import. Moved `processVenue` and all its helpers to `_shared/scraper/process-venue.ts` (no `serve()` call).
+
+Verified working: `{"scraped":3,"events_found":6,"events_created":6,"remaining":108}` — the two-pass pipeline is running. Hit "Run Scraper" now and you'll see it process 3 venues at a time with real progress.
+
+---
+[timestamp] 20...
+
+**user**: is this pwa change thing or a supabase change?
+
+---
+
+## 2026-08-11_12-28-47 (session 66f33189)
+
+**assistant**: That's just a background task notification from an earlier diagnostic check — nothing to act on. Go ahead and hit "Run Scraper" in the app.
+
+---
+[timestamp] 2026-08-11 10:17 CST
+
+**user**: It's doing stuff somewhat slow... 6 events scrapped. What can you see on your end?
+
+**assistant**: [tool: Bash]
+
+**assistant**: Events went from 135 to 175 — 40 new events created so far. The scraper is working but each batch takes ~30-60 seconds because of the two-pass pipeline (two DeepSeek API calls per venue × 3 venues per batch). That's the tradeoff for better data quality.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Each batch call takes ~50+ seconds — that's 3 venues × 2 DeepSeek calls each × ~8 seconds per call. It's working, just slow. The "STILL PENDING" messages are the diagnostics interceptor logging that the fetch hasn't returned yet.
+
+At this rate: 111 venues ÷ 3 per batch = 37 batches × ~50 seconds = **~30 minutes total**. The progress counter should be ticking up by 3 every minute or so. Let it run — it's crunching through. You should see events climbing and the "scraped" counter incrementing.
+
+--...
+
+---
+
+## 2026-08-11_13-44-49 (session 66f33189)
+
+**assistant**: Now replace the local state in CoverageTab with context consumption.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Commit, push, deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: v0.6.1 live. Here's what changed:
+
+- **ScrapeContext** — batch loop handlers now live in a React context that persists across route changes. Navigate away and the scraper keeps running.
+- **AdminScrapeRibbon** — thin gold shimmer bar + progress text visible from any page (Tonight, Map, Discover, etc.) while scraping. Admin-only. Hides on Coverage tab. Auto-hides 5 seconds after completion.
+- **CoverageTab** — consumes context instead of owning state. Buttons still work the same.
+- **Shared ADMIN...
+
+---
+
+## 2026-08-11_14-22-31 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Edge Function deployed. Now bump version, commit, push, and deploy to Vercel.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Also need to push the migration for resetting `scraped_at` on the remaining 9 venues so they get picked up fresh.
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-11_14-25-22 (session 451fc35e)
+
+**assistant**: There are **156 events with dates this month** — so the data is there. The problem is the map filter isn't showing them. Let me check how the map decides which venues to display.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The filter logic looks correct. Let me check how many venues actually have events overlapping this week/month AND have map coordinates.
+
+**assistant**: [tool: Bash]
+
+**assistant**: There it is. **134 out of 224 events have NULL start_date** — that's 60% of the events with no dates at all. The scraper extracted events but DeepSeek returned null for their dates. Only 90 events have actual dates, and of those, only 28 overlap this month across 7 venues. That's why the map shows 6-7 markers.
+
+The problem is in the AI extraction — DeepSeek is failing to extract dates for most events. Let me check the extraction prompt to see what's going on.
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-11_14-30-29 (session 451fc35e)
+
+**user**: 1. Add an "All" time pill so you can see every venue that has ANY events (including dateless
+  ones). Quick UI change, immediately useful.
+  2. Improve date extraction — the prompt could be more aggressive: if a show is listed on a
+  "current season" or "now playing" page, infer that it's running now rather than returning
+  null. This would require re-scraping after updating the prompt.
+
+  Which would you like to tackle? I'd recommend both — the "All" pill is a 10-minute fix that
+  unlocks vis...
+
+**assistant**: You're absolutely right — what we have now is a dumb single-pass scraper, not an intelligent agent. It fetches one URL, asks DeepSeek once, and gives up if dates aren't there. A proper graph engineering approach would have the agent try multiple strategies, learn from context, and not leave 60% of its data incomplete.
+
+Let me explore the existing graph engineering patterns and the scraper architecture to design this properly.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: but wait didn't we make documentation for this feature already? we ran new-feature for this exact feature what happened?
+
+**assistant**: Good question — let me check what docs were already produced.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-11_14-39-57 (session 451fc35e)
+
+**assistant**: Here's what exists:
+
+1. **`docs/graphs/multi-pass-extraction.md`** — This is the two-pass Extract → Verify pipeline we built in v0.6.0. It improves the *quality* of what gets extracted from a single page, but **doesn't help when the page itself doesn't have dates**. If the calendar page says "Now Playing: Leopoldstadt" with no dates, both passes return null.
+
+2. **`docs/iterate/scraper-data-completeness.md`** — P1 pending. About missing **cast/performers**, not dates. Never implemented.
+
+3. **`d...
+
+**user**: can we /new-feature again with  docs/graphs/multi-pass-extraction.md  as a v2
+
+Where we use ai graph engineering and ai loops to get these answers?  Like I didn't ask for a two prompt pass I asked for an ai graphengineering approach so the ai agent takes a systematic approach to discovering events when it looks and getting all the information it needs
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Medium** — new Edge Function architecture, reworked processing pipeline, no new data models but significant behavioral changes. 1-3 days. Full process.
+
+Let me explore the existing scraper architecture in depth before designing the v2.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Excellent research. Now let me design the v2 architecture with proper AI graph engineering.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user]
+
+**user**: so meaning that every time this thing scrapes it uses a graph and ai loops until it gets al...
+
+---
+
+## 2026-08-11_14-45-49 (session 451fc35e)
+
+**assistant**: Good — the CLI supports `architecture` mode. Let me construct the input and run it.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 4 models responded. Let me read the report.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The structured fields are sparse for architecture reviews. Let me get the raw text from each model.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_15-37-54 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Migration applied. Now deploy the Edge Function.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deployed. Now bump version, commit, push, and deploy to Vercel.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_13-41-40 (session 451fc35e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build, deploy, push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_14-38-13 (session 451fc35e)
+
+**assistant**: Now let me build, push the migration, deploy everything, and ship.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both deployed. Now bump version, commit, push.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_14-45-54 (session 451fc35e)
+
+**assistant**: Now update process-venue.ts to pass `found_by` to the upsert.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build, push migration, deploy, ship.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_14-56-19 (session 451fc35e)
+
+**assistant**: Now update the frontend to use polling instead of a while loop.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now build, deploy, push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_15-13-46 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found the bug. The first batch call at 20:02 completed successfully (200 in 34s, processed "Chicago Writers' Bloc"). But **no subsequent calls were made** — the self-chain via `pg_net.http_post` didn't fire. Most likely `current_setting('app.settings.scraper_secret')` isn't configured in your Supabase project's PostgreSQL settings, so the RPC silently fails.
+
+The fix: instead of chaining through `pg_net` (which requires database-level config), have the Edge Function call itself directly via `fet...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me also mark the stuck job as failed so the user can start fresh, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_15-18-08 (session 451fc35e)
+
+**assistant**: Fixed and deployed. The bug was that `pg_net.http_post` relied on `app.settings.scraper_secret` being configured at the PostgreSQL level — it wasn't, so the self-chain RPC silently failed after processing 1 venue.
+
+**The fix:** replaced the database-level `pg_net.http_post` with a direct `fetch()` call from the Edge Function to itself. The Edge Function already has `SCRAPER_SECRET` as an env var, so it just calls itself directly — simpler, no database config needed.
+
+I marked the stuck job as fa...
+
+**user**: ok I reopened it but its still showing 1 or 109
+
+**assistant**: The PATCH to mark the old job as failed probably didn't go through (RLS blocks updates via anon key). Let me fix it properly.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Still "running". Need to add an RLS update policy and clear it. Let me do it via a migration.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_15-42-45 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me add a temporary debug log to find the auth issue, deploy, test, then remove the log.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: mcp__supabase__query_logs]
+
+---
+
+## 2026-08-12_17-05-31 (session 451fc35e)
+
+**user**: okay now it says 150 / 109 so something seems wrong.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found it — two bugs causing an infinite loop:
+
+1. **Gap-priority query has no `scraped_at` filter** — it keeps returning "Chicago Writers' Bloc" every single time because that venue has events with NULL dates. It was scraped 160 times in a row because the query never skips recently-scraped venues.
+
+2. **No stop condition** when `venues_processed >= total_venues`.
+
+Let me fix both and stop the runaway job.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now stop the runaway job.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_17-24-49 (session 451fc35e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now fix the Docs.tsx unused vars — prefix with underscore.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_19-06-26 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: No — 9 venues this month in Chicago is way too low. Chicago has one of the most active theater scenes in the US. theatreinchicago.com alone lists 114 shows. The problem is our data quality.
+
+The scraper completed all 110 venues and found 196 events, but **197 of 285 total events (69%) STILL have NULL start_date**. The link following and TIC cross-reference didn't effectively fill dates. Let me diagnose why.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The picture is clear now. **TIC matching is broken** — out of 197 NULL-date events, TIC only matched 7. Shows like "Mrs. Doubtfire" and "Heathers the Musical" should definitely be on TIC. And **167 events are "partial"** — the link following isn't finding dates either.
+
+Let me test the TIC lookup directly to see why it's not matching.
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_19-09-10 (session ddbeaf17)
+
+**assistant**: The watchlist table is called `watchlist` not `watchlist_items`. Let me fix the migration.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: The first two migrations already applied. I need to fix the third and reapply. Let me check what state we're in.
+
+**assistant**: [tool: Bash]
+
+**user**: [Request interrupted by user]
+
+**user**: you dont need to do thatever youre doing we have supabase cli stuff in /development/patterns
+
+**assistant**: Got it — migrations applied successfully anyway. Let me commit the fix and move on.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_20-09-59 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now I see the real picture. The venue matcher is actually working fine — 6 out of 6 venues that exist in BOTH databases match correctly. The "misses" are venues that genuinely aren't in our DB (Paramount Theatre, North Shore Center, Chopin Theatre, Broadway Playhouse).
+
+BUT there are two deeper problems:
+1. **TIC pagination broken** — `?viewall=1` only returns 17 of 90 shows. We're missing 73 shows.
+2. **"Company at Venue" format** reduces match scores — "Music Theater Works at North Shore Cente...
+
+**assistant**: [tool: Bash]
+
+**assistant**: There it is — `viewall=1` doesn't work at all. TIC uses `pageNum_rsComingSoon` for pagination. We need to fetch pages 0-5 (6 pages × ~17 shows = ~90 total). Now let me write the docs.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-13_20-22-00 (session ddbeaf17)
+
+**assistant**: DB is complete. Now seed premise data for existing plays.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good data. Let me seed premises — one-sentence, no-spoiler, editorially written per the spec.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now commit, push, deploy — no stops.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_09-21-59 (session ddbeaf17)
+
+**assistant**: Live at **v0.12.0**. Migration applied, premises seeded, deployed. 
+
+Go tap a play from Discovery on your phone — you should see the full 4a/4b layout now. "Who's Afraid of Virginia Woolf?" will show the premise quote, the action bar, and WAITING IN CHICAGO (count starts at 0 until people tap "Want to see it"). If it has an active production, you'll get JUST ANNOUNCED; if not, UNTIL SOMEBODY STAGES IT with the library link.
+
+---
+[timestamp] 2026-08-13 20:28 CST
+
+**user**: i only see 11.1 did you push and commit>
+
+**assistant**: Let me check what's actually on the remote and what Vercel has.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The commit is there but the version in `package.json` is still `0.11.1` — I forgot to bump it. The version stamp in the header reads from `package.json`. Let me fix and redeploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_09-22-22 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both deployed. Now let me test the TIC cross-reference to see if it finds more matches.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Major improvement:
+
+- **TIC shows found: 113** (up from 17 — pagination fix worked!)
+- **Enriched: 29 events** (up from 7 — company-split + more shows to match)
+- **Cached matches: 21** (known-pair cache is working)
+- **AI matches: 0** (the ambiguous pairs might not have triggered, or the AI call didn't fire — let me check)
+
+**assistant**: [tool: Bash]
+
+**assistant**: **Results:**
+- **NULL dates: 168** (down from 197 — 29 events got dates from TIC)
+- **match_decisions table: 33 entries** (19 matched, 14 rejected — all logged for training)
+- **TIC shows: 113** (pagination fix captured the full catalog)
+
+Let me run it a second time to verify the known-pair cache works.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Known-pair cache working — 9 cached matches (skipped heuristic + AI). Enriched 0 because the 29 events from the first run already got their dates.
+
+Now commit, push, deploy frontend.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_09-43-36 (session ddbeaf17)
+
+**assistant**: OK so tapping a want_to_see item navigates to `/app/show/${event_id}` (the production detail page) — that works. The issue is:
+
+1. Play-level wants don't show up in My Shows at all (they go to a different table)
+2. The design spec (PLAY-AND-WAITING.md §6) explicitly calls for a 4th group in My Shows
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_10-57-22 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found both issues:
+
+**1. ChicagoPlays** — it was only ever used for venue *discovery* (finding which theaters exist), never for event scraping. The strategy agent only has TIC as an aggregator source. ChicagoPlays does have individual theater detail pages that list shows — we could add it as a second parallel aggregator alongside TIC.
+
+**2. Dashboard hidden on admin page** — line 37 of `AdminScrapeRibbon.tsx`: `if (onCoveragePage) return null`. The ribbon AND the dashboard both hide when you're ...
+
+**assistant**: [tool: Write]
+
+**assistant**: Two things:
+
+**Dashboard hidden on admin page** — that's a quick fix. The old `if (onCoveragePage) return null` kills the entire component including the dashboard overlay. I just need to let the dashboard render while hiding only the ribbon bar. One-line change.
+
+**ChicagoPlays for events** — it was never wired up for event scraping, only venue discovery. It should be added as a parallel source like TIC, but I'd need to check their detail pages first to see what event data they have. That's a `/...
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: how did we original event scrape before tic?
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_11-05-51 (session 451fc35e)
+
+**assistant**: Here's how it always worked — before TIC, before the v2 strategy agent, before everything:
+
+Each venue in our DB has a `calendar_url` — the direct link to that theater's own website (e.g., `courttheatre.org/current-season/`). The scraper fetches that one URL, sends the HTML to DeepSeek, and asks it to extract events.
+
+That's still the primary source. TIC was added as a **parallel second source** to fill in what the venue's own website misses (especially dates). But the venue's own `calendar_url`...
+
+**user**: ah I see so what's our current improvement plan? thanks for answering!
+
+---
+
+## 2026-08-14_11-13-34 (session 451fc35e)
+
+**assistant**: Here's where we are and what's on deck:
+
+**Current state:** 285 events, 168 with NULL dates (59%). Map shows 7 venues tonight, 11 this month. Chicago should have 50+.
+
+**What's already built and working:**
+- v2 strategy agent with link following (tries detail pages when dates missing)
+- TIC parallel source (113 shows, enriched 29 events)
+- AI venue matching + trainable match_decisions table
+- Server-side queue (runs without app open)
+- Full-screen scraper dashboard
+- Cross-query invalidation
+
+**...
+
+**user**: okay I did run it again. Where are we at now? Do we have less null events?  I see 9 tonight and 14 this month... maybe that's right or light for chicago on a friday?
+
+is our link following any better?
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_11-19-25 (session 451fc35e)
+
+**assistant**: Dashboard fix deployed. Now to your questions:
+
+## Theater announcement timelines
+
+Chicago theaters typically announce on different horizons:
+
+- **Broadway in Chicago** (touring shows) — 6-12 months out. Hamilton, Wicked, etc. are announced a full season ahead.
+- **Large institutions** (Steppenwolf, Goodman, Chicago Shakespeare) — announce full seasons 3-6 months out, usually in spring for the fall season.
+- **Mid-size storefront** (TimeLine, Writers, Court) — 2-4 months out. They announce a sea...
+
+**user**: yeah but something is wrong. We're not even doing TIC right.
+
+Like
+
+https://www.theatreinchicago.com/abuelas-follies/13476/
+
+this play is playing tonight at red orchid but it doesn't seem to be showing on maps. Do we have it in our db? did our bot make it to that url?
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_12-53-53 (session 451fc35e)
+
+**assistant**: Now build, deploy, test.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me test the TIC cross-reference to see if it now finds more events by fetching detail pages.
+
+**assistant**: [tool: Bash]
+
+**assistant**: **46 events enriched** (up from 29). The detail page fetching added 17 more events that were previously dropped. Let me check the NULL date count now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: NULL dates down to **151** (from 189 → 38 more events got dates from TIC detail pages). But Abuela's Follies still isn't in the DB — `tic-crossref` only enriches *existing* events, it doesn't create new ones. Abuela's was never scraped from Red Orchid's website.
+
+The strategy agent WILL add it as a TIC-only event when the scraper runs on Red Orchid — it'll find it via TIC, see it's not in the venue's events, fetch the detail page for dates, and add it with `found_by: ["tic"]`. You just need to r...
+
+**assistant**: [tool: Bash]
+
+**assistant**: Shipped. Here's the progress on the data:
+
+| Metric | v1 (Aug 11) | v2 first run | After TIC fix | Now |
+|--------|-------------|-------------|---------------|-----|
+| Total events | 224 | 285 | 565 | 565 |
+| NULL dates | 134 (60%) | 197 (69%) | 189 (33%) | **151 (27%)** |
+| With dates | 90 | 88 | 376 | **414** |
+
+Hit "Run Scraper" to pick up Abuela's Follies and other TIC-only Now Playing shows that the strategy agent will now add as new events with dates from detail pages.
+
+---
+[timestamp] 202...
+
+---
+
+## 2026-08-14_12-59-52 (session 451fc35e)
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: [Image #2] nothing happened.
+
+**user**: [Image: source: /Users/dericortiz/Downloads/IMG_4297.PNG]
+
+**assistant**: [tool: Read]
+
+**assistant**: "0 of 0 venues, Complete" — the batch function found no venues to process. That's the gap-priority query: it first looks for venues with NULL-date events that haven't been scraped in 24 hours, then stale/unscraped venues. All 111 venues were scraped earlier today (14:45 UTC / ~9:45 AM CST), so the 24-hour filter excludes them all.
+
+The scraper thinks "nothing to do" because everything was scraped within the last 24 hours. But we deployed new code AFTER that scrape — the code that would find Abue...
+
+**assistant**: [tool: Bash]
+
+**assistant**: Scraped 3 hours ago — 21 hours short of the 24-hour cooldown. I need to reset Red Orchid's `scraped_at` so the scraper picks it up. Actually, better fix: let me just reset all `scraped_at` since we deployed new code that would produce different results.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_13-36-37 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found the bug. Here's exactly what happens:
+
+1. `lookupVenueOnTic("A Red Orchid Theatre")` searches Coming Soon first
+2. Coming Soon has "Birds of North America" at Red Orchid → **matches at 0.9**
+3. **Function returns immediately** with just that one Coming Soon match — `if (matches.length > 0) return`
+4. **Now Playing is never checked** — Abuela's Follies is sitting right there but the function already exited
+
+The fix: `lookupVenueOnTic` should search BOTH pages and return combined results, no...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now reset Red Orchid's scraped_at so the scraper picks it up again.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found and fixed the bug. `lookupVenueOnTic` was short-circuiting — if Coming Soon had ANY match for a venue, it returned immediately and never checked Now Playing. Abuela's Follies is on Now Playing, but "Birds of North America" on Coming Soon matched Red Orchid first, so the function exited before ever seeing Abuela's.
+
+Now it searches both pages in parallel and returns combined results.
+
+Red Orchid's `scraped_at` is reset. Hit "Run Scraper" — it should pick up Red Orchid and find Abuela's Foll...
+
+---
+
+## 2026-08-14_13-37-42 (session ddbeaf17)
+
+**assistant**: Good data. 59 plays seeded, 0% event linkage, scraper doesn't extract playwright info at all. Let me produce the full documentation package.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Now write the graph engineering doc and QA doc.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: PRD looks solid. Let me now read the architecture section to get file paths and function signatures, then write the graph and QA docs.
+
+**assistant**: [tool: Read]
+
+**assistant**: Good architecture. Let me now write the graph engineering doc and QA doc.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-14_13-50-07 (session 451fc35e)
+
+**assistant**: Now update the ScraperDashboard ActivityLog to show field pills.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now create the migration to reset ALL scraped_at (not just Red Orchid).
+
+**assistant**: [tool: Write]
+
+**assistant**: Build, deploy, push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_13-51-32 (session 451fc35e)
+
+**assistant**: Everything's deployed. Here's what changed:
+
+**Dashboard field pills** — each venue in the activity log now shows:
+```
+Steppenwolf Theatre                    4 events
+DATES ✓  PRICE ✗  TIMES ✓  TICKET ✓  CAST ✗   VENUE  TIC
+followed 2 links, found 3 dates
+```
+Gold pills = got it, dim pills = missing. Source tags show VENUE (gold) or TIC (teal).
+
+**Full re-scrape reset** — ALL venues have `scraped_at = NULL`. The scraper will re-process every venue with the fixed TIC lookup that now searches both...
+
+**user**: did you push this to main via /cap
+
+---
+

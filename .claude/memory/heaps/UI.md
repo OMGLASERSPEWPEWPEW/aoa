@@ -1154,3 +1154,354 @@ Why: Prototype pages were static HTML outside the React app ...
 
 ---
 
+## 2026-08-09_12-14-45 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Proposed commits (2):
+
+**1.** `feat(ui): rename Docs to Admin, add AI Prompts tab with prompt viewer`
+```
+Why: User needs visibility into the AI prompts (scraper + mentor) from within
+     the app. Admin page now has Design and AI Prompts tabs with expandable prompt cards.
+Files: src/pages/Docs.tsx, src/App.tsx, src/components/Header.tsx, src/pages/DocsViewer.tsx
+```
+
+**2.** `chore(infra): update journals and memory heaps`
+```
+Files: .claude/journals/*, .claude/memory/*
+```
+
+Skipping untracked d...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Pushed and deployed. v0.4.30 now has the Admin page with Design + AI Prompts tabs. The UpdateBanner should prompt you to reload on your iPhone.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-09_13-29-47 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the CostsTab component at the end of the file.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now push the migration and build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean, migration applied. Now commit, push, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_21-59-14 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build, no warnings. Now let me bump the version, commit, deploy the edge function, and push.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Edge function deployed. Now commit and push everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_11-15-07 (session 66f33189)
+
+**assistant**: Now add the `MapTimePills` render above `MapFilterChips`, and push the filter chips down to make room.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now move the filter chips down so they don't overlap with the time pills.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build to verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now bump version, commit, push, deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-48-26 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also update the discovery button's style to use `busy` instead of the inline check.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_16-02-20 (session 66f33189)
+
+**assistant**: It's pushed and deployed. Hit "Run Scraper" — you should see "Scanning... 3 scraped, X events found" incrementing every ~30 seconds as each batch of 3 venues gets processed by DeepSeek.
+
+---
+[timestamp] 2026-08-10 14:42 CST
+
+**user**: Stop says: [Hook: Test Results]
+             </div>
+             <div
+               style="font-family: \"Courier Prime\", monospace; font-size: 9px; letter-spacing:
+      0.1em; color: var(--ink-faint); margin-top: 2px;"
+             >
+               USHERED
+             </div>
+           </div>
+         </div>
+       </div>
+     </body>
+      ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+      ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+  ...
+
+**assistant**: That's a pre-commit hook running tests. The `StatStrip` test is failing — it's looking for a `0` with a specific inline style selector that doesn't match. Let me fix it.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The component uses `var(--access)` for the ushered color, but the test expects the raw `oklch(0.68 0.13 150)` value. CSS variables don't resolve in jsdom (the test environment). The test selector will never match.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 4 tests pass. The test was checking for a raw `oklch()` color value but the component uses a CSS variable `var(--access)` — jsdom doesn't resolve CSS variables so the selector never matched. Fixed to match the actual inline style.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_12-32-32 (session 66f33189)
+
+**assistant**: Yes, I see it. The pattern is:
+
+1. **`InscriptionRibbon`** — a thin bar rendered in `App.tsx` (root layout, visible on ALL pages)
+2. **`useActiveInscription`** — polls a database table for active background work, returns progress (confirmed/total/pct)
+3. **Hides itself** when you're on the inscription page (no double UI), shows everywhere else
+4. **Realtime updates** via Supabase subscription — the ribbon updates as the background process progresses
+
+For AOA, the equivalent would be: a `ScrapeRi...
+
+**user**: that only admins would see. This admin function is gated to only two users darklight and matti right?
+
+---
+
+## 2026-08-12_19-12-29 (session ddbeaf17)
+
+**assistant**: Here's where we stand at **v0.12.0**:
+
+**Done (this session):**
+- N00-N02: Emotion light-theme helpers + EmotionDots component
+- N03-N06: All schema migrations + TypeScript types (play_interest, artists, credits, plans, threads, notifications, calls, standing_calls, learn_cards)
+- N09: Nav restructured to TONIGHT / CALLBOARD / [star] / LOBBY / YOU
+- N10/N12: Tonight + ProductionDetail verified, belt references cleaned
+- N13: Discover rewritten with spec filter chips + work-level play cards
+- N14...
+
+**user**: wait this isn't good we wiped a lot of stuff that was good. Revert.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Reverting both commits to get back to `f123e78` (v0.11.1). This keeps all your prior work intact.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Reverted. Everything is back to v0.11.1 (`f123e78`). The graph doc and QA doc are still in git history if we want them later — they just aren't in the working tree now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-13_20-14-26 (session ddbeaf17)
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now the main page upgrade — wiring all components together.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Let me run tests to verify no regressions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Same 4 pre-existing failures, 88 passing. Zero regressions. Let me verify what files were touched vs what wasn't.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-13_20-16-37 (session ddbeaf17)
+
+**assistant**: Exactly as planned. Modified files: `emotions.ts` (additive `ink()` only), `types.ts` (additive interfaces only), `PlayDetail.tsx` (upgraded). Everything else is new files. Navigation, Discover, MyShows, ReviewCard, SpectrumBar, EmotionPill — all untouched.
+
+## Implementation Summary
+
+**Files created (10):**
+- `supabase/migrations/20260813000001_play_interest.sql`
+- `src/hooks/usePlayInterest.ts`
+- `src/hooks/usePlaySpectrum.ts`
+- `src/components/play/PlayActionBar.tsx`
+- `src/components/play/Wa...
+
+**user**: so those two screens work? Like, I click in discovery, I find a play, click enter, i get those screens with all the functionality?
+
+---
+
+## 2026-08-14_09-21-59 (session ddbeaf17)
+
+**assistant**: Live at **v0.12.0**. Migration applied, premises seeded, deployed. 
+
+Go tap a play from Discovery on your phone — you should see the full 4a/4b layout now. "Who's Afraid of Virginia Woolf?" will show the premise quote, the action bar, and WAITING IN CHICAGO (count starts at 0 until people tap "Want to see it"). If it has an active production, you'll get JUST ANNOUNCED; if not, UNTIL SOMEBODY STAGES IT with the library link.
+
+---
+[timestamp] 2026-08-13 20:28 CST
+
+**user**: i only see 11.1 did you push and commit>
+
+**assistant**: Let me check what's actually on the remote and what Vercel has.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The commit is there but the version in `package.json` is still `0.11.1` — I forgot to bump it. The version stamp in the header reads from `package.json`. Let me fix and redeploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_10-57-22 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found both issues:
+
+**1. ChicagoPlays** — it was only ever used for venue *discovery* (finding which theaters exist), never for event scraping. The strategy agent only has TIC as an aggregator source. ChicagoPlays does have individual theater detail pages that list shows — we could add it as a second parallel aggregator alongside TIC.
+
+**2. Dashboard hidden on admin page** — line 37 of `AdminScrapeRibbon.tsx`: `if (onCoveragePage) return null`. The ribbon AND the dashboard both hide when you're ...
+
+**assistant**: [tool: Write]
+
+**assistant**: Two things:
+
+**Dashboard hidden on admin page** — that's a quick fix. The old `if (onCoveragePage) return null` kills the entire component including the dashboard overlay. I just need to let the dashboard render while hiding only the ribbon bar. One-line change.
+
+**ChicagoPlays for events** — it was never wired up for event scraping, only venue discovery. It should be added as a parallel source like TIC, but I'd need to check their detail pages first to see what event data they have. That's a `/...
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: how did we original event scrape before tic?
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_13-36-37 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found the bug. Here's exactly what happens:
+
+1. `lookupVenueOnTic("A Red Orchid Theatre")` searches Coming Soon first
+2. Coming Soon has "Birds of North America" at Red Orchid → **matches at 0.9**
+3. **Function returns immediately** with just that one Coming Soon match — `if (matches.length > 0) return`
+4. **Now Playing is never checked** — Abuela's Follies is sitting right there but the function already exited
+
+The fix: `lookupVenueOnTic` should search BOTH pages and return combined results, no...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now reset Red Orchid's scraped_at so the scraper picks it up again.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found and fixed the bug. `lookupVenueOnTic` was short-circuiting — if Coming Soon had ANY match for a venue, it returned immediately and never checked Now Playing. Abuela's Follies is on Now Playing, but "Birds of North America" on Coming Soon matched Red Orchid first, so the function exited before ever seeing Abuela's.
+
+Now it searches both pages in parallel and returns combined results.
+
+Red Orchid's `scraped_at` is reset. Hit "Run Scraper" — it should pick up Red Orchid and find Abuela's Foll...
+
+---
+

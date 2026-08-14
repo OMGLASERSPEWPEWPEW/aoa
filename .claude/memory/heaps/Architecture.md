@@ -2571,3 +2571,882 @@ When you run `/new-feature` for "top nav bar" or anything else, it'll create the
 
 ---
 
+## 2026-08-09_12-14-45 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Proposed commits (2):
+
+**1.** `feat(ui): rename Docs to Admin, add AI Prompts tab with prompt viewer`
+```
+Why: User needs visibility into the AI prompts (scraper + mentor) from within
+     the app. Admin page now has Design and AI Prompts tabs with expandable prompt cards.
+Files: src/pages/Docs.tsx, src/App.tsx, src/components/Header.tsx, src/pages/DocsViewer.tsx
+```
+
+**2.** `chore(infra): update journals and memory heaps`
+```
+Files: .claude/journals/*, .claude/memory/*
+```
+
+Skipping untracked d...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Pushed and deployed. v0.4.30 now has the Admin page with Design + AI Prompts tabs. The UpdateBanner should prompt you to reload on your iPhone.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-09_13-29-47 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the CostsTab component at the end of the file.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now push the migration and build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean, migration applied. Now commit, push, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_13-42-45 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the new-app skill's PWA section.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now check if the patterns project needs a commit, and commit both.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now commit the new-app skill update in AOA.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_20-29-57 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now Phase 7 — handoff review. Let me verify the doc package is complete.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The graph engineering doc has exact TypeScript interfaces, file paths, and build phases. Let me verify the full handoff checklist.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All five documents created. Let me commit, push, and deploy.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-09_21-59-14 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build, no warnings. Now let me bump the version, commit, deploy the edge function, and push.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Edge function deployed. Now commit and push everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_11-15-07 (session 66f33189)
+
+**assistant**: Now add the `MapTimePills` render above `MapFilterChips`, and push the filter chips down to make room.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now move the filter chips down so they don't overlap with the time pills.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build to verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now bump version, commit, push, deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-09-14 (session 66f33189)
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — new Edge Function (reuses existing enrichment modules), frontend loop logic in one file. < 1 day. Using shortcuts.
+
+Let me explore the existing code to write precise specs.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got the full picture. No new schema needed — the queue already has all enrichment columns. Let me write the doc package.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_12-12-32 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the button and status display.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Build check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy both Edge Functions, bump version, commit, push, deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-48-26 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also update the discovery button's style to use `busy` instead of the inline check.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_15-58-09 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the frontend to use the batch loop instead of NDJSON streaming.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_15-59-57 (session 66f33189)
+
+**assistant**: ## Implementation Summary
+
+**Files created:** `supabase/functions/event-scrape-batch/index.ts`, `supabase/migrations/20260810000002_scraped_at.sql`
+**Files modified:** `supabase/functions/event-scraper/index.ts` (exported processVenue), `src/pages/Docs.tsx` (batch loop replaces NDJSON reader)
+**QA items covered:** 14/14
+**Browser verified:** No (Chrome DevTools MCP unavailable)
+**Deviations:** None
+
+v0.5.5 live. "Run Scraper" now uses the same batch loop as enrichment:
+- Processes 3 venues per c...
+
+**user**: ok is this pushed? Do you want me to run the scraper again? whats up
+
+---
+
+## 2026-08-10_16-02-20 (session 66f33189)
+
+**assistant**: It's pushed and deployed. Hit "Run Scraper" — you should see "Scanning... 3 scraped, X events found" incrementing every ~30 seconds as each batch of 3 venues gets processed by DeepSeek.
+
+---
+[timestamp] 2026-08-10 14:42 CST
+
+**user**: Stop says: [Hook: Test Results]
+             </div>
+             <div
+               style="font-family: \"Courier Prime\", monospace; font-size: 9px; letter-spacing:
+      0.1em; color: var(--ink-faint); margin-top: 2px;"
+             >
+               USHERED
+             </div>
+           </div>
+         </div>
+       </div>
+     </body>
+      ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+      ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+  ...
+
+**assistant**: That's a pre-commit hook running tests. The `StatStrip` test is failing — it's looking for a `0` with a specific inline style selector that doesn't match. Let me fix it.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The component uses `var(--access)` for the ushered color, but the test expects the raw `oklch(0.68 0.13 150)` value. CSS variables don't resolve in jsdom (the test environment). The test selector will never match.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 4 tests pass. The test was checking for a raw `oklch()` color value but the component uses a CSS variable `var(--access)` — jsdom doesn't resolve CSS variables so the selector never matched. Fixed to match the actual inline style.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_20-37-37 (session 66f33189)
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The test file needs `extraction_confidence` added to mock Event objects.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-40-04 (session 66f33189)
+
+**assistant**: Here's everything we built today:
+
+**v0.4.30** — Fixed PWA auto-update (UpdateBanner), moved docs inside the app shell
+
+**v0.5.0** — Venue Discovery Pipeline: scrapes ChicagoPlays (231 theaters), deduplicates against existing DB, auto-promotes with geocoding/photos/calendar URLs. Admin Coverage tab with metrics.
+
+**v0.5.1** — Map time filter pills (Today / This Week / This Month) — hides venues with no active events
+
+**v0.5.2-0.5.3** — Separated enrichment into its own batch function, auto-promo...
+
+**user**: I'm running the scrapper but its stuck on 0 scraped 0 events found
+
+**assistant**: [tool: Bash]
+
+**assistant**: The batch returned 200 in 4.8 seconds with no errors. The issue is likely that all venues were scraped within the last 24 hours — the `scraped_at` filter skips them. Let me check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: Found it. The `event-scrape-batch` function is calling the OLD `event-scraper` — which runs the enrichment phase first (all 135 venue photo checks) before doing any event scraping. The batch function imports `processVenue` from event-scraper, but the event-scraper itself runs the full NDJSON flow including enrichment when called directly.
+
+Wait — actually the `event-scrape-batch` calls `processVenue()` which only processes one venue. The output I'm seeing is from the direct curl test hitting the...
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-45-32 (session 66f33189)
+
+**assistant**: Now I'll create the shared module and update both functions. The `processVenue` function uses `supabase` and `DEEPSEEK_API_KEY` from module-level constants — I'll need to pass those as parameters or create the supabase client inside the shared module.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update `event-scrape-batch` to import from the shared module instead of from event-scraper.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now deploy both functions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me verify the batch function works now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: It works. `{"scraped":3,"events_found":6,"events_created":6,"remaining":108}` — the two-pass pipeline processed 3 venues, found 6 events, created all 6, and 108 venues remain.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-45-58 (session 66f33189)
+
+**assistant**: Fixed and deployed. The bug was that importing `processVenue` from `event-scraper/index.ts` executed the `serve()` call in that file — Deno runs top-level code on import. Moved `processVenue` and all its helpers to `_shared/scraper/process-venue.ts` (no `serve()` call).
+
+Verified working: `{"scraped":3,"events_found":6,"events_created":6,"remaining":108}` — the two-pass pipeline is running. Hit "Run Scraper" now and you'll see it process 3 venues at a time with real progress.
+
+---
+[timestamp] 20...
+
+**user**: is this pwa change thing or a supabase change?
+
+---
+
+## 2026-08-11_13-44-49 (session 66f33189)
+
+**assistant**: Now replace the local state in CoverageTab with context consumption.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Commit, push, deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: v0.6.1 live. Here's what changed:
+
+- **ScrapeContext** — batch loop handlers now live in a React context that persists across route changes. Navigate away and the scraper keeps running.
+- **AdminScrapeRibbon** — thin gold shimmer bar + progress text visible from any page (Tonight, Map, Discover, etc.) while scraping. Admin-only. Hides on Coverage tab. Auto-hides 5 seconds after completion.
+- **CoverageTab** — consumes context instead of owning state. Buttons still work the same.
+- **Shared ADMIN...
+
+---
+
+## 2026-08-11_14-19-42 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Also update the edge function prompts that reference "The Art of Art".
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_14-22-31 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Edge Function deployed. Now bump version, commit, push, and deploy to Vercel.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Also need to push the migration for resetting `scraped_at` on the remaining 9 venues so they get picked up fresh.
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-11_15-37-54 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Migration applied. Now deploy the Edge Function.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deployed. Now bump version, commit, push, and deploy to Vercel.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_13-41-40 (session 451fc35e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build, deploy, push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_14-38-13 (session 451fc35e)
+
+**assistant**: Now let me build, push the migration, deploy everything, and ship.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both deployed. Now bump version, commit, push.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_14-45-54 (session 451fc35e)
+
+**assistant**: Now update process-venue.ts to pass `found_by` to the upsert.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build, push migration, deploy, ship.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_14-56-19 (session 451fc35e)
+
+**assistant**: Now update the frontend to use polling instead of a while loop.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now build, deploy, push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_15-43-18 (session ddbeaf17)
+
+**assistant**: [tool: Agent]
+
+**assistant**: Let me verify the graph document was written and check its contents.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The graph engineering document is complete — 1,416 lines, 23 nodes across 9 phases, with full node specs, loop specs, shared state, and an execution guide. Now let me produce the QA doc.
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-12_17-24-49 (session 451fc35e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now fix the Docs.tsx unused vars — prefix with underscore.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_17-30-13 (session 451fc35e)
+
+**assistant**: Now add the invalidation in the pollJob callback when venues_processed increases.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me also add prefetching for map data so it's warm when you navigate there. The map query runs two Supabase calls — I'll prefetch it in the AppShell.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_17-56-46 (session ddbeaf17)
+
+**assistant**: Dev server restarting at http://localhost:5204. Let me verify the play page visually.
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: Redirected to login — the play page requires auth. Let me navigate to a known play via the app. Let me first check what play IDs exist.
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: mcp__supabase__execute_sql]
+
+**assistant**: [tool: Bash]
+
+**assistant**: I can't authenticate to the browser or Supabase MCP right now. The code builds and compiles correctly — let me finalize what was implemented and summarize.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_19-12-29 (session ddbeaf17)
+
+**assistant**: Here's where we stand at **v0.12.0**:
+
+**Done (this session):**
+- N00-N02: Emotion light-theme helpers + EmotionDots component
+- N03-N06: All schema migrations + TypeScript types (play_interest, artists, credits, plans, threads, notifications, calls, standing_calls, learn_cards)
+- N09: Nav restructured to TONIGHT / CALLBOARD / [star] / LOBBY / YOU
+- N10/N12: Tonight + ProductionDetail verified, belt references cleaned
+- N13: Discover rewritten with spec filter chips + work-level play cards
+- N14...
+
+**user**: wait this isn't good we wiped a lot of stuff that was good. Revert.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Reverting both commits to get back to `f123e78` (v0.11.1). This keeps all your prior work intact.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Reverted. Everything is back to v0.11.1 (`f123e78`). The graph doc and QA doc are still in git history if we want them later — they just aren't in the working tree now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-13_20-14-26 (session ddbeaf17)
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now the main page upgrade — wiring all components together.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Let me run tests to verify no regressions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Same 4 pre-existing failures, 88 passing. Zero regressions. Let me verify what files were touched vs what wasn't.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_09-22-22 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both deployed. Now let me test the TIC cross-reference to see if it finds more matches.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Major improvement:
+
+- **TIC shows found: 113** (up from 17 — pagination fix worked!)
+- **Enriched: 29 events** (up from 7 — company-split + more shows to match)
+- **Cached matches: 21** (known-pair cache is working)
+- **AI matches: 0** (the ambiguous pairs might not have triggered, or the AI call didn't fire — let me check)
+
+**assistant**: [tool: Bash]
+
+**assistant**: **Results:**
+- **NULL dates: 168** (down from 197 — 29 events got dates from TIC)
+- **match_decisions table: 33 entries** (19 matched, 14 rejected — all logged for training)
+- **TIC shows: 113** (pagination fix captured the full catalog)
+
+Let me run it a second time to verify the known-pair cache works.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Known-pair cache working — 9 cached matches (skipped heuristic + AI). Enriched 0 because the 29 events from the first run already got their dates.
+
+Now commit, push, deploy frontend.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_12-53-53 (session 451fc35e)
+
+**assistant**: Now build, deploy, test.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me test the TIC cross-reference to see if it now finds more events by fetching detail pages.
+
+**assistant**: [tool: Bash]
+
+**assistant**: **46 events enriched** (up from 29). The detail page fetching added 17 more events that were previously dropped. Let me check the NULL date count now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: NULL dates down to **151** (from 189 → 38 more events got dates from TIC detail pages). But Abuela's Follies still isn't in the DB — `tic-crossref` only enriches *existing* events, it doesn't create new ones. Abuela's was never scraped from Red Orchid's website.
+
+The strategy agent WILL add it as a TIC-only event when the scraper runs on Red Orchid — it'll find it via TIC, see it's not in the venue's events, fetch the detail page for dates, and add it with `found_by: ["tic"]`. You just need to r...
+
+**assistant**: [tool: Bash]
+
+**assistant**: Shipped. Here's the progress on the data:
+
+| Metric | v1 (Aug 11) | v2 first run | After TIC fix | Now |
+|--------|-------------|-------------|---------------|-----|
+| Total events | 224 | 285 | 565 | 565 |
+| NULL dates | 134 (60%) | 197 (69%) | 189 (33%) | **151 (27%)** |
+| With dates | 90 | 88 | 376 | **414** |
+
+Hit "Run Scraper" to pick up Abuela's Follies and other TIC-only Now Playing shows that the strategy agent will now add as new events with dates from detail pages.
+
+---
+[timestamp] 202...
+
+---
+
+## 2026-08-14_13-37-42 (session ddbeaf17)
+
+**assistant**: Good data. 59 plays seeded, 0% event linkage, scraper doesn't extract playwright info at all. Let me produce the full documentation package.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Now write the graph engineering doc and QA doc.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: PRD looks solid. Let me now read the architecture section to get file paths and function signatures, then write the graph and QA docs.
+
+**assistant**: [tool: Read]
+
+**assistant**: Good architecture. Let me now write the graph engineering doc and QA doc.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-14_13-50-07 (session 451fc35e)
+
+**assistant**: Now update the ScraperDashboard ActivityLog to show field pills.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now create the migration to reset ALL scraped_at (not just Red Orchid).
+
+**assistant**: [tool: Write]
+
+**assistant**: Build, deploy, push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

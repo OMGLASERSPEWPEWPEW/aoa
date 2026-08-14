@@ -2018,3 +2018,1192 @@ Let me commit this.
 
 ---
 
+## 2026-08-09_21-59-14 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build, no warnings. Now let me bump the version, commit, deploy the edge function, and push.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Edge function deployed. Now commit and push everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_08-56-05 (session 66f33189)
+
+**assistant**: ## Implementation Summary
+
+**v0.5.0 — Venue Discovery Pipeline**
+
+**Files created (17):**
+- `supabase/migrations/20260809000002_venue_discovery.sql` — 3 tables, pg_trgm, coverage RPC, venue provenance columns
+- `supabase/functions/venue-discovery/index.ts` — Edge Function orchestrator (NDJSON stream, dual auth, 3-phase pipeline)
+- `supabase/functions/venue-discovery/chicagoplays-parser.ts` — Parses 231 member theaters from directory + detail pages
+- `supabase/functions/venue-discovery/dedup.ts` ...
+
+**user**: I dont fully understand what will it do?  It just looks at chicagoplays?  Is there a way to see what theaters are inactive and stuff? Every time we hit run discovery it checks chicagoplays?
+
+---
+
+## 2026-08-10_11-11-42 (session 66f33189)
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: This is a **Small** feature — touches 3-4 files, no new data models, < 1 day effort. Using shortcuts: combined phases.
+
+Let me explore the existing map code first.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Great — I have the full picture. The map already has filter chips that **dim** markers, and `isUpTonight()` exists in `src/lib/tonight.ts`. The user wants time-window pills that **hide** venues entirely. Let me write the doc package.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_11-47-03 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add CORS headers to all responses — the 401, the "already_running", the 404, and the streaming response.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now deploy and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_11-50-23 (session 66f33189)
+
+**assistant**: The diagnostics showed the exact problem: `POST /functions/v1/venue-discovery FAILED (1377ms): Load failed` — that's iOS Safari blocking a cross-origin request with no CORS headers. Fixed by adding the same `getCorsHeaders` pattern used by mentor-chat and ai-gateway.
+
+Try "Run Discovery" again. Now the browser can actually reach the function. You'll see the queue populate (it may already have 195 from the curl test earlier) and the metrics update.
+
+To your point about seeing pipeline state as a ...
+
+**user**: But im asking a different thing... Like do you have the ability to see and read a user's state as they use the app
+
+---
+
+## 2026-08-10_11-57-03 (session 66f33189)
+
+**assistant**: The `total_known_chicago` is 0 because the function was timing out during enrichment before it could write the final `venues_found` count to the run record. Let me fix the function to update the run record right after parsing, not at the end.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: I need to add a run record update right after `venuesFound` is set, and again after dedup completes.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now also update after dedup so the run record has accurate new/matched counts even if enrichment times out.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now deploy the function, commit everything, and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-03-59 (session 66f33189)
+
+**assistant**: Now remove the entire enrichment phase from the stream handler.
+
+**assistant**: [tool: Read]
+
+**user**: [Request interrupted by user]
+
+**user**: Can we also assume that not all theaters will be active ... i.e. no longer have a website etc... so we are graceful about it? Can you /new-feature this and do research on how this enrichment should work reliably and gracefully please and thank you
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: This is a **Medium** feature — new Edge Function, cron schedule, state machine on existing table. Let me research how this should actually work before writing specs.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: wait why do we need a cron schedule? admin presses run discovery... it does everything there until its done. Why are we bringing cron into this?
+
+---
+
+## 2026-08-10_12-09-14 (session 66f33189)
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — new Edge Function (reuses existing enrichment modules), frontend loop logic in one file. < 1 day. Using shortcuts.
+
+Let me explore the existing code to write precise specs.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got the full picture. No new schema needed — the queue already has all enrichment columns. Let me write the doc package.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_12-12-32 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the button and status display.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Build check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy both Edge Functions, bump version, commit, push, deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-18-13 (session 66f33189)
+
+**user**: ok now it says parsing chicagokays... no new theaters found.[Image #2]
+
+Ok this looks like progress but still like... i dont understand we have 231 venues known in chicago... but none are added to the calender, 18 with photos... I just? 
+
+What's going on?
+
+**user**: [Image: source: /Users/dericortiz/Downloads/IMG_4285.PNG]
+
+**user**: ok now it says parsing chicagokays... no new theaters found.[Image #2]
+
+Ok this looks like progress but still like... i dont understand we have 231 venues known in chicago... but none are added to the calender, 18 with photos... I just? 
+
+What's going on?  we now have 231 known in chicago but liek queue is 195... did we not retreive any?
+
+**user**: [Image: source: /Users/dericortiz/.claude/image-cache/66f33189-8bdd-40f9-b079-a9090de0e5fa/2.jpeg]
+
+**assistant**: I see the bug. The discovery says "no new theaters found" because those 195 are already in the queue from previous runs — the unique constraint correctly skips re-inserting them. But the frontend then skips enrichment because `venues_new = 0`. It should check for pending enrichment items regardless.
+
+The 195 theaters are sitting there un-enriched from the earlier runs. The button just needs to enrich them.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also update the status text to show enrichment progress even when `found` is 0 (from a previous run).
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-27-51 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean. Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-35-56 (session 66f33189)
+
+**assistant**: v0.5.3 live. Here's what changed:
+
+**Auto-promotion:** After enriching a venue, `venue-enrich` now automatically inserts it into the `venues` table if it has lat/lng coordinates. No manual promotion form. The queue shrinks as venues are promoted.
+
+**The flow now:**
+1. Press "Run Discovery" → parses ChicagoPlays, deduplicates
+2. Auto-loops `venue-enrich` → enriches 5 venues per call (fetches detail pages, geocodes, finds calendars, extracts photos) → auto-promotes them to the live database
+3. But...
+
+**user**: ok we're getting feedback like enriching & adding venings... 70 so far... but none of the stats in the boxes are updating.  
+
+Ok it updates at the end instead of incrementally, it should be incrementally.
+
+we have 135 aoa venues, 231 known chicago, 58% coverage, 111 w/ calendar, w / 116 with photo, 119 zero events, 97 queue, ..
+
+What does each box signify?
+
+**assistant**: Here's what each box means:
+
+| Box | What it counts | Source |
+|-----|---------------|--------|
+| **AOA VENUES** | Total venues in your `venues` table — what shows on the map | Was 37, now 135 after auto-promotion |
+| **KNOWN CHICAGO** | How many theaters ChicagoPlays listed in the last discovery run | 231 (their full member directory) |
+| **COVERAGE** | AOA VENUES / KNOWN CHICAGO as a percentage | 135/231 = 58% |
+| **W/ CALENDAR** | Venues that have a `calendar_url` — the flash bot can scrape t...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-36-45 (session 66f33189)
+
+**assistant**: Now the metric boxes will tick up after each batch — you'll see AOA VENUES go from 135 → 140 → 145..., COVERAGE climb, QUEUE shrink, all in real time as venues are promoted.
+
+---
+[timestamp] 2026-08-10 13:28 CST
+
+**user**: ok so based on this is it working? Like our bots would now flash scrape 111 for events?
+
+---
+
+## 2026-08-10_12-41-09 (session 66f33189)
+
+**assistant**: Yes — the event scraper already queries `SELECT * FROM venues WHERE calendar_url IS NOT NULL`. So those 111 venues with calendar URLs will all get scraped on the next run. It doesn't care whether they were hand-added or auto-promoted.
+
+But the scraper isn't running automatically yet — there's no cron. It only runs when manually triggered. We talked about setting up a daily 6 AM CST cron earlier but never wired it up.
+
+So right now: you'd need to manually invoke the event scraper to get events fo...
+
+**user**: Ok. So let's add a second button under run discovery for like having a manual run of the flash bot to scan the venues for events.  This should also tie into costs.  I also noticed our costs don't have a by date option.  /new-feature
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — UI changes to 2 existing files, no new backend. Using shortcuts.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got the full picture. The event-scraper already logs to `ai_usage` (costs already flow through). It streams NDJSON but has no CORS headers (same bug we fixed for venue-discovery). The costs hook hardcodes `p_days` values.
+
+Let me write the docs.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_12-48-26 (session 66f33189)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also update the discovery button's style to use `busy` instead of the inline check.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_13-30-01 (session 66f33189)
+
+**assistant**: ## Implementation Summary
+
+**Files modified:** `supabase/functions/event-scraper/index.ts` (CORS + dual auth), `src/hooks/useCostDashboard.ts` (accepts `days` param), `src/pages/Docs.tsx` (Run Scraper button + NDJSON reader + cost date pills)
+**QA items covered:** 13/13
+**Browser verified:** No (Chrome DevTools MCP unavailable)
+**Deviations:** None
+
+v0.5.4 live. Three changes:
+
+1. **Run Scraper button** on Coverage tab — reads the NDJSON stream in real time, shows "5 scraped, 12 events found... ...
+
+**user**: ok I'm runing the scraper... stuck on 0 scraped, 0 events found no other feedback.  Can you see in diagnostics?
+
+**assistant**: [tool: Bash]
+
+**assistant**: The scraper returned 200 in 3.5 seconds — way too fast for 111 venues. Let me test it directly to see what it actually returns.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The scraper IS working — it's sending NDJSON events. But the first phase is "enrichment" (venue photo checks), and the frontend only counts `type === 'venue'` lines. The enrichment phase runs first for all venues, THEN the scraping phase starts.
+
+The user's browser got the response, but the scraper probably timed out after the enrichment phase and never reached the venue scraping phase (the part that calls DeepSeek). It completed enrichment for ~135 venues in 3.5 seconds, then the function hit t...
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_15-54-38 (session 66f33189)
+
+**assistant**: The scraper streams fine from curl. The function IS running and emitting NDJSON lines. The problem is on the iOS Safari side — either `response.body.getReader()` isn't streaming properly, or iOS buffers the entire response.
+
+The issue is that iOS Safari doesn't support true streaming fetch with `getReader()` for all response types. It works for some Content-Types but can buffer `application/x-ndjson`. The browser waits for the full response before exposing it to the reader — which means the func...
+
+**user**: no simple fix please do it right /new-feature
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — new Edge Function (reuses existing scraper logic), modify frontend handler. Using shortcuts.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got it. The key function is `processVenue(venue, runId)` — it handles everything (fetch HTML, call DeepSeek, upsert events, log costs). I just need a batch wrapper. Let me write the docs.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-10_15-58-09 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the frontend to use the batch loop instead of NDJSON streaming.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_16-02-20 (session 66f33189)
+
+**assistant**: It's pushed and deployed. Hit "Run Scraper" — you should see "Scanning... 3 scraped, X events found" incrementing every ~30 seconds as each batch of 3 venues gets processed by DeepSeek.
+
+---
+[timestamp] 2026-08-10 14:42 CST
+
+**user**: Stop says: [Hook: Test Results]
+             </div>
+             <div
+               style="font-family: \"Courier Prime\", monospace; font-size: 9px; letter-spacing:
+      0.1em; color: var(--ink-faint); margin-top: 2px;"
+             >
+               USHERED
+             </div>
+           </div>
+         </div>
+       </div>
+     </body>
+      ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+      ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+  ...
+
+**assistant**: That's a pre-commit hook running tests. The `StatStrip` test is failing — it's looking for a `0` with a specific inline style selector that doesn't match. Let me fix it.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The component uses `var(--access)` for the ushered color, but the test expects the raw `oklch(0.68 0.13 150)` value. CSS variables don't resolve in jsdom (the test environment). The test selector will never match.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 4 tests pass. The test was checking for a raw `oklch()` color value but the component uses a CSS variable `var(--access)` — jsdom doesn't resolve CSS variables so the selector never matched. Fixed to match the actual inline style.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_16-05-48 (session 66f33189)
+
+**assistant**: Fixed and pushed. The test was stale — it expected a raw `oklch()` value from before we switched to CSS custom properties. Now go try "Run Scraper."
+
+---
+[timestamp] 2026-08-10 14:48 CST
+
+**user**: okay afaik that worked. the feedback was that it got through all 135 events. What do you see in our tables? On the map section, I don't see new events in Chicago. I see 7 this week and 8 this month.  Is that right? How can we tell.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_20-37-37 (session 66f33189)
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The test file needs `extraction_confidence` added to mock Event objects.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-40-04 (session 66f33189)
+
+**assistant**: Here's everything we built today:
+
+**v0.4.30** — Fixed PWA auto-update (UpdateBanner), moved docs inside the app shell
+
+**v0.5.0** — Venue Discovery Pipeline: scrapes ChicagoPlays (231 theaters), deduplicates against existing DB, auto-promotes with geocoding/photos/calendar URLs. Admin Coverage tab with metrics.
+
+**v0.5.1** — Map time filter pills (Today / This Week / This Month) — hides venues with no active events
+
+**v0.5.2-0.5.3** — Separated enrichment into its own batch function, auto-promo...
+
+**user**: I'm running the scrapper but its stuck on 0 scraped 0 events found
+
+**assistant**: [tool: Bash]
+
+**assistant**: The batch returned 200 in 4.8 seconds with no errors. The issue is likely that all venues were scraped within the last 24 hours — the `scraped_at` filter skips them. Let me check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: Found it. The `event-scrape-batch` function is calling the OLD `event-scraper` — which runs the enrichment phase first (all 135 venue photo checks) before doing any event scraping. The batch function imports `processVenue` from event-scraper, but the event-scraper itself runs the full NDJSON flow including enrichment when called directly.
+
+Wait — actually the `event-scrape-batch` calls `processVenue()` which only processes one venue. The output I'm seeing is from the direct curl test hitting the...
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-48-01 (session 66f33189)
+
+**assistant**: Supabase only — the Edge Function code changed, not the frontend. No need for a PWA update. Hit "Run Scraper" as-is.
+
+---
+[timestamp] 2026-08-11 10:16 CST
+
+**user**: <task-notification>
+<task-id>b1nw0w2ac</task-id>
+<tool-use-id>toolu_013Bmk8v3BDE2BbgmzP9xeCy</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/66f33189-8bdd-40f9-b079-a9090de0e5fa/tasks/b1nw0w2ac.output</output-file>
+<status>completed</status>
+<summary>Background command "Check diagnostics and test batch directly" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+## 2026-08-11_12-30-07 (session 66f33189)
+
+**assistant**: When it finishes, the button goes back to "Run Scraper" and the status text shows "Done — N events found across M venues."
+
+If you leave the page, **the loop stops**. It only runs while the Coverage tab is open — the frontend drives each batch call. When you come back and press "Run Scraper" again, it picks up where it left off (only processes venues not scraped in the last 24 hours).
+
+So leave it open and let it run. ~30 minutes for all 111 venues.
+
+---
+[timestamp] 2026-08-11 10:22 CST
+
+**user**: if it stops will it pick up where it left off or start over?
+
+---
+
+## 2026-08-11_13-44-49 (session 66f33189)
+
+**assistant**: Now replace the local state in CoverageTab with context consumption.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Commit, push, deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: v0.6.1 live. Here's what changed:
+
+- **ScrapeContext** — batch loop handlers now live in a React context that persists across route changes. Navigate away and the scraper keeps running.
+- **AdminScrapeRibbon** — thin gold shimmer bar + progress text visible from any page (Tonight, Map, Discover, etc.) while scraping. Admin-only. Hides on Coverage tab. Auto-hides 5 seconds after completion.
+- **CoverageTab** — consumes context instead of owning state. Buttons still work the same.
+- **Shared ADMIN...
+
+---
+
+## 2026-08-11_14-30-29 (session 451fc35e)
+
+**user**: 1. Add an "All" time pill so you can see every venue that has ANY events (including dateless
+  ones). Quick UI change, immediately useful.
+  2. Improve date extraction — the prompt could be more aggressive: if a show is listed on a
+  "current season" or "now playing" page, infer that it's running now rather than returning
+  null. This would require re-scraping after updating the prompt.
+
+  Which would you like to tackle? I'd recommend both — the "All" pill is a 10-minute fix that
+  unlocks vis...
+
+**assistant**: You're absolutely right — what we have now is a dumb single-pass scraper, not an intelligent agent. It fetches one URL, asks DeepSeek once, and gives up if dates aren't there. A proper graph engineering approach would have the agent try multiple strategies, learn from context, and not leave 60% of its data incomplete.
+
+Let me explore the existing graph engineering patterns and the scraper architecture to design this properly.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: but wait didn't we make documentation for this feature already? we ran new-feature for this exact feature what happened?
+
+**assistant**: Good question — let me check what docs were already produced.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-11_14-39-57 (session 451fc35e)
+
+**assistant**: Here's what exists:
+
+1. **`docs/graphs/multi-pass-extraction.md`** — This is the two-pass Extract → Verify pipeline we built in v0.6.0. It improves the *quality* of what gets extracted from a single page, but **doesn't help when the page itself doesn't have dates**. If the calendar page says "Now Playing: Leopoldstadt" with no dates, both passes return null.
+
+2. **`docs/iterate/scraper-data-completeness.md`** — P1 pending. About missing **cast/performers**, not dates. Never implemented.
+
+3. **`d...
+
+**user**: can we /new-feature again with  docs/graphs/multi-pass-extraction.md  as a v2
+
+Where we use ai graph engineering and ai loops to get these answers?  Like I didn't ask for a two prompt pass I asked for an ai graphengineering approach so the ai agent takes a systematic approach to discovering events when it looks and getting all the information it needs
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Medium** — new Edge Function architecture, reworked processing pipeline, no new data models but significant behavioral changes. 1-3 days. Full process.
+
+Let me explore the existing scraper architecture in depth before designing the v2.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Excellent research. Now let me design the v2 architecture with proper AI graph engineering.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user]
+
+**user**: so meaning that every time this thing scrapes it uses a graph and ai loops until it gets al...
+
+---
+
+## 2026-08-11_14-45-49 (session 451fc35e)
+
+**assistant**: Good — the CLI supports `architecture` mode. Let me construct the input and run it.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 4 models responded. Let me read the report.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The structured fields are sparse for architecture reviews. Let me get the raw text from each model.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_13-41-40 (session 451fc35e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build, deploy, push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_15-42-45 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me add a temporary debug log to find the auth issue, deploy, test, then remove the log.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: mcp__supabase__query_logs]
+
+---
+
+## 2026-08-12_15-43-18 (session ddbeaf17)
+
+**assistant**: [tool: Agent]
+
+**assistant**: Let me verify the graph document was written and check its contents.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The graph engineering document is complete — 1,416 lines, 23 nodes across 9 phases, with full node specs, loop specs, shared state, and an execution guide. Now let me produce the QA doc.
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-12_17-12-56 (session 451fc35e)
+
+**assistant**: Fixed. The bug: the gap-priority query found "Chicago Writers' Bloc" had events with NULL `start_date`, scraped it, but the dates genuinely aren't available on their website. Without a `scraped_at` filter, it just kept picking the same venue forever — 160 times in a row.
+
+Now the gap query respects the 24-hour cooldown. If a venue's events still have NULL dates after scraping, it won't retry until tomorrow.
+
+The runaway job is cancelled. Reopen the app and hit "Run Scraper" — this time it'll pro...
+
+**user**: ok its at 4 out of 110.  It's slow which is okay but that means it needs to be consistent.
+
+Is this flash bot scrapping both websites in parallel? It needs to so this is quicker. They just write information to common bins and they notate what they provide and sources.
+
+**assistant**: [tool: Read]
+
+**assistant**: Yes — the venue fetch and TIC lookup are already running in parallel via `Promise.all` at line 150. The TIC data is available instantly when the DeepSeek extraction finishes. The flow per venue is:
+
+```
+0s   → [parallel] Fetch venue HTML + Fetch TIC listings
+2s   → DeepSeek extraction (venue HTML) — ~10s
+12s  → Merge TIC data (instant — regex, no AI)
+12s  → Completeness check — if TIC already provided dates, skip link following
+12s  → Verification pass — ~10s (or skipped if budget tight)
+22s  → ...
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_19-06-26 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: No — 9 venues this month in Chicago is way too low. Chicago has one of the most active theater scenes in the US. theatreinchicago.com alone lists 114 shows. The problem is our data quality.
+
+The scraper completed all 110 venues and found 196 events, but **197 of 285 total events (69%) STILL have NULL start_date**. The link following and TIC cross-reference didn't effectively fill dates. Let me diagnose why.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The picture is clear now. **TIC matching is broken** — out of 197 NULL-date events, TIC only matched 7. Shows like "Mrs. Doubtfire" and "Heathers the Musical" should definitely be on TIC. And **167 events are "partial"** — the link following isn't finding dates either.
+
+Let me test the TIC lookup directly to see why it's not matching.
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_19-12-29 (session ddbeaf17)
+
+**assistant**: Here's where we stand at **v0.12.0**:
+
+**Done (this session):**
+- N00-N02: Emotion light-theme helpers + EmotionDots component
+- N03-N06: All schema migrations + TypeScript types (play_interest, artists, credits, plans, threads, notifications, calls, standing_calls, learn_cards)
+- N09: Nav restructured to TONIGHT / CALLBOARD / [star] / LOBBY / YOU
+- N10/N12: Tonight + ProductionDetail verified, belt references cleaned
+- N13: Discover rewritten with spec filter chips + work-level play cards
+- N14...
+
+**user**: wait this isn't good we wiped a lot of stuff that was good. Revert.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Reverting both commits to get back to `f123e78` (v0.11.1). This keeps all your prior work intact.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Reverted. Everything is back to v0.11.1 (`f123e78`). The graph doc and QA doc are still in git history if we want them later — they just aren't in the working tree now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_20-09-59 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now I see the real picture. The venue matcher is actually working fine — 6 out of 6 venues that exist in BOTH databases match correctly. The "misses" are venues that genuinely aren't in our DB (Paramount Theatre, North Shore Center, Chopin Theatre, Broadway Playhouse).
+
+BUT there are two deeper problems:
+1. **TIC pagination broken** — `?viewall=1` only returns 17 of 90 shows. We're missing 73 shows.
+2. **"Company at Venue" format** reduces match scores — "Music Theater Works at North Shore Cente...
+
+**assistant**: [tool: Bash]
+
+**assistant**: There it is — `viewall=1` doesn't work at all. TIC uses `pageNum_rsComingSoon` for pagination. We need to fetch pages 0-5 (6 pages × ~17 shows = ~90 total). Now let me write the docs.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-13_20-14-26 (session ddbeaf17)
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now the main page upgrade — wiring all components together.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Let me run tests to verify no regressions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Same 4 pre-existing failures, 88 passing. Zero regressions. Let me verify what files were touched vs what wasn't.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-13_20-16-37 (session ddbeaf17)
+
+**assistant**: Exactly as planned. Modified files: `emotions.ts` (additive `ink()` only), `types.ts` (additive interfaces only), `PlayDetail.tsx` (upgraded). Everything else is new files. Navigation, Discover, MyShows, ReviewCard, SpectrumBar, EmotionPill — all untouched.
+
+## Implementation Summary
+
+**Files created (10):**
+- `supabase/migrations/20260813000001_play_interest.sql`
+- `src/hooks/usePlayInterest.ts`
+- `src/hooks/usePlaySpectrum.ts`
+- `src/components/play/PlayActionBar.tsx`
+- `src/components/play/Wa...
+
+**user**: so those two screens work? Like, I click in discovery, I find a play, click enter, i get those screens with all the functionality?
+
+---
+
+## 2026-08-13_20-22-00 (session ddbeaf17)
+
+**assistant**: DB is complete. Now seed premise data for existing plays.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good data. Let me seed premises — one-sentence, no-spoiler, editorially written per the spec.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now commit, push, deploy — no stops.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_09-22-22 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both deployed. Now let me test the TIC cross-reference to see if it finds more matches.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Major improvement:
+
+- **TIC shows found: 113** (up from 17 — pagination fix worked!)
+- **Enriched: 29 events** (up from 7 — company-split + more shows to match)
+- **Cached matches: 21** (known-pair cache is working)
+- **AI matches: 0** (the ambiguous pairs might not have triggered, or the AI call didn't fire — let me check)
+
+**assistant**: [tool: Bash]
+
+**assistant**: **Results:**
+- **NULL dates: 168** (down from 197 — 29 events got dates from TIC)
+- **match_decisions table: 33 entries** (19 matched, 14 rejected — all logged for training)
+- **TIC shows: 113** (pagination fix captured the full catalog)
+
+Let me run it a second time to verify the known-pair cache works.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Known-pair cache working — 9 cached matches (skipped heuristic + AI). Enriched 0 because the 29 events from the first run already got their dates.
+
+Now commit, push, deploy frontend.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_09-43-36 (session ddbeaf17)
+
+**assistant**: OK so tapping a want_to_see item navigates to `/app/show/${event_id}` (the production detail page) — that works. The issue is:
+
+1. Play-level wants don't show up in My Shows at all (they go to a different table)
+2. The design spec (PLAY-AND-WAITING.md §6) explicitly calls for a 4th group in My Shows
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_10-57-22 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found both issues:
+
+**1. ChicagoPlays** — it was only ever used for venue *discovery* (finding which theaters exist), never for event scraping. The strategy agent only has TIC as an aggregator source. ChicagoPlays does have individual theater detail pages that list shows — we could add it as a second parallel aggregator alongside TIC.
+
+**2. Dashboard hidden on admin page** — line 37 of `AdminScrapeRibbon.tsx`: `if (onCoveragePage) return null`. The ribbon AND the dashboard both hide when you're ...
+
+**assistant**: [tool: Write]
+
+**assistant**: Two things:
+
+**Dashboard hidden on admin page** — that's a quick fix. The old `if (onCoveragePage) return null` kills the entire component including the dashboard overlay. I just need to let the dashboard render while hiding only the ribbon bar. One-line change.
+
+**ChicagoPlays for events** — it was never wired up for event scraping, only venue discovery. It should be added as a parallel source like TIC, but I'd need to check their detail pages first to see what event data they have. That's a `/...
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: how did we original event scrape before tic?
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_11-05-51 (session 451fc35e)
+
+**assistant**: Here's how it always worked — before TIC, before the v2 strategy agent, before everything:
+
+Each venue in our DB has a `calendar_url` — the direct link to that theater's own website (e.g., `courttheatre.org/current-season/`). The scraper fetches that one URL, sends the HTML to DeepSeek, and asks it to extract events.
+
+That's still the primary source. TIC was added as a **parallel second source** to fill in what the venue's own website misses (especially dates). But the venue's own `calendar_url`...
+
+**user**: ah I see so what's our current improvement plan? thanks for answering!
+
+---
+
+## 2026-08-14_12-53-53 (session 451fc35e)
+
+**assistant**: Now build, deploy, test.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me test the TIC cross-reference to see if it now finds more events by fetching detail pages.
+
+**assistant**: [tool: Bash]
+
+**assistant**: **46 events enriched** (up from 29). The detail page fetching added 17 more events that were previously dropped. Let me check the NULL date count now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: NULL dates down to **151** (from 189 → 38 more events got dates from TIC detail pages). But Abuela's Follies still isn't in the DB — `tic-crossref` only enriches *existing* events, it doesn't create new ones. Abuela's was never scraped from Red Orchid's website.
+
+The strategy agent WILL add it as a TIC-only event when the scraper runs on Red Orchid — it'll find it via TIC, see it's not in the venue's events, fetch the detail page for dates, and add it with `found_by: ["tic"]`. You just need to r...
+
+**assistant**: [tool: Bash]
+
+**assistant**: Shipped. Here's the progress on the data:
+
+| Metric | v1 (Aug 11) | v2 first run | After TIC fix | Now |
+|--------|-------------|-------------|---------------|-----|
+| Total events | 224 | 285 | 565 | 565 |
+| NULL dates | 134 (60%) | 197 (69%) | 189 (33%) | **151 (27%)** |
+| With dates | 90 | 88 | 376 | **414** |
+
+Hit "Run Scraper" to pick up Abuela's Follies and other TIC-only Now Playing shows that the strategy agent will now add as new events with dates from detail pages.
+
+---
+[timestamp] 202...
+
+---
+
+## 2026-08-14_13-09-01 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good feedback — two things:
+
+**1. Can't reopen dashboard from Coverage tab** — the "Scraping X/Y..." button tries to start a new scrape instead of reopening the dashboard. Easy fix: when a scrape is already running, that button should open the dashboard.
+
+**2. Preview next venue + what we have/don't** — that's a richer enhancement. The backend would need to include the next venue name and the current venue's field completeness in the `scrape_jobs` row. Good idea but bigger change.
+
+Let me fix th...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now make the scraper button open the dashboard when a scrape is running, and add a "View Progress" button when minimized.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_13-37-42 (session ddbeaf17)
+
+**assistant**: Good data. 59 plays seeded, 0% event linkage, scraper doesn't extract playwright info at all. Let me produce the full documentation package.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Now write the graph engineering doc and QA doc.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: PRD looks solid. Let me now read the architecture section to get file paths and function signatures, then write the graph and QA docs.
+
+**assistant**: [tool: Read]
+
+**assistant**: Good architecture. Let me now write the graph engineering doc and QA doc.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+

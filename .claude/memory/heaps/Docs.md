@@ -687,3 +687,355 @@ The graph is only useful when you're actively building a new project from a `gra
 
 ---
 
+## 2026-08-10_11-11-42 (session 66f33189)
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: This is a **Small** feature — touches 3-4 files, no new data models, < 1 day effort. Using shortcuts: combined phases.
+
+Let me explore the existing map code first.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Great — I have the full picture. The map already has filter chips that **dim** markers, and `isUpTonight()` exists in `src/lib/tonight.ts`. The user wants time-window pills that **hide** venues entirely. Let me write the doc package.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_12-03-59 (session 66f33189)
+
+**assistant**: Now remove the entire enrichment phase from the stream handler.
+
+**assistant**: [tool: Read]
+
+**user**: [Request interrupted by user]
+
+**user**: Can we also assume that not all theaters will be active ... i.e. no longer have a website etc... so we are graceful about it? Can you /new-feature this and do research on how this enrichment should work reliably and gracefully please and thank you
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: This is a **Medium** feature — new Edge Function, cron schedule, state machine on existing table. Let me research how this should actually work before writing specs.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: wait why do we need a cron schedule? admin presses run discovery... it does everything there until its done. Why are we bringing cron into this?
+
+---
+
+## 2026-08-10_12-09-14 (session 66f33189)
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — new Edge Function (reuses existing enrichment modules), frontend loop logic in one file. < 1 day. Using shortcuts.
+
+Let me explore the existing code to write precise specs.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got the full picture. No new schema needed — the queue already has all enrichment columns. Let me write the doc package.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_12-12-32 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the button and status display.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Build check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy both Edge Functions, bump version, commit, push, deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-41-09 (session 66f33189)
+
+**assistant**: Yes — the event scraper already queries `SELECT * FROM venues WHERE calendar_url IS NOT NULL`. So those 111 venues with calendar URLs will all get scraped on the next run. It doesn't care whether they were hand-added or auto-promoted.
+
+But the scraper isn't running automatically yet — there's no cron. It only runs when manually triggered. We talked about setting up a daily 6 AM CST cron earlier but never wired it up.
+
+So right now: you'd need to manually invoke the event scraper to get events fo...
+
+**user**: Ok. So let's add a second button under run discovery for like having a manual run of the flash bot to scan the venues for events.  This should also tie into costs.  I also noticed our costs don't have a by date option.  /new-feature
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — UI changes to 2 existing files, no new backend. Using shortcuts.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got the full picture. The event-scraper already logs to `ai_usage` (costs already flow through). It streams NDJSON but has no CORS headers (same bug we fixed for venue-discovery). The costs hook hardcodes `p_days` values.
+
+Let me write the docs.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_15-54-38 (session 66f33189)
+
+**assistant**: The scraper streams fine from curl. The function IS running and emitting NDJSON lines. The problem is on the iOS Safari side — either `response.body.getReader()` isn't streaming properly, or iOS buffers the entire response.
+
+The issue is that iOS Safari doesn't support true streaming fetch with `getReader()` for all response types. It works for some Content-Types but can buffer `application/x-ndjson`. The browser waits for the full response before exposing it to the reader — which means the func...
+
+**user**: no simple fix please do it right /new-feature
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — new Edge Function (reuses existing scraper logic), modify frontend handler. Using shortcuts.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got it. The key function is `processVenue(venue, runId)` — it handles everything (fetch HTML, call DeepSeek, upsert events, log costs). I just need a batch wrapper. Let me write the docs.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-11_14-30-29 (session 451fc35e)
+
+**user**: 1. Add an "All" time pill so you can see every venue that has ANY events (including dateless
+  ones). Quick UI change, immediately useful.
+  2. Improve date extraction — the prompt could be more aggressive: if a show is listed on a
+  "current season" or "now playing" page, infer that it's running now rather than returning
+  null. This would require re-scraping after updating the prompt.
+
+  Which would you like to tackle? I'd recommend both — the "All" pill is a 10-minute fix that
+  unlocks vis...
+
+**assistant**: You're absolutely right — what we have now is a dumb single-pass scraper, not an intelligent agent. It fetches one URL, asks DeepSeek once, and gives up if dates aren't there. A proper graph engineering approach would have the agent try multiple strategies, learn from context, and not leave 60% of its data incomplete.
+
+Let me explore the existing graph engineering patterns and the scraper architecture to design this properly.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: but wait didn't we make documentation for this feature already? we ran new-feature for this exact feature what happened?
+
+**assistant**: Good question — let me check what docs were already produced.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-11_14-39-57 (session 451fc35e)
+
+**assistant**: Here's what exists:
+
+1. **`docs/graphs/multi-pass-extraction.md`** — This is the two-pass Extract → Verify pipeline we built in v0.6.0. It improves the *quality* of what gets extracted from a single page, but **doesn't help when the page itself doesn't have dates**. If the calendar page says "Now Playing: Leopoldstadt" with no dates, both passes return null.
+
+2. **`docs/iterate/scraper-data-completeness.md`** — P1 pending. About missing **cast/performers**, not dates. Never implemented.
+
+3. **`d...
+
+**user**: can we /new-feature again with  docs/graphs/multi-pass-extraction.md  as a v2
+
+Where we use ai graph engineering and ai loops to get these answers?  Like I didn't ask for a two prompt pass I asked for an ai graphengineering approach so the ai agent takes a systematic approach to discovering events when it looks and getting all the information it needs
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Medium** — new Edge Function architecture, reworked processing pipeline, no new data models but significant behavioral changes. 1-3 days. Full process.
+
+Let me explore the existing scraper architecture in depth before designing the v2.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Excellent research. Now let me design the v2 architecture with proper AI graph engineering.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user]
+
+**user**: so meaning that every time this thing scrapes it uses a graph and ai loops until it gets al...
+
+---
+
+## 2026-08-12_15-43-18 (session ddbeaf17)
+
+**assistant**: [tool: Agent]
+
+**assistant**: Let me verify the graph document was written and check its contents.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: The graph engineering document is complete — 1,416 lines, 23 nodes across 9 phases, with full node specs, loop specs, shared state, and an execution guide. Now let me produce the QA doc.
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-12_20-09-59 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now I see the real picture. The venue matcher is actually working fine — 6 out of 6 venues that exist in BOTH databases match correctly. The "misses" are venues that genuinely aren't in our DB (Paramount Theatre, North Shore Center, Chopin Theatre, Broadway Playhouse).
+
+BUT there are two deeper problems:
+1. **TIC pagination broken** — `?viewall=1` only returns 17 of 90 shows. We're missing 73 shows.
+2. **"Company at Venue" format** reduces match scores — "Music Theater Works at North Shore Cente...
+
+**assistant**: [tool: Bash]
+
+**assistant**: There it is — `viewall=1` doesn't work at all. TIC uses `pageNum_rsComingSoon` for pagination. We need to fetch pages 0-5 (6 pages × ~17 shows = ~90 total). Now let me write the docs.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-13_18-09-57 (session 451fc35e)
+
+**assistant**: Documentation package complete. Here's the summary:
+
+**Root causes diagnosed:**
+1. **TIC pagination broken** — `?viewall=1` doesn't work. We're parsing 17 of 90 Coming Soon shows. Fix: fetch all 6 pages using the actual pagination params (`pageNum_rsComingSoon=N&totalRows_rsComingSoon=90`)
+2. **"Company at Venue" format** — TIC lists "Kokandy Productions at Chopin Theatre" but our DB has "Chopin Theatre". Fix: split on " at " and try matching just the venue part
+3. **No AI fallback** — ambiguous...
+
+**user**: where we at
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-14_13-37-42 (session ddbeaf17)
+
+**assistant**: Good data. 59 plays seeded, 0% event linkage, scraper doesn't extract playwright info at all. Let me produce the full documentation package.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Now write the graph engineering doc and QA doc.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: PRD looks solid. Let me now read the architecture section to get file paths and function signatures, then write the graph and QA docs.
+
+**assistant**: [tool: Read]
+
+**assistant**: Good architecture. Let me now write the graph engineering doc and QA doc.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+

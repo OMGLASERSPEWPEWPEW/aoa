@@ -1697,3 +1697,763 @@ I'd recommend **once daily at 6 AM CST** to start, and bum...
 
 ---
 
+## 2026-08-10_10-46-44 (session 66f33189)
+
+**assistant**: Here's what happens when you hit "Run Discovery":
+
+1. Fetches the ChicagoPlays member directory page (one HTTP request)
+2. Parses all 231 member theater names + visits each detail page to get address, website, phone, description
+3. Inserts them into a queue table
+4. Deduplicates: compares each one against your existing 37 venues by website URL, address, and name similarity — marks matches and flags genuinely new theaters
+5. Enriches new ones: geocodes their address, scans their website for a cal...
+
+**user**: In our map section and our events... we only show icons for active plays? Like we don't want to show an icon for a theather that is doing nothing that day/week etc?
+
+**assistant**: Right now we show **every venue as a marker on the map regardless of whether they have active events**. Let me verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-10_11-33-44 (session 66f33189)
+
+**assistant**: I need to add a "Step 0" that fetches the ChicagoPlays detail page to get address/website/description, then updates the queue row before running the rest of enrichment.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the index.ts to pass `detail_page_url` to the enrichment candidates.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Excellent! The previous run (before the refactor) actually completed! It found **231 venues**, matched **36** against existing, flagged **195 as new**, and started enriching successfully. Let me see the full output.
+
+**assistant**: [tool: Bash]
+
+**assistant**: It actually worked — **231 parsed, 36 matched, 195 new, 30 enriched** before timing out. The user saw nothing because the auth was failing silently. Now let me deploy the refactored version (faster parse, detail pages in enrichment) and push everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_11-47-03 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add CORS headers to all responses — the 401, the "already_running", the 404, and the streaming response.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now deploy and push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_11-50-23 (session 66f33189)
+
+**assistant**: The diagnostics showed the exact problem: `POST /functions/v1/venue-discovery FAILED (1377ms): Load failed` — that's iOS Safari blocking a cross-origin request with no CORS headers. Fixed by adding the same `getCorsHeaders` pattern used by mentor-chat and ai-gateway.
+
+Try "Run Discovery" again. Now the browser can actually reach the function. You'll see the queue populate (it may already have 195 from the curl test earlier) and the metrics update.
+
+To your point about seeing pipeline state as a ...
+
+**user**: But im asking a different thing... Like do you have the ability to see and read a user's state as they use the app
+
+---
+
+## 2026-08-10_11-51-40 (session 66f33189)
+
+**assistant**: Yes — I just did it. I queried the `diagnostics` table and saw your exact errors:
+
+```
+[#15] POST /functions/v1/venue-discovery FAILED (1377ms): Load failed
+Discovery run failed: TypeError: Load failed
+Auth state: SIGNED_IN (userId: 1eaeafb3...)
+```
+
+That's how I found the CORS bug — from YOUR app session's diagnostics, not from guessing.
+
+I can see:
+- **Fetch logs** — every API call your app makes, status codes, durations
+- **Auth state** — sign-in/sign-out events
+- **Console errors** — anythin...
+
+**user**: ok in glyffitimobile I think we also log user's actions... do we do that in this project?
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-03-59 (session 66f33189)
+
+**assistant**: Now remove the entire enrichment phase from the stream handler.
+
+**assistant**: [tool: Read]
+
+**user**: [Request interrupted by user]
+
+**user**: Can we also assume that not all theaters will be active ... i.e. no longer have a website etc... so we are graceful about it? Can you /new-feature this and do research on how this enrichment should work reliably and gracefully please and thank you
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: This is a **Medium** feature — new Edge Function, cron schedule, state machine on existing table. Let me research how this should actually work before writing specs.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: wait why do we need a cron schedule? admin presses run discovery... it does everything there until its done. Why are we bringing cron into this?
+
+---
+
+## 2026-08-10_12-09-14 (session 66f33189)
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — new Edge Function (reuses existing enrichment modules), frontend loop logic in one file. < 1 day. Using shortcuts.
+
+Let me explore the existing code to write precise specs.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got the full picture. No new schema needed — the queue already has all enrichment columns. Let me write the doc package.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-10_12-12-32 (session 66f33189)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the button and status display.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Build check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Now deploy both Edge Functions, bump version, commit, push, deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_12-18-13 (session 66f33189)
+
+**user**: ok now it says parsing chicagokays... no new theaters found.[Image #2]
+
+Ok this looks like progress but still like... i dont understand we have 231 venues known in chicago... but none are added to the calender, 18 with photos... I just? 
+
+What's going on?
+
+**user**: [Image: source: /Users/dericortiz/Downloads/IMG_4285.PNG]
+
+**user**: ok now it says parsing chicagokays... no new theaters found.[Image #2]
+
+Ok this looks like progress but still like... i dont understand we have 231 venues known in chicago... but none are added to the calender, 18 with photos... I just? 
+
+What's going on?  we now have 231 known in chicago but liek queue is 195... did we not retreive any?
+
+**user**: [Image: source: /Users/dericortiz/.claude/image-cache/66f33189-8bdd-40f9-b079-a9090de0e5fa/2.jpeg]
+
+**assistant**: I see the bug. The discovery says "no new theaters found" because those 195 are already in the queue from previous runs — the unique constraint correctly skips re-inserting them. But the frontend then skips enrichment because `venues_new = 0`. It should check for pending enrichment items regardless.
+
+The 195 theaters are sitting there un-enriched from the earlier runs. The button just needs to enrich them.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also update the status text to show enrichment progress even when `found` is 0 (from a previous run).
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_13-30-01 (session 66f33189)
+
+**assistant**: ## Implementation Summary
+
+**Files modified:** `supabase/functions/event-scraper/index.ts` (CORS + dual auth), `src/hooks/useCostDashboard.ts` (accepts `days` param), `src/pages/Docs.tsx` (Run Scraper button + NDJSON reader + cost date pills)
+**QA items covered:** 13/13
+**Browser verified:** No (Chrome DevTools MCP unavailable)
+**Deviations:** None
+
+v0.5.4 live. Three changes:
+
+1. **Run Scraper button** on Coverage tab — reads the NDJSON stream in real time, shows "5 scraped, 12 events found... ...
+
+**user**: ok I'm runing the scraper... stuck on 0 scraped, 0 events found no other feedback.  Can you see in diagnostics?
+
+**assistant**: [tool: Bash]
+
+**assistant**: The scraper returned 200 in 3.5 seconds — way too fast for 111 venues. Let me test it directly to see what it actually returns.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The scraper IS working — it's sending NDJSON events. But the first phase is "enrichment" (venue photo checks), and the frontend only counts `type === 'venue'` lines. The enrichment phase runs first for all venues, THEN the scraping phase starts.
+
+The user's browser got the response, but the scraper probably timed out after the enrichment phase and never reached the venue scraping phase (the part that calls DeepSeek). It completed enrichment for ~135 venues in 3.5 seconds, then the function hit t...
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_15-26-09 (session 66f33189)
+
+**assistant**: Here's what's happening: the event-scraper runs TWO phases — first it checks/updates venue photos (enrichment), then it scrapes events with DeepSeek. Your browser was only counting the second phase, which hadn't started yet.
+
+Now you'll see progress from both phases. But fair warning: with 135 venues, the scraper will likely timeout before finishing all the DeepSeek calls. It'll process as many as it can. You can re-run for the rest — it'll skip venues that already have fresh events.
+
+The scrape...
+
+**user**: Now you'll see progress from both phases. But fair warning: with 135 venues, the scraper will likely timeout before finishing all the DeepSeek
+   calls. It'll process as many as it can. You can re-run for the rest — it'll skip venues that already have fresh events.
+
+  The scraper was built for 37 venues. At 135 it's hitting the same "too many for one call" problem. If this keeps timing out, we'll need to
+  split it into batches like we did for enrichment. But try it first — you should at least s...
+
+**assistant**: You're right to question this. Let me check what glyffiti/ournews does.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: There it is. You're right — ournews has a `streamWithKeepalive` utility. Here's what it does and why it matters:
+
+**The problem:** Supabase's API gateway (Kong) has a ~150 second **idle** timeout. If no data flows for 150 seconds, the connection is killed. Our event scraper's NDJSON streaming already sends data after each venue, so it SHOULD stay alive. But the real issue is different.
+
+**Your actual question is more fundamental:** Each DeepSeek call IS a separate HTTP request from the Edge Func...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-10_15-54-38 (session 66f33189)
+
+**assistant**: The scraper streams fine from curl. The function IS running and emitting NDJSON lines. The problem is on the iOS Safari side — either `response.body.getReader()` isn't streaming properly, or iOS buffers the entire response.
+
+The issue is that iOS Safari doesn't support true streaming fetch with `getReader()` for all response types. It works for some Content-Types but can buffer `application/x-ndjson`. The browser waits for the full response before exposing it to the reader — which means the func...
+
+**user**: no simple fix please do it right /new-feature
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Small** — new Edge Function (reuses existing scraper logic), modify frontend handler. Using shortcuts.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got it. The key function is `processVenue(venue, runId)` — it handles everything (fetch HTML, call DeepSeek, upsert events, log costs). I just need a batch wrapper. Let me write the docs.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-10_15-58-09 (session 66f33189)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the frontend to use the batch loop instead of NDJSON streaming.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deploy everything.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-40-04 (session 66f33189)
+
+**assistant**: Here's everything we built today:
+
+**v0.4.30** — Fixed PWA auto-update (UpdateBanner), moved docs inside the app shell
+
+**v0.5.0** — Venue Discovery Pipeline: scrapes ChicagoPlays (231 theaters), deduplicates against existing DB, auto-promotes with geocoding/photos/calendar URLs. Admin Coverage tab with metrics.
+
+**v0.5.1** — Map time filter pills (Today / This Week / This Month) — hides venues with no active events
+
+**v0.5.2-0.5.3** — Separated enrichment into its own batch function, auto-promo...
+
+**user**: I'm running the scrapper but its stuck on 0 scraped 0 events found
+
+**assistant**: [tool: Bash]
+
+**assistant**: The batch returned 200 in 4.8 seconds with no errors. The issue is likely that all venues were scraped within the last 24 hours — the `scraped_at` filter skips them. Let me check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: Found it. The `event-scrape-batch` function is calling the OLD `event-scraper` — which runs the enrichment phase first (all 135 venue photo checks) before doing any event scraping. The batch function imports `processVenue` from event-scraper, but the event-scraper itself runs the full NDJSON flow including enrichment when called directly.
+
+Wait — actually the `event-scrape-batch` calls `processVenue()` which only processes one venue. The output I'm seeing is from the direct curl test hitting the...
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_11-45-32 (session 66f33189)
+
+**assistant**: Now I'll create the shared module and update both functions. The `processVenue` function uses `supabase` and `DEEPSEEK_API_KEY` from module-level constants — I'll need to pass those as parameters or create the supabase client inside the shared module.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update `event-scrape-batch` to import from the shared module instead of from event-scraper.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now deploy both functions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me verify the batch function works now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: It works. `{"scraped":3,"events_found":6,"events_created":6,"remaining":108}` — the two-pass pipeline processed 3 venues, found 6 events, created all 6, and 108 venues remain.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-11_12-28-47 (session 66f33189)
+
+**assistant**: That's just a background task notification from an earlier diagnostic check — nothing to act on. Go ahead and hit "Run Scraper" in the app.
+
+---
+[timestamp] 2026-08-11 10:17 CST
+
+**user**: It's doing stuff somewhat slow... 6 events scrapped. What can you see on your end?
+
+**assistant**: [tool: Bash]
+
+**assistant**: Events went from 135 to 175 — 40 new events created so far. The scraper is working but each batch takes ~30-60 seconds because of the two-pass pipeline (two DeepSeek API calls per venue × 3 venues per batch). That's the tradeoff for better data quality.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Each batch call takes ~50+ seconds — that's 3 venues × 2 DeepSeek calls each × ~8 seconds per call. It's working, just slow. The "STILL PENDING" messages are the diagnostics interceptor logging that the fetch hasn't returned yet.
+
+At this rate: 111 venues ÷ 3 per batch = 37 batches × ~50 seconds = **~30 minutes total**. The progress counter should be ticking up by 3 every minute or so. Let it run — it's crunching through. You should see events climbing and the "scraped" counter incrementing.
+
+--...
+
+---
+
+## 2026-08-11_13-44-49 (session 66f33189)
+
+**assistant**: Now replace the local state in CoverageTab with context consumption.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean build. Commit, push, deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: v0.6.1 live. Here's what changed:
+
+- **ScrapeContext** — batch loop handlers now live in a React context that persists across route changes. Navigate away and the scraper keeps running.
+- **AdminScrapeRibbon** — thin gold shimmer bar + progress text visible from any page (Tonight, Map, Discover, etc.) while scraping. Admin-only. Hides on Coverage tab. Auto-hides 5 seconds after completion.
+- **CoverageTab** — consumes context instead of owning state. Buttons still work the same.
+- **Shared ADMIN...
+
+---
+
+## 2026-08-11_14-30-29 (session 451fc35e)
+
+**user**: 1. Add an "All" time pill so you can see every venue that has ANY events (including dateless
+  ones). Quick UI change, immediately useful.
+  2. Improve date extraction — the prompt could be more aggressive: if a show is listed on a
+  "current season" or "now playing" page, infer that it's running now rather than returning
+  null. This would require re-scraping after updating the prompt.
+
+  Which would you like to tackle? I'd recommend both — the "All" pill is a 10-minute fix that
+  unlocks vis...
+
+**assistant**: You're absolutely right — what we have now is a dumb single-pass scraper, not an intelligent agent. It fetches one URL, asks DeepSeek once, and gives up if dates aren't there. A proper graph engineering approach would have the agent try multiple strategies, learn from context, and not leave 60% of its data incomplete.
+
+Let me explore the existing graph engineering patterns and the scraper architecture to design this properly.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: but wait didn't we make documentation for this feature already? we ran new-feature for this exact feature what happened?
+
+**assistant**: Good question — let me check what docs were already produced.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-11_14-39-57 (session 451fc35e)
+
+**assistant**: Here's what exists:
+
+1. **`docs/graphs/multi-pass-extraction.md`** — This is the two-pass Extract → Verify pipeline we built in v0.6.0. It improves the *quality* of what gets extracted from a single page, but **doesn't help when the page itself doesn't have dates**. If the calendar page says "Now Playing: Leopoldstadt" with no dates, both passes return null.
+
+2. **`docs/iterate/scraper-data-completeness.md`** — P1 pending. About missing **cast/performers**, not dates. Never implemented.
+
+3. **`d...
+
+**user**: can we /new-feature again with  docs/graphs/multi-pass-extraction.md  as a v2
+
+Where we use ai graph engineering and ai loops to get these answers?  Like I didn't ask for a two prompt pass I asked for an ai graphengineering approach so the ai agent takes a systematic approach to discovering events when it looks and getting all the information it needs
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size: Medium** — new Edge Function architecture, reworked processing pipeline, no new data models but significant behavioral changes. 1-3 days. Full process.
+
+Let me explore the existing scraper architecture in depth before designing the v2.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Excellent research. Now let me design the v2 architecture with proper AI graph engineering.
+
+**assistant**: [tool: Agent]
+
+**user**: [Request interrupted by user]
+
+**user**: so meaning that every time this thing scrapes it uses a graph and ai loops until it gets al...
+
+---
+
+## 2026-08-12_14-38-13 (session 451fc35e)
+
+**assistant**: Now let me build, push the migration, deploy everything, and ship.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both deployed. Now bump version, commit, push.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_15-42-45 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Let me add a temporary debug log to find the auth issue, deploy, test, then remove the log.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: mcp__supabase__query_logs]
+
+---
+
+## 2026-08-12_17-12-56 (session 451fc35e)
+
+**assistant**: Fixed. The bug: the gap-priority query found "Chicago Writers' Bloc" had events with NULL `start_date`, scraped it, but the dates genuinely aren't available on their website. Without a `scraped_at` filter, it just kept picking the same venue forever — 160 times in a row.
+
+Now the gap query respects the 24-hour cooldown. If a venue's events still have NULL dates after scraping, it won't retry until tomorrow.
+
+The runaway job is cancelled. Reopen the app and hit "Run Scraper" — this time it'll pro...
+
+**user**: ok its at 4 out of 110.  It's slow which is okay but that means it needs to be consistent.
+
+Is this flash bot scrapping both websites in parallel? It needs to so this is quicker. They just write information to common bins and they notate what they provide and sources.
+
+**assistant**: [tool: Read]
+
+**assistant**: Yes — the venue fetch and TIC lookup are already running in parallel via `Promise.all` at line 150. The TIC data is available instantly when the DeepSeek extraction finishes. The flow per venue is:
+
+```
+0s   → [parallel] Fetch venue HTML + Fetch TIC listings
+2s   → DeepSeek extraction (venue HTML) — ~10s
+12s  → Merge TIC data (instant — regex, no AI)
+12s  → Completeness check — if TIC already provided dates, skip link following
+12s  → Verification pass — ~10s (or skipped if budget tight)
+22s  → ...
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-12_19-09-10 (session ddbeaf17)
+
+**assistant**: The watchlist table is called `watchlist` not `watchlist_items`. Let me fix the migration.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: The first two migrations already applied. I need to fix the third and reapply. Let me check what state we're in.
+
+**assistant**: [tool: Bash]
+
+**user**: [Request interrupted by user]
+
+**user**: you dont need to do thatever youre doing we have supabase cli stuff in /development/patterns
+
+**assistant**: Got it — migrations applied successfully anyway. Let me commit the fix and move on.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_10-57-22 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found both issues:
+
+**1. ChicagoPlays** — it was only ever used for venue *discovery* (finding which theaters exist), never for event scraping. The strategy agent only has TIC as an aggregator source. ChicagoPlays does have individual theater detail pages that list shows — we could add it as a second parallel aggregator alongside TIC.
+
+**2. Dashboard hidden on admin page** — line 37 of `AdminScrapeRibbon.tsx`: `if (onCoveragePage) return null`. The ribbon AND the dashboard both hide when you're ...
+
+**assistant**: [tool: Write]
+
+**assistant**: Two things:
+
+**Dashboard hidden on admin page** — that's a quick fix. The old `if (onCoveragePage) return null` kills the entire component including the dashboard overlay. I just need to let the dashboard render while hiding only the ribbon bar. One-line change.
+
+**ChicagoPlays for events** — it was never wired up for event scraping, only venue discovery. It should be added as a parallel source like TIC, but I'd need to check their detail pages first to see what event data they have. That's a `/...
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: how did we original event scrape before tic?
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_12-59-52 (session 451fc35e)
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: [Image #2] nothing happened.
+
+**user**: [Image: source: /Users/dericortiz/Downloads/IMG_4297.PNG]
+
+**assistant**: [tool: Read]
+
+**assistant**: "0 of 0 venues, Complete" — the batch function found no venues to process. That's the gap-priority query: it first looks for venues with NULL-date events that haven't been scraped in 24 hours, then stale/unscraped venues. All 111 venues were scraped earlier today (14:45 UTC / ~9:45 AM CST), so the 24-hour filter excludes them all.
+
+The scraper thinks "nothing to do" because everything was scraped within the last 24 hours. But we deployed new code AFTER that scrape — the code that would find Abue...
+
+**assistant**: [tool: Bash]
+
+**assistant**: Scraped 3 hours ago — 21 hours short of the 24-hour cooldown. I need to reset Red Orchid's `scraped_at` so the scraper picks it up. Actually, better fix: let me just reset all `scraped_at` since we deployed new code that would produce different results.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_13-09-01 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good feedback — two things:
+
+**1. Can't reopen dashboard from Coverage tab** — the "Scraping X/Y..." button tries to start a new scrape instead of reopening the dashboard. Easy fix: when a scrape is already running, that button should open the dashboard.
+
+**2. Preview next venue + what we have/don't** — that's a richer enhancement. The backend would need to include the next venue name and the current venue's field completeness in the `scrape_jobs` row. Good idea but bigger change.
+
+Let me fix th...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now make the scraper button open the dashboard when a scrape is running, and add a "View Progress" button when minimized.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_13-36-37 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found the bug. Here's exactly what happens:
+
+1. `lookupVenueOnTic("A Red Orchid Theatre")` searches Coming Soon first
+2. Coming Soon has "Birds of North America" at Red Orchid → **matches at 0.9**
+3. **Function returns immediately** with just that one Coming Soon match — `if (matches.length > 0) return`
+4. **Now Playing is never checked** — Abuela's Follies is sitting right there but the function already exited
+
+The fix: `lookupVenueOnTic` should search BOTH pages and return combined results, no...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now reset Red Orchid's scraped_at so the scraper picks it up again.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Found and fixed the bug. `lookupVenueOnTic` was short-circuiting — if Coming Soon had ANY match for a venue, it returned immediately and never checked Now Playing. Abuela's Follies is on Now Playing, but "Birds of North America" on Coming Soon matched Red Orchid first, so the function exited before ever seeing Abuela's.
+
+Now it searches both pages in parallel and returns combined results.
+
+Red Orchid's `scraped_at` is reset. Hit "Run Scraper" — it should pick up Red Orchid and find Abuela's Foll...
+
+---
+
