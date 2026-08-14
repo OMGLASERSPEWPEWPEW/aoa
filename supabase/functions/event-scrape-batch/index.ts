@@ -225,6 +225,10 @@ serve(async (req) => {
         events_found: totalFound,
         strategy: lastStrategyStr,
         timestamp: new Date().toISOString(),
+        fields_complete: result.field_summary?.with_dates ?? 0,
+        events_total: result.field_summary?.total ?? totalFound,
+        missing: result.field_summary?.missing ?? [],
+        sources: result.field_summary?.sources ?? [],
       });
       if (recentVenues.length > 15) recentVenues.length = 15;
 

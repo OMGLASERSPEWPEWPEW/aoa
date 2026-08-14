@@ -38,6 +38,12 @@ export interface ScrapeResult {
   strategy_links_followed?: number;
   strategy_fields_filled?: string[];
   strategy_stop_reason?: string;
+  field_summary?: {
+    with_dates: number;
+    total: number;
+    missing: string[];
+    sources: string[];
+  };
 }
 
 export interface EnrichmentResult {

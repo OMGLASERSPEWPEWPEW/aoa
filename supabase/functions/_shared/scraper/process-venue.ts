@@ -29,6 +29,19 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
     result.strategy_fields_filled = trace.steps.flatMap(s => s.fieldsFilledIn);
     result.strategy_stop_reason = trace.stopReason;
 
+    const withDates = mergedEvents.filter(e => e.start_date).length;
+    const missingSet = new Set<string>();
+    const sourceSet = new Set<string>();
+    for (const e of mergedEvents) {
+      if (!e.start_date) missingSet.add("dates");
+      if (e.price_min == null && e.price_max == null) missingSet.add("price");
+      if (!e.show_times) missingSet.add("times");
+      if (!e.ticket_url) missingSet.add("ticket");
+      if (!e.cast_members?.length) missingSet.add("cast");
+      for (const s of e.found_by) sourceSet.add(s);
+    }
+    result.field_summary = { with_dates: withDates, total: mergedEvents.length, missing: [...missingSet], sources: [...sourceSet] };
+
     for (const step of trace.steps) {
       if (step.aiCalls > 0) {
         const feature = step.step === "verify" ? "event-scraper-verify"

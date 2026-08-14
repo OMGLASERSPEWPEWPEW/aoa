@@ -104,6 +104,43 @@ function PipelineDots({ stage }: { stage: number }) {
   )
 }
 
+const FIELD_LABELS = ['dates', 'price', 'times', 'ticket', 'cast'] as const
+
+function FieldPill({ label, present }: { label: string; present: boolean }) {
+  return (
+    <span style={{
+      ...mono,
+      fontSize: 6.5,
+      letterSpacing: '0.06em',
+      padding: '1px 4px',
+      borderRadius: 2,
+      background: present ? 'var(--accent-bg)' : 'var(--bg)',
+      color: present ? 'var(--accent-text)' : 'var(--ink-whisper)',
+      border: present ? '1px solid var(--accent-border)' : '1px solid var(--rule-soft)',
+    }}>
+      {label.toUpperCase()}{present ? ' ✓' : ' ✗'}
+    </span>
+  )
+}
+
+function SourceTag({ source }: { source: string }) {
+  const isTic = source === 'tic'
+  return (
+    <span style={{
+      ...mono,
+      fontSize: 6,
+      letterSpacing: '0.06em',
+      padding: '1px 4px',
+      borderRadius: 2,
+      background: isTic ? 'var(--accent-bg)' : 'var(--bg-chrome)',
+      color: isTic ? 'var(--access)' : 'var(--ink-faint)',
+      border: `1px solid ${isTic ? 'var(--access)' : 'var(--rule)'}`,
+    }}>
+      {source === 'venue_website' ? 'VENUE' : source === 'tic' ? 'TIC' : source.toUpperCase()}
+    </span>
+  )
+}
+
 function ActivityLog({ venues }: { venues: RecentVenueEntry[] }) {
   if (venues.length === 0) return null
 
@@ -113,7 +150,7 @@ function ActivityLog({ venues }: { venues: RecentVenueEntry[] }) {
       borderRadius: 8,
       border: '1px solid var(--rule)',
       margin: '0 16px',
-      maxHeight: '40vh',
+      maxHeight: '45vh',
       overflowY: 'auto',
     }}>
       <div style={{
@@ -125,52 +162,57 @@ function ActivityLog({ venues }: { venues: RecentVenueEntry[] }) {
       }}>
         ACTIVITY LOG
       </div>
-      {venues.map((v, i) => (
-        <div
-          key={`${v.name}-${i}`}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'baseline',
-            padding: '6px 14px',
-            borderTop: i > 0 ? '1px solid var(--rule-soft)' : undefined,
-            opacity: i === 0 ? 1 : Math.max(0.4, 1 - i * 0.08),
-          }}
-        >
-          <div style={{
-            ...serif,
-            fontStyle: 'italic',
-            fontSize: 13,
-            color: 'var(--ink)',
-            flex: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            marginRight: 8,
-          }}>
-            {v.name}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <span style={{ ...mono, fontSize: 9, color: 'var(--ink-dim)' }}>
-              {v.strategy || (v.events_found > 0 ? `${v.events_found} events` : 'no events')}
-            </span>
-            {v.events_found > 0 && (
-              <span style={{
-                ...mono,
-                fontSize: 7,
-                letterSpacing: '0.08em',
-                padding: '1px 5px',
-                borderRadius: 3,
-                background: 'var(--accent-bg)',
-                color: 'var(--accent-text)',
-                border: '1px solid var(--accent-border)',
+      {venues.map((v, i) => {
+        const missing = new Set(v.missing ?? [])
+        const hasFieldData = v.missing !== undefined
+        return (
+          <div
+            key={`${v.name}-${i}`}
+            style={{
+              padding: '8px 14px',
+              borderTop: i > 0 ? '1px solid var(--rule-soft)' : undefined,
+              opacity: i === 0 ? 1 : Math.max(0.45, 1 - i * 0.07),
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <div style={{
+                ...serif,
+                fontStyle: 'italic',
+                fontSize: 13,
+                color: 'var(--ink)',
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                marginRight: 8,
               }}>
-                {v.events_found}
-              </span>
+                {v.name}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <span style={{ ...mono, fontSize: 9, color: 'var(--ink-dim)' }}>
+                  {v.events_found > 0 ? `${v.events_found} events` : 'no events'}
+                </span>
+              </div>
+            </div>
+            {hasFieldData && v.events_found > 0 && (
+              <div style={{ display: 'flex', gap: 3, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                {FIELD_LABELS.map(f => (
+                  <FieldPill key={f} label={f} present={!missing.has(f)} />
+                ))}
+                <span style={{ width: 4 }} />
+                {(v.sources ?? []).map(s => (
+                  <SourceTag key={s} source={s} />
+                ))}
+              </div>
+            )}
+            {v.strategy && (
+              <div style={{ ...mono, fontSize: 8, color: 'var(--ink-faint)', marginTop: 3 }}>
+                {v.strategy}
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

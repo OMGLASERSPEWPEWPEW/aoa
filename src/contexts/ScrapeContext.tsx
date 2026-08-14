@@ -16,6 +16,10 @@ export interface RecentVenueEntry {
   events_found: number
   strategy: string
   timestamp: string
+  fields_complete?: number
+  events_total?: number
+  missing?: string[]
+  sources?: string[]
 }
 
 export interface ScraperProgress {
