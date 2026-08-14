@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useScrape, type RecentVenueEntry } from '../contexts/ScrapeContext'
+import { useMemo, useState } from 'react'
+import { useScrape, type RecentVenueEntry, type EventDetail } from '../contexts/ScrapeContext'
 
 const serif = { fontFamily: "'Newsreader', Georgia, serif" } as const
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
@@ -141,7 +141,54 @@ function SourceTag({ source }: { source: string }) {
   )
 }
 
+function formatDateRange(start: string | null, end: string | null): string {
+  if (!start && !end) return 'dates TBD'
+  const fmt = (d: string) => {
+    const [, m, day] = d.split('-')
+    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    return `${months[parseInt(m)]} ${parseInt(day)}`
+  }
+  if (start && end) return `${fmt(start)} – ${fmt(end)}`
+  if (start) return `${fmt(start)}+`
+  return `thru ${fmt(end!)}`
+}
+
+function formatPrice(min: number | null, max: number | null): string {
+  if (min === null && max === null) return 'price TBD'
+  if (min === 0 && (max === null || max === 0)) return 'Free'
+  if (min !== null && max !== null && min === max) return `$${min}`
+  if (min !== null && max !== null) return `$${min}–$${max}`
+  if (min !== null) return `$${min}+`
+  return `up to $${max}`
+}
+
+function EventRow({ event }: { event: EventDetail }) {
+  const dateStr = formatDateRange(event.start_date, event.end_date)
+  const priceStr = formatPrice(event.price_min, event.price_max)
+  const hasDates = !!event.start_date
+  const hasPrice = event.price_min !== null || event.price_max !== null
+
+  return (
+    <div style={{ padding: '4px 0' }}>
+      <div style={{ ...serif, fontStyle: 'italic', fontSize: 12, color: 'var(--ink)' }}>
+        {event.title}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 2, ...mono, fontSize: 8, color: 'var(--ink-dim)' }}>
+        <span style={{ color: hasDates ? 'var(--ink-dim)' : 'var(--ink-whisper)' }}>{dateStr}</span>
+        <span style={{ color: 'var(--rule)' }}>·</span>
+        <span style={{ color: hasPrice ? 'var(--ink-dim)' : 'var(--ink-whisper)' }}>{priceStr}</span>
+        <span style={{ color: 'var(--rule)' }}>·</span>
+        <span style={{ color: event.has_ticket ? 'var(--accent-text)' : 'var(--ink-whisper)' }}>
+          {event.has_ticket ? 'ticket ✓' : 'ticket ✗'}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function ActivityLog({ venues }: { venues: RecentVenueEntry[] }) {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
+
   if (venues.length === 0) return null
 
   return (
@@ -150,7 +197,7 @@ function ActivityLog({ venues }: { venues: RecentVenueEntry[] }) {
       borderRadius: 8,
       border: '1px solid var(--rule)',
       margin: '0 16px',
-      maxHeight: '45vh',
+      maxHeight: '50vh',
       overflowY: 'auto',
     }}>
       <div style={{
@@ -165,13 +212,18 @@ function ActivityLog({ venues }: { venues: RecentVenueEntry[] }) {
       {venues.map((v, i) => {
         const missing = new Set(v.missing ?? [])
         const hasFieldData = v.missing !== undefined
+        const expanded = expandedIdx === i
+        const hasEvents = (v.event_details?.length ?? 0) > 0
+
         return (
           <div
             key={`${v.name}-${i}`}
+            onClick={() => hasEvents ? setExpandedIdx(expanded ? null : i) : undefined}
             style={{
               padding: '8px 14px',
               borderTop: i > 0 ? '1px solid var(--rule-soft)' : undefined,
               opacity: i === 0 ? 1 : Math.max(0.45, 1 - i * 0.07),
+              cursor: hasEvents ? 'pointer' : 'default',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -186,6 +238,7 @@ function ActivityLog({ venues }: { venues: RecentVenueEntry[] }) {
                 whiteSpace: 'nowrap',
                 marginRight: 8,
               }}>
+                {hasEvents && <span style={{ fontSize: 9, marginRight: 4, color: 'var(--ink-faint)' }}>{expanded ? '▼' : '▶'}</span>}
                 {v.name}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
@@ -205,9 +258,20 @@ function ActivityLog({ venues }: { venues: RecentVenueEntry[] }) {
                 ))}
               </div>
             )}
-            {v.strategy && (
+            {v.strategy && !expanded && (
               <div style={{ ...mono, fontSize: 8, color: 'var(--ink-faint)', marginTop: 3 }}>
                 {v.strategy}
+              </div>
+            )}
+            {expanded && v.event_details && (
+              <div style={{
+                marginTop: 8,
+                paddingTop: 6,
+                borderTop: '1px solid var(--rule-soft)',
+              }}>
+                {v.event_details.map((e, j) => (
+                  <EventRow key={j} event={e} />
+                ))}
               </div>
             )}
           </div>

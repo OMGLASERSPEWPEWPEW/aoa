@@ -231,6 +231,7 @@ serve(async (req) => {
         events_total: lastResult?.field_summary?.total ?? totalFound,
         missing: lastResult?.field_summary?.missing ?? [],
         sources: lastResult?.field_summary?.sources ?? [],
+        event_details: lastResult?.field_summary?.event_details ?? [],
       });
       if (recentVenues.length > 15) recentVenues.length = 15;
 

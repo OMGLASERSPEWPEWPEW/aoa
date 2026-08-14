@@ -11,6 +11,17 @@ export interface DiscoveryProgress {
   error?: string
 }
 
+export interface EventDetail {
+  title: string
+  start_date: string | null
+  end_date: string | null
+  price_min: number | null
+  price_max: number | null
+  has_ticket: boolean
+  has_times: boolean
+  found_by: string[]
+}
+
 export interface RecentVenueEntry {
   name: string
   events_found: number
@@ -20,6 +31,7 @@ export interface RecentVenueEntry {
   events_total?: number
   missing?: string[]
   sources?: string[]
+  event_details?: EventDetail[]
 }
 
 export interface ScraperProgress {
