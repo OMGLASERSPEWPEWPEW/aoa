@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { getAllTicShows } from "../_shared/scraper/tic-lookup.ts";
+import { getAllTicShows, enrichFromTicDetail } from "../_shared/scraper/tic-lookup.ts";
 import {
   matchVenueName,
   lookupKnownPair,
@@ -164,7 +164,17 @@ serve(async (req) => {
       }
     }
 
-    for (const { eventId, show } of eventMatches) {
+    for (const match of eventMatches) {
+      const { eventId, show } = match;
+      if (!show.startDate && !show.endDate && show.detailUrl) {
+        try {
+          const detail = await enrichFromTicDetail(show.detailUrl);
+          if (detail) {
+            if (detail.startDate) (show as any).startDate = detail.startDate;
+            if (detail.endDate) (show as any).endDate = detail.endDate;
+          }
+        } catch { /* detail fetch failed */ }
+      }
       if (!show.startDate && !show.endDate) { unmatched++; continue; }
 
       const updates: Record<string, unknown> = {};

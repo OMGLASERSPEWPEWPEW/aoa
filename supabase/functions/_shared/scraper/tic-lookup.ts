@@ -90,13 +90,11 @@ export async function lookupVenueOnTic(
 }
 
 export function ticShowsToEnrichments(shows: TicShow[]): TargetedEnrichment[] {
-  return shows
-    .filter(s => s.startDate || s.endDate)
-    .map(s => ({
-      title: s.title,
-      start_date: s.startDate,
-      end_date: s.endDate,
-    }));
+  return shows.map(s => ({
+    title: s.title,
+    start_date: s.startDate,
+    end_date: s.endDate,
+  }));
 }
 
 export async function enrichFromTicDetail(detailUrl: string): Promise<TicDetailData | null> {

@@ -1,9 +1,9 @@
 # Graph Engineering: Intelligent Event Scraper (v2)
 
-**Version:** 2.0.0
-**Generated:** 2026-08-11
-**Supersedes:** v1.0 (two-pass extract+verify)
-**Nodes:** 10 | **Phases:** 4 | **Loop specs:** 2
+**Version:** 2.1.0
+**Generated:** 2026-08-14
+**Supersedes:** v2.0 (added TIC detail fetch node)
+**Nodes:** 11 | **Phases:** 4 | **Loop specs:** 3
 
 ---
 
@@ -13,7 +13,7 @@
 ```
 FOUNDATION:  ies-types, ies-migration
 MODULES:     ies-cost-budget, ies-completeness, ies-link-extractor, ies-targeted-prompt
-CORE:        ies-strategy-agent, ies-process-venue-refactor
+CORE:        ies-tic-detail-fetch, ies-strategy-agent, ies-process-venue-refactor
 BATCH:       ies-batch-query, ies-batch-size
 ```
 
@@ -282,9 +282,35 @@ RULES:
 - Dates: YYYY-MM-DD format only, future dates only
 ```
 
+#### Node: ies-tic-detail-fetch
+- **Type**: feature
+- **Depends on**: ies-types
+- **Outputs**: `supabase/functions/_shared/scraper/strategy-agent.ts`, `supabase/functions/_shared/scraper/tic-lookup.ts`
+- **Loop pattern**: plan-execute-verify
+- **Success criteria**: TIC shows with no dates on listing page get detail pages fetched. Abuela's Follies at Red Orchid gets dates from `/abuelas-follies/13476/`. TIC-only shows without listing dates are no longer silently dropped.
+- **Estimated effort**: Small
+
+**Context:** TIC Now Playing listings have NO dates (no `<span class="open-date">`). Only Coming Soon has dates. This means ~24 Now Playing shows are silently dropped by `ticShowsToEnrichments()` which filters `startDate || endDate`. The detail pages at `/show-slug/ID/` DO have dates, show times, and ticket URLs — `parseTicDetailPage` already exists but is never called.
+
+**Where in the strategy tree:** After TIC merge, before completeness check. New decision:
+```
+TIC returns shows ──► show has dates from listing? ──► YES: merge as-is (current)
+                                                   ──► NO: fetch detail page
+                                                          parse with parseTicDetailPage (regex, no AI)
+                                                          merge dates + show_times + ticket_url
+```
+
+**Changes:**
+1. In `strategy-agent.ts` TIC merge section: for TIC shows where `!startDate && !endDate`, call `enrichFromTicDetail(show.detailUrl)` to fetch the detail page
+2. In `tic-lookup.ts`: `ticShowsToEnrichments()` should NOT filter out dateless shows — instead return them with null dates so the caller can decide to fetch details
+3. In `tic-crossref/index.ts`: same pattern — when a matched TIC show has no dates, fetch its detail page before skipping
+4. Budget: each detail page fetch costs 1 HTTP request (no AI). Cap at 5 detail fetches per venue to stay within budget.
+
+**Reuse:** `enrichFromTicDetail()` and `parseTicDetailPage()` already exist in `tic-lookup.ts` and `tic-parser.ts` — they just need to be called.
+
 #### Node: ies-strategy-agent
 - **Type**: feature
-- **Depends on**: ies-cost-budget, ies-completeness, ies-link-extractor, ies-targeted-prompt, ies-migration
+- **Depends on**: ies-cost-budget, ies-completeness, ies-link-extractor, ies-targeted-prompt, ies-tic-detail-fetch, ies-migration
 - **Outputs**: `supabase/functions/_shared/scraper/strategy-agent.ts`
 - **Loop pattern**: plan-execute-verify
 - **Success criteria**: Orchestrates the full strategy tree; venues with detail-page dates get them filled in; budget respected; strategy trace logged
@@ -369,6 +395,16 @@ Change line 26: `const BATCH_SIZE = 2` → `const BATCH_SIZE = 1`
 ---
 
 ## Section 3: Loop Specifications
+
+### Loop: ies-tic-detail-fetch
+- **Trigger**: TIC merge returns shows with no dates on listing page
+- **Inner cycle**:
+  1. Plan: Identify TIC shows where `!startDate && !endDate` and `detailUrl` exists
+  2. Execute: For each (up to 5), call `enrichFromTicDetail(detailUrl)` → parse with `parseTicDetailPage` (regex, no AI) → merge dates/times/ticket into event
+  3. Verify: Check that "Abuela's Follies" at Red Orchid gets dates from its TIC detail page. Check that Now Playing shows no longer get silently dropped.
+- **Evaluator**: TIC Now Playing shows appear in our events with dates. Strategy trace shows `aggregator_detail` steps.
+- **Retry**: Fix detail page regex if parsing fails (max 1 cycle)
+- **Stop condition**: All fetchable TIC detail pages processed or budget exhausted
 
 ### Loop: ies-strategy-agent
 - **Trigger**: All module nodes complete (cost-budget, completeness, link-extractor, targeted-prompt) + migration applied

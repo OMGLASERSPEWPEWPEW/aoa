@@ -125,7 +125,7 @@ export interface CandidateLink {
 }
 
 export interface StrategyStep {
-  step: "initial_extract" | "link_follow" | "website_fallback" | "verify" | "aggregator_crossref";
+  step: "initial_extract" | "link_follow" | "website_fallback" | "verify" | "aggregator_crossref" | "aggregator_detail";
   url: string;
   aiCalls: number;
   inputTokens: number;

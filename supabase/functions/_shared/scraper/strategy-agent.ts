@@ -5,7 +5,7 @@ import { buildTargetedExtractionPrompt } from "./targeted-prompt.ts";
 import { extractCandidateLinks, prioritizeLinks } from "./link-extractor.ts";
 import { shouldFollowLinks, mergeTargetedExtraction, averageCompleteness, evaluateCompleteness } from "./completeness-evaluator.ts";
 import { CostBudget } from "./cost-budget.ts";
-import { lookupVenueOnTic, ticShowsToEnrichments } from "./tic-lookup.ts";
+import { lookupVenueOnTic, ticShowsToEnrichments, enrichFromTicDetail } from "./tic-lookup.ts";
 import type {
   VenueTarget,
   Pass1Event,
@@ -200,30 +200,89 @@ export async function executeStrategyTree(
     );
 
     for (const ticOnly of ticOnlyShows) {
-      if (ticOnly.startDate || ticOnly.endDate) {
+      let startDate = ticOnly.startDate;
+      let endDate = ticOnly.endDate;
+      let showTimes: Record<string, string[]> | null = null;
+      let ticketUrl: string | null = ticOnly.detailUrl;
+
+      if (!startDate && !endDate && ticOnly.detailUrl && budget.canAffordFetch()) {
+        try {
+          const detail = await enrichFromTicDetail(ticOnly.detailUrl);
+          budget.recordFetch();
+          if (detail) {
+            startDate = detail.startDate;
+            endDate = detail.endDate;
+            showTimes = detail.showTimes;
+            if (detail.ticketUrl) ticketUrl = detail.ticketUrl;
+          }
+        } catch { /* detail fetch failed, skip */ }
+      }
+
+      if (startDate || endDate) {
         updated.push({
           title: ticOnly.title,
           event_type: "show",
-          start_date: ticOnly.startDate,
-          end_date: ticOnly.endDate,
+          start_date: startDate,
+          end_date: endDate,
           price_min: null,
           price_max: null,
-          ticket_url: ticOnly.detailUrl,
-          show_times: null,
+          ticket_url: ticketUrl,
+          show_times: showTimes,
         });
         foundByMap.set(ticOnly.title.toLowerCase(), new Set(["tic"]));
       }
     }
 
+    // Also fetch details for existing events that TIC matched but had no dates
+    let detailFieldsFilled: string[] = [];
+    for (const show of ticShows) {
+      if (show.startDate || show.endDate) continue;
+      if (!show.detailUrl || !budget.canAffordFetch()) continue;
+
+      const matchIdx = updated.findIndex(e =>
+        e.title.toLowerCase() === show.title.toLowerCase() ||
+        e.title.toLowerCase().includes(show.title.toLowerCase()) ||
+        show.title.toLowerCase().includes(e.title.toLowerCase()),
+      );
+      if (matchIdx === -1) continue;
+      if (updated[matchIdx].start_date) continue;
+
+      try {
+        const detail = await enrichFromTicDetail(show.detailUrl);
+        budget.recordFetch();
+        if (detail && (detail.startDate || detail.endDate)) {
+          if (!updated[matchIdx].start_date && detail.startDate) { updated[matchIdx].start_date = detail.startDate; detailFieldsFilled.push("start_date"); }
+          if (!updated[matchIdx].end_date && detail.endDate) { updated[matchIdx].end_date = detail.endDate; detailFieldsFilled.push("end_date"); }
+          if (!updated[matchIdx].show_times && detail.showTimes) { updated[matchIdx].show_times = detail.showTimes; detailFieldsFilled.push("show_times"); }
+          if (!updated[matchIdx].ticket_url && detail.ticketUrl) { updated[matchIdx].ticket_url = detail.ticketUrl; detailFieldsFilled.push("ticket_url"); }
+          const key = updated[matchIdx].title.toLowerCase();
+          const existing = foundByMap.get(key);
+          if (existing) existing.add("tic");
+          else foundByMap.set(key, new Set(["tic"]));
+        }
+      } catch { /* detail fetch failed */ }
+    }
+
     events = updated;
 
+    const allFieldsFilled = [...fieldsFilledIn, ...detailFieldsFilled];
     steps.push({
       step: "aggregator_crossref", url: "theatreinchicago.com",
       aiCalls: 0, inputTokens: 0, outputTokens: 0,
-      eventsAffected: fieldsFilledIn.length + ticOnlyShows.length,
-      fieldsFilledIn: [...fieldsFilledIn, ...ticOnlyShows.map(() => "tic_only_event")],
+      eventsAffected: allFieldsFilled.length + ticOnlyShows.filter(s => foundByMap.has(s.title.toLowerCase())).length,
+      fieldsFilledIn: allFieldsFilled,
       durationMs: Date.now() - ticStart,
     });
+
+    if (detailFieldsFilled.length > 0) {
+      steps.push({
+        step: "aggregator_detail", url: "theatreinchicago.com/detail",
+        aiCalls: 0, inputTokens: 0, outputTokens: 0,
+        eventsAffected: detailFieldsFilled.filter(f => f === "start_date").length,
+        fieldsFilledIn: detailFieldsFilled,
+        durationMs: 0,
+      });
+    }
   }
 
   // Website fallback if 0 events from both sources
