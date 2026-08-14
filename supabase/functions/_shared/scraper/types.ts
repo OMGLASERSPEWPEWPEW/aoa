@@ -43,6 +43,16 @@ export interface ScrapeResult {
     total: number;
     missing: string[];
     sources: string[];
+    event_details: Array<{
+      title: string;
+      start_date: string | null;
+      end_date: string | null;
+      price_min: number | null;
+      price_max: number | null;
+      has_ticket: boolean;
+      has_times: boolean;
+      found_by: string[];
+    }>;
   };
 }
 
@@ -239,4 +249,37 @@ export interface VenueCoverageMetrics {
   pending_in_queue: number;
   last_discovery_run: string | null;
   last_run_alert: boolean;
+}
+
+// --- Play Catalog types ---
+
+export interface PlayRecord {
+  id: string;
+  title: string;
+  slug: string;
+  playwright: string;
+  year_written: number | null;
+  source: "curated" | "ai";
+}
+
+export interface AiPlayIdentification {
+  is_canonical_work: boolean;
+  is_devised_or_original: boolean;
+  canonical_title: string | null;
+  playwright: string | null;
+  year_written: number | null;
+  confidence: number;
+}
+
+export interface PlayMatchSummary {
+  events_processed: number;
+  exact_matches: number;
+  fuzzy_matches: number;
+  ai_matches: number;
+  plays_created: number;
+  events_skipped: number;
+  events_unmatched: number;
+  ai_input_tokens: number;
+  ai_output_tokens: number;
+  duration_ms: number;
 }

@@ -3,6 +3,7 @@ import { generateSlug } from "./slug-generator.ts";
 import { executeStrategyTree } from "./strategy-agent.ts";
 import type { VenueTarget, ScrapeResult } from "./types.ts";
 import { logUsage } from "../logUsage.ts";
+import { runPlayMatcherBatch } from "./play-matcher.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -40,7 +41,17 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
       if (!e.cast_members?.length) missingSet.add("cast");
       for (const s of e.found_by) sourceSet.add(s);
     }
-    result.field_summary = { with_dates: withDates, total: mergedEvents.length, missing: [...missingSet], sources: [...sourceSet] };
+    const eventDetails = mergedEvents.slice(0, 10).map(e => ({
+      title: e.title,
+      start_date: e.start_date,
+      end_date: e.end_date,
+      price_min: e.price_min,
+      price_max: e.price_max,
+      has_ticket: !!e.ticket_url,
+      has_times: !!e.show_times,
+      found_by: e.found_by,
+    }));
+    result.field_summary = { with_dates: withDates, total: mergedEvents.length, missing: [...missingSet], sources: [...sourceSet], event_details: eventDetails };
 
     for (const step of trace.steps) {
       if (step.aiCalls > 0) {
@@ -57,6 +68,8 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
         } catch { /* usage logging is best-effort */ }
       }
     }
+
+    const upsertedEventIds: string[] = [];
 
     for (const event of mergedEvents) {
       const slug = generateSlug(event.title, venue.slug);
@@ -82,10 +95,20 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
         const { error } = await supabase.from("events").update(row).eq("id", existing.id);
         if (error) throw new Error(`Update failed: ${error.message}`);
         result.events_updated++;
+        upsertedEventIds.push(existing.id);
       } else {
-        const { error } = await supabase.from("events").insert(row);
+        const { data: inserted, error } = await supabase.from("events").insert(row).select("id").single();
         if (error) throw new Error(`Insert failed: ${error.message}`);
         result.events_created++;
+        if (inserted) upsertedEventIds.push(inserted.id);
+      }
+    }
+
+    if (upsertedEventIds.length > 0) {
+      try {
+        await runPlayMatcherBatch(upsertedEventIds, supabase, runId);
+      } catch (e) {
+        console.warn("[play-matcher] Hook failed, continuing:", e);
       }
     }
   } catch (error) {
