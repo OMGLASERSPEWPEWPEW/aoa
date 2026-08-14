@@ -52,6 +52,10 @@ export interface Play {
   year_written: number | null
   awards: string[]
   synopsis: string | null
+  premise: string | null
+  read_prompt: string | null
+  library_url: string | null
+  adjacent_event_id: string | null
   created_at: string
 }
 
@@ -152,3 +156,24 @@ export interface Friendship {
 export const HOUSE_RANKS = [
   'Standing Room', 'Balcony', 'Mezzanine', 'Orchestra', 'Front Row', 'Green Room', 'Company',
 ] as const
+
+export interface PlayInterest {
+  id: string
+  user_id: string
+  play_id: string
+  city: string
+  created_at: string
+}
+
+export interface PlayWaiting {
+  play_id: string
+  city: string
+  waiting: number
+}
+
+export interface PlayWaitingTrend {
+  play_id: string
+  city: string
+  month: string
+  count: number
+}
