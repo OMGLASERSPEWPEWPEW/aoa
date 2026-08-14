@@ -3450,3 +3450,26 @@ Hit "Run Scraper" to pick up Abuela's Follies and other TIC-only Now Playing sho
 
 ---
 
+## 2026-08-14_14-01-26 (session 451fc35e)
+
+**assistant**: All 3 commits pushed, nothing unpushed remaining.
+
+```
+5c3c868 chore(infra): session journals, daily logs, heap updates
+3cfc6fd docs(roadmap): add AI venue matching and scraper improvement entries
+46646ae feat(gateway): version bump and changelog for scraper v2.1 (v0.13.0)
+```
+
+v0.13.0 shipped. `/cap` memory saved — I'll use it for all future commits.
+
+---
+[timestamp] 2026-08-14 CST
+
+**user**: we're not flipping to v 13 though
+
+**assistant**: Need to deploy to Vercel — the version stamp is baked in at build time.
+
+**assistant**: [tool: Bash]
+
+---
+

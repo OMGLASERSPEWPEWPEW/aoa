@@ -1039,3 +1039,63 @@ BUT there are two deeper problems:
 
 ---
 
+## 2026-08-14_13-58-08 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: > Consider running `/docs-check` first — `src/data/changelog.ts` changed.
+
+Proposed commits (3):
+
+**1.** `feat(gateway): version bump and changelog for scraper v2.1 (v0.13.0)`
+```
+Why: Multiple scraper improvements shipped without version tracking —
+     TIC detail fetch, field pills dashboard, venue matching, pagination fix.
+Files: package.json, src/data/changelog.ts
+```
+
+**2.** `docs(roadmap): add AI venue matching and play catalog entries`
+```
+Files: docs/roadmap/roadmap.md, docs/graphs/ai-ve...
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-01-26 (session 451fc35e)
+
+**assistant**: All 3 commits pushed, nothing unpushed remaining.
+
+```
+5c3c868 chore(infra): session journals, daily logs, heap updates
+3cfc6fd docs(roadmap): add AI venue matching and scraper improvement entries
+46646ae feat(gateway): version bump and changelog for scraper v2.1 (v0.13.0)
+```
+
+v0.13.0 shipped. `/cap` memory saved — I'll use it for all future commits.
+
+---
+[timestamp] 2026-08-14 CST
+
+**user**: we're not flipping to v 13 though
+
+**assistant**: Need to deploy to Vercel — the version stamp is baked in at build time.
+
+**assistant**: [tool: Bash]
+
+---
+

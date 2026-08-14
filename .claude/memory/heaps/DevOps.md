@@ -4182,3 +4182,61 @@ Gold pills = got it, dim pills = missing. Source tags show VENUE (gold) or TIC (
 
 ---
 
+## 2026-08-14_14-01-26 (session 451fc35e)
+
+**assistant**: All 3 commits pushed, nothing unpushed remaining.
+
+```
+5c3c868 chore(infra): session journals, daily logs, heap updates
+3cfc6fd docs(roadmap): add AI venue matching and scraper improvement entries
+46646ae feat(gateway): version bump and changelog for scraper v2.1 (v0.13.0)
+```
+
+v0.13.0 shipped. `/cap` memory saved — I'll use it for all future commits.
+
+---
+[timestamp] 2026-08-14 CST
+
+**user**: we're not flipping to v 13 though
+
+**assistant**: Need to deploy to Vercel — the version stamp is baked in at build time.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-04-42 (session ddbeaf17)
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-design
+
+# Design Overhaul — AI Graph Engineer
+
+You are executing the **design overhaul graph engineer**. This skill reads the design handoff specs, audits the current codebase, and produces an executable graph engineering document that Claude Code agents can implement node-by-node with self-correction loops.
+
+<!-- === CONFIGURATION START === -->
+## Configuration
+
+| Setting | Value |
+|---------|-------|
+| **Design Handoff Directo...
+
+**assistant**: Starting Phase 1 — launching two Explore agents to audit the PRD and the existing scraper codebase.
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: Both agents returned with exhaustive detail. Now launching the code-architect to produce the full-depth graph.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Graph rewritten — 130 lines to 1,976 lines. Let me verify it landed properly.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+---
+
