@@ -41,21 +41,34 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
 
   const today = new Date().toISOString().split('T')[0]
 
-  const handleSwipeDown = useCallback((e: React.TouchEvent) => {
+  const touchRef = useRef<{ startY: number; startTime: number; startScroll: number } | null>(null)
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
     const el = sheetRef.current
     if (!el) return
-    const startY = e.touches[0].clientY
-    let lastY = startY
-
-    const onMove = (ev: TouchEvent) => { lastY = ev.touches[0].clientY }
-    const onEnd = () => {
-      document.removeEventListener('touchmove', onMove)
-      document.removeEventListener('touchend', onEnd)
-      const delta = lastY - startY
-      if (delta > 80) onClose()
+    touchRef.current = {
+      startY: e.touches[0].clientY,
+      startTime: Date.now(),
+      startScroll: el.scrollTop,
     }
-    document.addEventListener('touchmove', onMove, { passive: true })
-    document.addEventListener('touchend', onEnd)
+  }, [])
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const el = sheetRef.current
+    const touch = touchRef.current
+    if (!el || !touch) return
+    touchRef.current = null
+
+    const endY = e.changedTouches[0].clientY
+    const delta = endY - touch.startY
+    const elapsed = Date.now() - touch.startTime
+    const velocity = delta / Math.max(elapsed, 1)
+
+    if (touch.startScroll <= 0 && delta > 0) {
+      if (velocity > 0.4 || delta > 100) {
+        onClose()
+      }
+    }
   }, [onClose])
 
   const nearbyVenues = useMemo(() => {
@@ -111,6 +124,8 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
       {/* Sheet */}
       <div
         ref={sheetRef}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
         style={{
           position: 'absolute',
           bottom: 0,
@@ -132,8 +147,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
         {/* Grab handle — large touch target */}
         <div
           className="flex justify-center"
-          onTouchStart={handleSwipeDown}
-          style={{ padding: '12px 0 8px', cursor: 'grab', touchAction: 'none' }}
+          style={{ padding: '12px 0 8px', cursor: 'grab' }}
         >
           <div style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: 'var(--rule)' }} />
         </div>
