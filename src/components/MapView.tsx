@@ -2,10 +2,11 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { useWatchlist } from '../hooks/useWatchlist'
+import { useLastScrape } from '../hooks/useLastScrape'
+import { fetchMapData, mapDataQueryKey } from '../lib/mapData'
 import { createMarkerElement } from './MapMarker'
 import { MapFilterChips } from './MapFilterChips'
 import { MapTimePills, type TimeFilter } from './MapTimePills'
@@ -13,7 +14,6 @@ import { isThisWeek, isThisMonth } from '../lib/tonight'
 import { MapKey } from './MapKey'
 import { VenueSheet } from './VenueSheet'
 import { isUpTonight } from '../lib/tonight'
-import { EMOTIONS, base } from '../lib/emotions'
 import type { Venue, Event } from '../lib/types'
 
 const CHICAGO_CENTER: [number, number] = [-87.6298, 41.8781]
@@ -32,46 +32,11 @@ export function MapView() {
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
 
   const hasToken = !!import.meta.env.VITE_MAPBOX_TOKEN
+  const lastScrapeTs = useLastScrape()
 
   const { data: mapData } = useQuery({
-    queryKey: ['map-data', user?.id],
-    queryFn: async () => {
-      const [venueRes, eventRes] = await Promise.all([
-        supabase.from('venues').select('*').not('latitude', 'is', null).not('longitude', 'is', null),
-        supabase.from('events').select('*, venue:venues(*)').order('start_date', { ascending: true }),
-      ])
-      const venues = (venueRes.data as Venue[]) ?? []
-      const events = (eventRes.data as Event[]) ?? []
-
-      let visitCounts: Record<string, number> = {}
-      let lastVisitDates: Record<string, string> = {}
-      let venueEmotionColors: Record<string, string> = {}
-
-      if (user) {
-        const { data: watchlist } = await supabase
-          .from('watchlist')
-          .select('event_id, seen_date, emotions, events(venue_id)')
-          .eq('user_id', user.id)
-          .eq('status', 'seen')
-        for (const w of watchlist ?? []) {
-          const vid = (w as any).events?.venue_id
-          if (vid) {
-            visitCounts[vid] = (visitCounts[vid] ?? 0) + 1
-            const sd = (w as any).seen_date
-            if (sd && (!lastVisitDates[vid] || sd > lastVisitDates[vid])) {
-              lastVisitDates[vid] = sd
-            }
-            const emotions = (w as any).emotions as string[] | null
-            if (emotions?.length && !venueEmotionColors[vid]) {
-              const def = EMOTIONS.find(e => e.slug === emotions[0])
-              if (def) venueEmotionColors[vid] = base(def)
-            }
-          }
-        }
-      }
-
-      return { venues, events, visitCounts, lastVisitDates, venueEmotionColors }
-    },
+    queryKey: mapDataQueryKey(user?.id ?? null, lastScrapeTs),
+    queryFn: () => fetchMapData(user?.id ?? null),
   })
 
   const venues = mapData?.venues ?? []

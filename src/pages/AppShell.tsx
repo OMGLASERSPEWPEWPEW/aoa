@@ -4,9 +4,23 @@ import { Header } from '../components/Header'
 import { Navigation } from '../components/Navigation'
 import { OfflineIndicator } from '../components/OfflineIndicator'
 import { startOfflineSync } from '../lib/offlineSync'
+import { useAuth } from '../contexts/AuthContext'
+import { useLastScrape } from '../hooks/useLastScrape'
+import { fetchMapData, mapDataQueryKey } from '../lib/mapData'
+import { queryClient } from '../App'
 
 export function AppShell() {
+  const { user } = useAuth()
+  const lastScrapeTs = useLastScrape()
+
   useEffect(() => startOfflineSync(), [])
+
+  useEffect(() => {
+    queryClient.prefetchQuery({
+      queryKey: mapDataQueryKey(user?.id ?? null, lastScrapeTs),
+      queryFn: () => fetchMapData(user?.id ?? null),
+    })
+  }, [user?.id, lastScrapeTs])
 
   return (
     <div className="flex flex-col h-dvh" style={{ backgroundColor: 'var(--bg)' }}>
