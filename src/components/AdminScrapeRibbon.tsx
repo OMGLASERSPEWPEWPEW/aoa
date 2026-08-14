@@ -33,8 +33,7 @@ export function AdminScrapeRibbon() {
   }, [isRunning, isDone, isError])
 
   if (!isAdmin) return null
-  if (hidden && !isRunning) return null
-  if (onCoveragePage) return null
+  if (hidden && !isRunning && !dashboardOpen) return null
 
   let message = ''
   let color = 'var(--ink-dim)'
@@ -67,7 +66,7 @@ export function AdminScrapeRibbon() {
       {dashboardOpen && (scraper.phase === 'scraping' || scraper.phase === 'done' || scraper.phase === 'error') && (
         <ScraperDashboard onMinimize={() => setDashboardOpen(false)} />
       )}
-      {message && !dashboardOpen && (
+      {message && !dashboardOpen && !onCoveragePage && (
         <div
           onClick={() => setDashboardOpen(true)}
           style={{
