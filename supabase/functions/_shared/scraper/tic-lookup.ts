@@ -77,16 +77,17 @@ export async function getAllTicShows(): Promise<TicShow[]> {
 
 export async function lookupVenueOnTic(
   venueName: string,
-): Promise<{ shows: TicShow[]; source: "coming_soon" | "now_playing" | null }> {
-  const comingSoon = await getComingSoon();
-  const matches = comingSoon.filter(s => matchVenueName(venueName, s.venueName) >= 0.6);
-  if (matches.length > 0) return { shows: matches, source: "coming_soon" };
-
-  const nowPlaying = await getNowPlaying();
+): Promise<{ shows: TicShow[]; source: "coming_soon" | "now_playing" | "both" | null }> {
+  const [comingSoon, nowPlaying] = await Promise.all([getComingSoon(), getNowPlaying()]);
+  const csMatches = comingSoon.filter(s => matchVenueName(venueName, s.venueName) >= 0.6);
   const npMatches = nowPlaying.filter(s => matchVenueName(venueName, s.venueName) >= 0.6);
-  if (npMatches.length > 0) return { shows: npMatches, source: "now_playing" };
 
-  return { shows: [], source: null };
+  const allMatches = [...csMatches, ...npMatches];
+  if (allMatches.length === 0) return { shows: [], source: null };
+
+  const source = csMatches.length > 0 && npMatches.length > 0 ? "both"
+    : csMatches.length > 0 ? "coming_soon" : "now_playing";
+  return { shows: allMatches, source };
 }
 
 export function ticShowsToEnrichments(shows: TicShow[]): TargetedEnrichment[] {
