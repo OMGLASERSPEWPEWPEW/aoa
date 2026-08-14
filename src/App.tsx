@@ -33,7 +33,6 @@ import { Docs } from './pages/Docs'
 import { DocsViewer } from './pages/DocsViewer'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ScrapeProvider } from './contexts/ScrapeContext'
-import { AdminScrapeRibbon } from './components/AdminScrapeRibbon'
 export default function App() {
   return (
     <ThemeProvider>
@@ -42,7 +41,6 @@ export default function App() {
       <AuthProvider>
         <ScrapeProvider>
         <UpdateBanner />
-        <AdminScrapeRibbon />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
