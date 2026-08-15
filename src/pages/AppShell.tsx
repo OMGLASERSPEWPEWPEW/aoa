@@ -16,6 +16,8 @@ export function AppShell() {
 
   useEffect(() => startOfflineSync(), [])
 
+  useEffect(() => { import('mapbox-gl') }, [])
+
   useEffect(() => {
     queryClient.prefetchQuery({
       queryKey: mapDataQueryKey(user?.id ?? null, lastScrapeTs),

@@ -41,33 +41,64 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
 
   const today = new Date().toISOString().split('T')[0]
 
-  const touchRef = useRef<{ startY: number; startTime: number; startScroll: number } | null>(null)
+  const [dragY, setDragY] = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const [dismissing, setDismissing] = useState(false)
+  const dragRef = useRef<{ startY: number; startTime: number; isDragging: boolean } | null>(null)
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     const el = sheetRef.current
-    if (!el) return
-    touchRef.current = {
+    if (!el || dismissing) return
+    dragRef.current = {
       startY: e.touches[0].clientY,
       startTime: Date.now(),
-      startScroll: el.scrollTop,
+      isDragging: false,
     }
-  }, [])
+  }, [dismissing])
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    const el = sheetRef.current
+    const drag = dragRef.current
+    if (!el || !drag || dismissing) return
+
+    const currentY = e.touches[0].clientY
+    const delta = currentY - drag.startY
+
+    if (!drag.isDragging) {
+      if (el.scrollTop <= 0 && delta > 8) {
+        drag.isDragging = true
+        drag.startY = currentY
+        setDragging(true)
+      }
+      return
+    }
+
+    const d = Math.max(0, currentY - drag.startY)
+    setDragY(d)
+  }, [dismissing])
 
   const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    const el = sheetRef.current
-    const touch = touchRef.current
-    if (!el || !touch) return
-    touchRef.current = null
+    const drag = dragRef.current
+    if (!drag) return
+
+    if (!drag.isDragging) {
+      dragRef.current = null
+      return
+    }
 
     const endY = e.changedTouches[0].clientY
-    const delta = endY - touch.startY
-    const elapsed = Date.now() - touch.startTime
+    const delta = endY - drag.startY
+    const elapsed = Date.now() - drag.startTime
     const velocity = delta / Math.max(elapsed, 1)
+    dragRef.current = null
 
-    if (touch.startScroll <= 0 && delta > 0) {
-      if (velocity > 0.4 || delta > 100) {
-        onClose()
-      }
+    if (velocity > 0.5 || delta > 120) {
+      setDismissing(true)
+      setDragY(window.innerHeight)
+      setTimeout(onClose, 250)
+    } else {
+      setDragY(0)
+      setDragging(false)
     }
   }, [onClose])
 
@@ -125,6 +156,7 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
       <div
         ref={sheetRef}
         onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         style={{
           position: 'absolute',
@@ -137,10 +169,14 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
           borderTop: '1px solid var(--rule)',
           boxShadow: '0 -14px 44px rgba(0,0,0,.75)',
           maxHeight: '75dvh',
-          overflowY: 'auto',
+          overflowY: dragging ? 'hidden' : 'auto',
           overscrollBehavior: 'contain',
-          transform: entered ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 300ms cubic-bezier(.2,.8,.2,1)',
+          transform: dismissing
+            ? `translateY(${dragY}px)`
+            : dragging
+              ? `translateY(${dragY}px)`
+              : entered ? 'translateY(0)' : 'translateY(100%)',
+          transition: dragging ? 'none' : 'transform 300ms cubic-bezier(.2,.8,.2,1)',
           WebkitOverflowScrolling: 'touch',
         }}
       >
