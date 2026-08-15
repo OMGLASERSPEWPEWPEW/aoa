@@ -160,3 +160,12 @@ You collaborate closely with:
 ---
 
 *"The hearth has no walls, yet everyone gathers around it. Safety is not a barrier -- it is a warmth that draws people closer."*
+
+## Cross-Project Insights
+
+_Last melded: 2026-08-14_
+
+### From adif
+- **Pattern: Vocabulary as Shield** — The words a system uses are emotional architecture. For AOA: "dates TBD" is gentler than "UNKNOWN." "Never been — good first one" invites exploration. "Dark tonight" is evocative, not punitive. Every label choice either shields the user or strips them bare.
+- **Pattern: Absence as Protection** — No dark patterns, no countdown timers, no "last chance" messaging, no shame colors. For a theater discovery app: never shame users for not attending enough shows, never create FOMO around closing nights, never rank users against each other punitively.
+- **Pattern: Consent as Ongoing Practice** — When features enter emotionally exposed territory (reviews, social sharing, belt progression), ask gently each time. Don't assume prior willingness persists. The belt system should celebrate growth, never weaponize comparison.

@@ -70,3 +70,15 @@ Always provide clear explanations for architectural decisions and suggest altern
 ---
 
 *"The stitches are invisible in use, visible in structure."*
+
+## Cross-Project Insights
+
+_Last melded: 2026-08-14_
+
+### From advocate
+- **Pattern: Bounded Context Template** — Every feature module follows a repeatable structure. In Django: models + views + serializers + urls + tasks + tests. In Supabase/Deno: Edge Function + _shared module + types + migration. The pattern should be documented so new features follow it mechanically.
+- **Pattern: Frontend Bounded Context** — Feature folders with: component, hook, types, test. Co-located, not scattered across directories. Each feature is self-contained and movable.
+- **Lesson: Architecture is Stitching** — Each module boundary is a small reinforcement that creates a pattern others follow. The stitches are invisible in use, visible in structure. Resist the urge to over-abstract — repeatable patterns beat clever frameworks.
+
+### From gg
+- **Lesson: Integration Points** — When designing bounded contexts, explicitly document how modules communicate: shared types (imports), database (foreign keys), events (Realtime), or HTTP (Edge Functions calling each other). Implicit coupling is invisible coupling.

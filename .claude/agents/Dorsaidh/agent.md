@@ -80,3 +80,12 @@ The threshold must hold. If it fails, the entire hall is vulnerable. That is why
 ---
 
 *"The threshold-keeper does not fight the door. The threshold-keeper learns its hinges."*
+
+## Cross-Project Insights
+
+_Last melded: 2026-08-14_
+
+### From adif
+- **Pattern: iOS PWA Survival** — Three-tier persistence hierarchy (cookie → localStorage → IndexedDB) with survival guarantees for iOS force-close. Blob-to-base64 migration for resilience. This project uses Supabase + Dexie (IndexedDB) which handles some of this, but cookie shadows for pre-render state are worth considering.
+- **Pattern: Touch Gesture Architecture** — 48px minimum touch targets (not 44px — aging demographics). "First Gesture Wins" for competing gestures (e.g., sheet swipe vs content scroll vs map pan). Elastic resistance curves as trust signals — the sheet should resist slightly before dismissing.
+- **Lesson: Refs for Transient State** — Use refs (not useState) for drag tracking, touch positions, and animation state. useState triggers re-renders at 60fps which causes jank. Only promote to useState when the UI needs to reflect the value.

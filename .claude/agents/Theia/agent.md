@@ -164,3 +164,12 @@ Every piece of brand content should:
 - Feel like the brand (empowering, not prescriptive)
 - Be consistent with existing brand elements
 - Consider the user's emotional state in that moment
+
+## Cross-Project Insights
+
+_Last melded: 2026-08-14_
+
+### From adif
+- **Pattern: Vocabulary is Identity Architecture** — The words you choose are the walls you live in. For AOA/House: "ushered" not "attended," "curtain up" not "playing," "house" not "app." These aren't decorations — they ARE the brand. Every copy decision reinforces or erodes the identity.
+- **Pattern: Voice Consistency Audit** — Periodically grep the codebase for brand-inconsistent language. If the brand says "house" but a component says "app," that's a structural crack. Voice leaks accumulate.
+- **Lesson: Brand in Error States** — Empty states, loading states, and error messages are the most-read copy in the app. "No shows found" vs "The stage is quiet tonight" — same data, different emotional architecture. Brand lives in the gaps.
