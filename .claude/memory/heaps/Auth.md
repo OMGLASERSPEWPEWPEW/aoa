@@ -2196,3 +2196,119 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
+## 2026-08-14_20-31-44 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: ## Phase 4: Persist
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update MEMORY.md with the new runbooks.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-14_20-47-25 (session 451fc35e)
+
+**user**: <command-message>evolution</command-message>
+<command-name>/evolution</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/evolution
+
+# Evolution - Collective Agent Self-Improvement
+
+```
+    +==============================================================+
+    |                                                              |
+    |     * ============================================== *      |
+    |     |  E V O L U T I O N   P R O T O C O L           |      |
+    |     * ============================================== *      |
+    |                         ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All journals are essentially empty (6 lines = just the header). All in APPEND mode, plenty of room. This session's work touched Engineering (scraper, TIC, Edge Functions), Design (venue sheet, dashboard), and Quality (data quality bugs). Let me select the most relevant agents.
+
+**Selected agents (5):**
+1. **backend-architect** — scraper pipeline, TIC integration, self-chaining, Edge Functions
+2. **frontend-developer** — venue sheet rebuild, dashboard field pills, expandable events
+3. **debugger*...
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-14_21-20-44 (session 451fc35e)
+
+**assistant**: All 5 agents complete. Several wrote their entries but noted plan mode blocked the file writes. Let me write all the journal entries now and commit.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 5 journals written. Now commit.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_21-37-30 (session f9ee169e)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good, I've got the lay of the land. Here's the **Zephyr Recap**:
+
+---
+
+**What's been happening**: Recent sessions have been all about UX polish — venue sheets got swipe-to-dismiss, tap-outside-close, and overscroll containment. Mapbox preloading was added for faster map loads. On the data side, the play catalog backfill landed (233 Wikipedia-seeded plays), event start_date backfilling was fixed for "Thru" events, and the gateway now processes ALL unlinked events in one batch. Agent evolution ran...
+
+**assistant**: [tool: Agent]
+
+**assistant**: Zephyr explored the codebase and wrote the plan. Let me verify the document.
+
+**assistant**: [tool: Read]
+
+**assistant**: The document is thorough. Let me check if there's more content at the end.
+
+**assistant**: [tool: Read]
+
+---
+

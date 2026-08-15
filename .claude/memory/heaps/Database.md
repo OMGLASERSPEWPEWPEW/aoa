@@ -2755,3 +2755,210 @@ Excluding: `.zip` files, `docs/design/` dire...
 
 ---
 
+## 2026-08-14_14-33-01 (session ddbeaf17)
+
+**assistant**: You're right. They're two different things:
+
+- **Plays** = the works themselves. "Hamlet" exists whether or not anyone in Chicago is staging it right now. The catalog should be comprehensive on its own — seeded from theater databases, award lists, editorial curation. That's what the 177-play seed does.
+
+- **Events** = specific productions at specific venues with dates and tickets. "Hamlet at Court Theatre, March 2027." That's what the scraper finds.
+
+The play-matcher's job is just the **link** —...
+
+**user**: I dont know what you mean? Do we have the ability to pull plays and can we make a button or not?
+
+---
+
+## 2026-08-14_14-34-03 (session ddbeaf17)
+
+**assistant**: There's no public API for "all plays ever written" — no theater equivalent of a music database we can just pull from. The 177 we seeded came from manual curation.
+
+What we CAN do right now:
+
+1. **The backfill button** — we have ~1000 scraped events that don't have `play_id` linked yet. A button in the admin dashboard that runs the play-matcher against all of them would find every event that matches a known play and link it. It would also create new play records via AI for canonical works we miss...
+
+**user**: what are you talking about do we not have a scraper that looks for more plays? What have we been working on?
+
+---
+
+## 2026-08-14_14-45-22 (session ddbeaf17)
+
+**assistant**: Now we're talking. TheatreInChicago has ~130 shows (now playing + coming soon) with titles, venues, and dates. Let me check more sources.
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: Jackpot. Let me check the American Theatre Play Index — that's exactly what we need.
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: Now let me check Wikipedia's comprehensive list and the Chicago theater schedule for the full season.
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: [tool: WebFetch]
+
+---
+
+## 2026-08-14_14-58-54 (session ddbeaf17)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Syntax error in the play-matcher file — trailing content at line 654. Let me check.
+
+**assistant**: [tool: Read]
+
+**assistant**: Missing closing brace — the function body isn't closed. Let me fix it.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now redeploy the event-scraper too since we fixed the play-matcher syntax.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now commit and deploy frontend.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_15-30-19 (session 451fc35e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now let me verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now `/cap`.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_15-30-44 (session 451fc35e)
+
+**assistant**: Done. Abuela's Follies now has `start_date: "2026-08-14"`, `end_date: "2026-08-23"`. It should show on the map tonight.
+
+Three fixes shipped:
+- **Migration**: backfilled 10 active events that had end dates but no start dates
+- **TIC parser**: "Thru Aug 23" now sets `startDate` to today (future scrapes handle this automatically)
+- **Time filters**: `overlapsWindow` and `isUpTonight` now handle events with `end_date` only as a safety net
+
+Reload the app — Tonight count should be higher and Abuela'...
+
+**user**: did you just update that one or all the ones without a start date
+
+---
+
+## 2026-08-14_15-39-37 (session ddbeaf17)
+
+**assistant**: [tool: Read]
+
+**assistant**: Still running batch 1. The timeout issue means each batch is hitting the 150s limit. Let me wait for it to finish and check results after.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The background batches haven't completed yet (still 14 linked). The 150s timeout is the bottleneck — processing 604 events through DeepSeek AI takes too long per batch. Let me just do the smart thing: run the exact+fuzzy matching directly in SQL for all the obvious ones, then only use AI for the truly ambiguous remainder.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: 17 linked. The remaining 601 are mostly original works, improv, concerts, and events with marketing titles that don't match any play name. That's expected — most Chicago theater events ARE original/devised works, not productions of canonical plays.
+
+Let me show you the breakdown of what's left.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Most of these are original works (Abuela's Follies, Adolescent Salvation, Adirondack Chair Circle) or adapted/local productions that wouldn't match a canonical play. A few like "9 to 5" and "A Christmas Story" could be matched but need the musical versions in our catalog.
+
+Here's the summary: **17 events linked to plays through direct SQL matching.** The remaining 601 are legitimately not productions of canonical plays in our catalog — they're original works, improv shows, concerts, or adaptatio...
+
+---
+
+## 2026-08-14_18-09-02 (session 451fc35e)
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now I have the full VenueSheet. Two changes:
+
+1. Add ticket links per tonight event
+2. Add "COMING UP" section for this venue's other events
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the "COMING UP" section. I need to find all events at this venue that aren't tonight.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_21-37-30 (session f9ee169e)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good, I've got the lay of the land. Here's the **Zephyr Recap**:
+
+---
+
+**What's been happening**: Recent sessions have been all about UX polish — venue sheets got swipe-to-dismiss, tap-outside-close, and overscroll containment. Mapbox preloading was added for faster map loads. On the data side, the play catalog backfill landed (233 Wikipedia-seeded plays), event start_date backfilling was fixed for "Thru" events, and the gateway now processes ALL unlinked events in one batch. Agent evolution ran...
+
+**assistant**: [tool: Agent]
+
+**assistant**: Zephyr explored the codebase and wrote the plan. Let me verify the document.
+
+**assistant**: [tool: Read]
+
+**assistant**: The document is thorough. Let me check if there's more content at the end.
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-15_12-36-57 (session b4222ce9)
+
+**assistant**: Here are the **top five refactoring opportunities**, ranked by impact:
+
+### 1. Standardize data fetching — kill the useEffect/useState sprawl
+19 hooks independently import `supabase` and run raw `useEffect` + `useState` with inconsistent error handling and no caching. `MapView` already uses TanStack Query's `useQuery`, but everything else is hand-rolled. Migrating to `useQuery` everywhere would give you automatic caching, refetch-on-focus, loading/error states, and cache invalidation — eliminati...
+
+**user**: whats the refactor skill do?
+
+---
+

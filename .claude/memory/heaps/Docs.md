@@ -1099,3 +1099,70 @@ v0.13.0 shipped. `/cap` memory saved — I'll use it for all future commits.
 
 ---
 
+## 2026-08-14_14-39-34 (session ddbeaf17)
+
+**assistant**: You're right, I'm sorry — I confused myself. We DO have this. Here's what we built:
+
+The **play-matcher** runs automatically after every scraper run. When the scraper finds an event like "The Children's Hour at Steppenwolf," the matcher:
+
+1. Checks if that play is in our catalog → links it
+2. If it's NOT in the catalog, the AI identifies it ("that's a canonical work by Lillian Hellman, 1934") and **creates a new play record automatically**
+
+So the scraper IS the play discovery pipeline. The 177-...
+
+**user**: can we /new-feature the backlog What does or should that look like to be as comprehensive as possible. What's the structure approach best websites etc
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: **Size assessment: Medium.** New Edge Function + admin UI button + external source research. Full process.
+
+Let me explore the current admin dashboard and external source landscape.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Good intel. This is **Small** — the play-matcher already exists, we just need the backfill Edge Function and an admin button. Using shortcuts.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-15_14-32-30 (session f9ee169e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me run the full Phase D verification now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Almost there. Let me check which `as any` casts remain — should be only 3 (2 offline + 1 test).
+
+**assistant**: [tool: Bash]
+
+**assistant**: The 4th match is just a comment string in `queries.ts` mentioning "as any" — not an actual cast. The real casts are the 2 documented offline-queue ones and 1 test mock. All expected.
+
+Now let me run the final build + test suite.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both agents completed. Same 4 pre-existing test failures (HouseChips + SeatingChart), zero new failures. All phases done!
+
+Let me do the final comprehensive verification against the QA doc.
+
+**assistant**: [tool: Bash]
+
+---
+

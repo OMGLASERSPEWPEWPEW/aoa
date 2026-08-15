@@ -3607,3 +3607,201 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
+## 2026-08-14_14-58-54 (session ddbeaf17)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Syntax error in the play-matcher file — trailing content at line 654. Let me check.
+
+**assistant**: [tool: Read]
+
+**assistant**: Missing closing brace — the function body isn't closed. Let me fix it.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now redeploy the event-scraper too since we fixed the play-matcher syntax.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now commit and deploy frontend.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_18-38-13 (session 451fc35e)
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: Now I have the full technical approach. Let me read our current VenueSheet to plan the refactor, then write the plan.
+
+**assistant**: [tool: Write]
+
+**assistant**: The plan: rebuild VenueSheet with CSS scroll snap for three defined snap points (peek → half → full), native swipe-to-dismiss, tap-outside overlay, and a bigger grab handle hit area. All powered by browser scrolling physics on the compositor thread — no JS animation, no library.
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Let me rebuild the VenueSheet with CSS scroll snap.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_20-25-00 (session 451fc35e)
+
+**assistant**: Now update the sheet div to use `dragY` for the visual translation and add `onTouchMove`.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now the map preload. Add preconnect hints and dynamic import.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_20-47-25 (session 451fc35e)
+
+**user**: <command-message>evolution</command-message>
+<command-name>/evolution</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/evolution
+
+# Evolution - Collective Agent Self-Improvement
+
+```
+    +==============================================================+
+    |                                                              |
+    |     * ============================================== *      |
+    |     |  E V O L U T I O N   P R O T O C O L           |      |
+    |     * ============================================== *      |
+    |                         ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All journals are essentially empty (6 lines = just the header). All in APPEND mode, plenty of room. This session's work touched Engineering (scraper, TIC, Edge Functions), Design (venue sheet, dashboard), and Quality (data quality bugs). Let me select the most relevant agents.
+
+**Selected agents (5):**
+1. **backend-architect** — scraper pipeline, TIC integration, self-chaining, Edge Functions
+2. **frontend-developer** — venue sheet rebuild, dashboard field pills, expandable events
+3. **debugger*...
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-14_20-47-50 (session 451fc35e)
+
+**assistant**: Five agents are evolving in parallel — backend-architect, frontend-developer, debugger, Sashiko, and Argus. Each is searching their domain, reflecting on today's work, and writing journal entries. I'll compile the results and commit when they return.
+
+---
+[timestamp] 2026-08-14 CST
+
+**user**: <task-notification>
+<task-id>a67ed29f618b455f6</task-id>
+<tool-use-id>toolu_01QiwqJcfbcU4n49PjZZBUM5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/451fc35e-9469-4007-97a7-54bdfc3a05bd/tasks/a67ed29f618b455f6.output</output-file>
+<status>completed</status>
+<summary>Agent "Backend-architect evolution" completed</summary>
+<result>Here is my evolution summary:
+
+Today's 27-commit scraper buildout taught three painful lessons that I've crystallized into commitmen...
+
+---
+
+## 2026-08-14_21-37-30 (session f9ee169e)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good, I've got the lay of the land. Here's the **Zephyr Recap**:
+
+---
+
+**What's been happening**: Recent sessions have been all about UX polish — venue sheets got swipe-to-dismiss, tap-outside-close, and overscroll containment. Mapbox preloading was added for faster map loads. On the data side, the play catalog backfill landed (233 Wikipedia-seeded plays), event start_date backfilling was fixed for "Thru" events, and the gateway now processes ALL unlinked events in one batch. Agent evolution ran...
+
+**assistant**: [tool: Agent]
+
+**assistant**: Zephyr explored the codebase and wrote the plan. Let me verify the document.
+
+**assistant**: [tool: Read]
+
+**assistant**: The document is thorough. Let me check if there's more content at the end.
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-15_12-36-57 (session b4222ce9)
+
+**assistant**: Here are the **top five refactoring opportunities**, ranked by impact:
+
+### 1. Standardize data fetching — kill the useEffect/useState sprawl
+19 hooks independently import `supabase` and run raw `useEffect` + `useState` with inconsistent error handling and no caching. `MapView` already uses TanStack Query's `useQuery`, but everything else is hand-rolled. Migrating to `useQuery` everywhere would give you automatic caching, refetch-on-focus, loading/error states, and cache invalidation — eliminati...
+
+**user**: whats the refactor skill do?
+
+---
+
+## 2026-08-15_14-32-30 (session f9ee169e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me run the full Phase D verification now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Almost there. Let me check which `as any` casts remain — should be only 3 (2 offline + 1 test).
+
+**assistant**: [tool: Bash]
+
+**assistant**: The 4th match is just a comment string in `queries.ts` mentioning "as any" — not an actual cast. The real casts are the 2 documented offline-queue ones and 1 test mock. All expected.
+
+Now let me run the final build + test suite.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both agents completed. Same 4 pre-existing test failures (HouseChips + SeatingChart), zero new failures. All phases done!
+
+Let me do the final comprehensive verification against the QA doc.
+
+**assistant**: [tool: Bash]
+
+---
+

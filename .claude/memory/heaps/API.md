@@ -2550,3 +2550,151 @@ Excluding: `.zip` files, `docs/design/` dire...
 
 ---
 
+## 2026-08-14_14-29-55 (session 451fc35e)
+
+**assistant**: [tool: AskUserQuestion]
+
+**user**: [Request interrupted by user]
+
+**user**: wait if we push will that break the current scrape
+
+**assistant**: No — it's safe. The Edge Function deploy doesn't kill in-flight invocations. The current venue finishes with old code, and the next self-chain call picks up the new code. The only difference is the new code adds `event_details` to `recent_venues` — old entries without it just won't have the expand arrow, which the frontend handles gracefully (`v.event_details?.length ?? 0`).
+
+**assistant**: [tool: Bash]
+
+**assistant**: 17/110 and running. Safe to push — go ahead?
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-34-03 (session ddbeaf17)
+
+**assistant**: There's no public API for "all plays ever written" — no theater equivalent of a music database we can just pull from. The 177 we seeded came from manual curation.
+
+What we CAN do right now:
+
+1. **The backfill button** — we have ~1000 scraped events that don't have `play_id` linked yet. A button in the admin dashboard that runs the play-matcher against all of them would find every event that matches a known play and link it. It would also create new play records via AI for canonical works we miss...
+
+**user**: what are you talking about do we not have a scraper that looks for more plays? What have we been working on?
+
+---
+
+## 2026-08-14_18-38-13 (session 451fc35e)
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: Now I have the full technical approach. Let me read our current VenueSheet to plan the refactor, then write the plan.
+
+**assistant**: [tool: Write]
+
+**assistant**: The plan: rebuild VenueSheet with CSS scroll snap for three defined snap points (peek → half → full), native swipe-to-dismiss, tap-outside overlay, and a bigger grab handle hit area. All powered by browser scrolling physics on the compositor thread — no JS animation, no library.
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Let me rebuild the VenueSheet with CSS scroll snap.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_18-56-42 (session 451fc35e)
+
+**user**: the swipe down doesn't work well
+
+**assistant**: The issue is the swipe handler is only on the tiny grab handle, and it fights with the sheet's own scroll. Let me fix it — swipe should work from the whole top area, use velocity detection, and only dismiss when the sheet is scrolled to top.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the sheet to use these handlers on the whole sheet, not just the grab handle.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Vercel API is having a DNS issue. Let me commit and push — Vercel auto-deploys from main anyway.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_20-31-44 (session 451fc35e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: ## Phase 4: Persist
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update MEMORY.md with the new runbooks.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-14_20-47-25 (session 451fc35e)
+
+**user**: <command-message>evolution</command-message>
+<command-name>/evolution</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/evolution
+
+# Evolution - Collective Agent Self-Improvement
+
+```
+    +==============================================================+
+    |                                                              |
+    |     * ============================================== *      |
+    |     |  E V O L U T I O N   P R O T O C O L           |      |
+    |     * ============================================== *      |
+    |                         ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All journals are essentially empty (6 lines = just the header). All in APPEND mode, plenty of room. This session's work touched Engineering (scraper, TIC, Edge Functions), Design (venue sheet, dashboard), and Quality (data quality bugs). Let me select the most relevant agents.
+
+**Selected agents (5):**
+1. **backend-architect** — scraper pipeline, TIC integration, self-chaining, Edge Functions
+2. **frontend-developer** — venue sheet rebuild, dashboard field pills, expandable events
+3. **debugger*...
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+

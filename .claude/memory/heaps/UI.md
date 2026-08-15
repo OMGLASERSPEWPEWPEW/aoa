@@ -1557,3 +1557,155 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
+## 2026-08-14_14-29-55 (session 451fc35e)
+
+**assistant**: [tool: AskUserQuestion]
+
+**user**: [Request interrupted by user]
+
+**user**: wait if we push will that break the current scrape
+
+**assistant**: No — it's safe. The Edge Function deploy doesn't kill in-flight invocations. The current venue finishes with old code, and the next self-chain call picks up the new code. The only difference is the new code adds `event_details` to `recent_venues` — old entries without it just won't have the expand arrow, which the frontend handles gracefully (`v.event_details?.length ?? 0`).
+
+**assistant**: [tool: Bash]
+
+**assistant**: 17/110 and running. Safe to push — go ahead?
+
+**assistant**: [tool: AskUserQuestion]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_14-34-44 (session 451fc35e)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add it to AppShell between Header and main.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_18-38-13 (session 451fc35e)
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: Now I have the full technical approach. Let me read our current VenueSheet to plan the refactor, then write the plan.
+
+**assistant**: [tool: Write]
+
+**assistant**: The plan: rebuild VenueSheet with CSS scroll snap for three defined snap points (peek → half → full), native swipe-to-dismiss, tap-outside overlay, and a bigger grab handle hit area. All powered by browser scrolling physics on the compositor thread — no JS animation, no library.
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Let me rebuild the VenueSheet with CSS scroll snap.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-14_21-25-48 (session b4222ce9)
+
+**assistant**: ## Summary
+
+**Tests written:** 20 new tests across 3 files, all passing
+
+| File | Tests | Status |
+|------|-------|--------|
+| `src/lib/genre.test.ts` (new) | 5 | All pass |
+| `src/lib/tonight.test.ts` (expanded) | 10 new | All pass |
+| `src/lib/settingsStorage.test.ts` (new) | 5 | All pass |
+
+**Full suite:** 108 passing, 4 failing (pre-existing SeatingChart test mismatch — component switched to CSS custom properties but tests still assert inline oklch values).
+
+**Potential defects:** None found...
+
+**user**: what are the top five refactoring opportunities in this code base
+
+**assistant**: Let me scan the codebase for patterns that stand out as refactoring candidates.
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-14_21-37-30 (session f9ee169e)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good, I've got the lay of the land. Here's the **Zephyr Recap**:
+
+---
+
+**What's been happening**: Recent sessions have been all about UX polish — venue sheets got swipe-to-dismiss, tap-outside-close, and overscroll containment. Mapbox preloading was added for faster map loads. On the data side, the play catalog backfill landed (233 Wikipedia-seeded plays), event start_date backfilling was fixed for "Thru" events, and the gateway now processes ALL unlinked events in one batch. Agent evolution ran...
+
+**assistant**: [tool: Agent]
+
+**assistant**: Zephyr explored the codebase and wrote the plan. Let me verify the document.
+
+**assistant**: [tool: Read]
+
+**assistant**: The document is thorough. Let me check if there's more content at the end.
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-15_14-32-30 (session f9ee169e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me run the full Phase D verification now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Almost there. Let me check which `as any` casts remain — should be only 3 (2 offline + 1 test).
+
+**assistant**: [tool: Bash]
+
+**assistant**: The 4th match is just a comment string in `queries.ts` mentioning "as any" — not an actual cast. The real casts are the 2 documented offline-queue ones and 1 test mock. All expected.
+
+Now let me run the final build + test suite.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both agents completed. Same 4 pre-existing test failures (HouseChips + SeatingChart), zero new failures. All phases done!
+
+Let me do the final comprehensive verification against the QA doc.
+
+**assistant**: [tool: Bash]
+
+---
+
