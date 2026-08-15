@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import type { QueueItem } from './useDiscoveryQueue'
+import type { QueueItem, PromoteData } from '../lib/types'
 
 function generateSlug(name: string): string {
   return name
@@ -8,23 +8,6 @@ function generateSlug(name: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80)
-}
-
-export interface PromoteData {
-  name: string
-  slug: string
-  description: string
-  venue_type: string
-  address: string
-  neighborhood: string
-  latitude: number | null
-  longitude: number | null
-  price_range: string
-  website_url: string
-  calendar_url: string
-  genre_tags: string[]
-  accessibility_info: string
-  photo_url: string
 }
 
 export function buildPromoteDefaults(item: QueueItem): PromoteData {

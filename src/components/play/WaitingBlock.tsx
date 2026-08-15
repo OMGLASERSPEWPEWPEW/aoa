@@ -1,7 +1,4 @@
-interface TrendBucket {
-  month: string
-  count: number
-}
+import type { TrendBucket } from '../../lib/types'
 
 interface Props {
   city: string

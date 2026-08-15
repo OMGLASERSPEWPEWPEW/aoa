@@ -8,6 +8,7 @@ export function useOfflineWrite() {
     payload: Record<string, unknown>,
   ): Promise<{ offline: boolean; error: string | null }> => {
     if (navigator.onLine) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic offline queue payload cannot be typed to a specific table
       const { error } = await supabase.from(table).upsert(payload as any)
       return { offline: false, error: error?.message ?? null }
     }

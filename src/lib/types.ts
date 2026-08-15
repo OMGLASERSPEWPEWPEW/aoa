@@ -177,3 +177,140 @@ export interface PlayWaitingTrend {
   month: string
   count: number
 }
+
+export interface TrendBucket {
+  month: string
+  count: number
+}
+
+export interface ProductionRow {
+  event: Event
+  userSeen: boolean
+  userSeenDate: string | null
+}
+
+export interface FriendActivity {
+  friendName: string
+  avatarUrl: string | null
+  showTitle: string
+  emotions: Emotion[]
+  quote: string | null
+  seenDate: string
+}
+
+export interface QueueItem {
+  id: string
+  raw_name: string
+  raw_address: string | null
+  raw_website_url: string | null
+  raw_description: string | null
+  enriched_venue_type: string | null
+  enriched_calendar_url: string | null
+  enriched_photo_url: string | null
+  enriched_latitude: number | null
+  enriched_longitude: number | null
+  enriched_venue_type_confidence: number | null
+  enrichment_status: string
+  created_at: string
+}
+
+export interface AuditVenue {
+  id: string
+  name: string
+  neighborhood: string | null
+  venue_type: string
+  has_calendar_url: boolean
+  has_photo: boolean
+  event_count: number
+  source: string
+}
+
+export interface CostByModel {
+  model: string
+  call_count: number
+  total_input_tokens: number
+  total_output_tokens: number
+  total_cost: number
+}
+
+export interface CostByFeature {
+  feature: string
+  call_count: number
+  total_cost: number
+}
+
+export interface DailyCost {
+  day: string
+  call_count: number
+  total_cost: number
+}
+
+export interface CostDashboard {
+  total: number
+  byModel: CostByModel[]
+  byFeature: CostByFeature[]
+  dailySeries: DailyCost[]
+  loading: boolean
+}
+
+export interface PromoteData {
+  name: string
+  slug: string
+  description: string
+  venue_type: string
+  address: string
+  neighborhood: string
+  latitude: number | null
+  longitude: number | null
+  price_range: string
+  website_url: string
+  calendar_url: string
+  genre_tags: string[]
+  accessibility_info: string
+  photo_url: string
+}
+
+export interface MapData {
+  venues: Venue[]
+  events: Event[]
+  visitCounts: Record<string, number>
+  lastVisitDates: Record<string, string>
+  venueEmotionColors: Record<string, string>
+}
+
+export type TimeFilter = 'today' | 'week' | 'month'
+
+export interface PatchNote {
+  version: string
+  date: string
+  title: string
+  summary: string
+  details?: string[]
+}
+
+export interface WatchlistWithEvent extends WatchlistItem {
+  event: Event & { venue: Venue }
+}
+
+export interface WatchlistMapJoin {
+  event_id: string
+  seen_date: string | null
+  emotions: Emotion[] | null
+  events: { venue_id: string }[] | null
+}
+
+export interface ReviewWithProfile extends Review {
+  profile: Pick<Profile, 'id' | 'username' | 'house_rank'>
+}
+
+export interface EventEmotionCount {
+  event_id: string
+  emotion_slug: string
+  pick_count: number
+}
+
+export interface EventSpectrumRow {
+  event_id: string
+  emotion: string
+  pct: number
+}

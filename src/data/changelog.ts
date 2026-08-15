@@ -1,10 +1,6 @@
-export interface PatchNote {
-  version: string
-  date: string
-  title: string
-  summary: string
-  details?: string[]
-}
+import type { PatchNote } from '../lib/types'
+
+export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {

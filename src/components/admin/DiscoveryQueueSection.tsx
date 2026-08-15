@@ -1,4 +1,4 @@
-import type { QueueItem } from '../../hooks/useDiscoveryQueue'
+import type { QueueItem } from '../../lib/types'
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 

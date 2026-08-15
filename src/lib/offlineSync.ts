@@ -15,6 +15,7 @@ async function processQueue(): Promise<void> {
       let success = false
 
       while (attempts < 3 && !success) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic offline queue payload cannot be typed to a specific table
         const { error } = await supabase.from(item.table).upsert(item.payload as any)
         if (!error) {
           await db.pendingWrites.delete(item.id!)

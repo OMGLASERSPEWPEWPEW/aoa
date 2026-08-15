@@ -1,4 +1,4 @@
-export type TimeFilter = 'today' | 'week' | 'month'
+import type { TimeFilter } from '../lib/types'
 
 const PILLS: Array<{ key: TimeFilter; label: string }> = [
   { key: 'today', label: 'TODAY' },

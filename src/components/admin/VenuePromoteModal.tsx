@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { QueueItem } from '../../hooks/useDiscoveryQueue'
-import { buildPromoteDefaults, useVenuePromotion, type PromoteData } from '../../hooks/useVenuePromotion'
+import type { QueueItem, PromoteData } from '../../lib/types'
+import { buildPromoteDefaults, useVenuePromotion } from '../../hooks/useVenuePromotion'
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 

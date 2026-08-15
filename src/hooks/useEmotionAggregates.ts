@@ -1,65 +1,24 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
+import { queryKeys } from '../lib/queryKeys'
+import { fetchEmotionAggregates } from '../lib/queries'
 import { emotionBySlug } from '../lib/emotions'
 import type { SpectrumSlice } from '../lib/types'
 
-function currentSeason(): string {
-  const now = new Date()
-  const year = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
-  return year.toString()
-}
-
 export function useEmotionAggregates(mode: 'season' | 'all-time') {
   const { user } = useAuth()
-  const [slices, setSlices] = useState<SpectrumSlice[]>([])
-  const [totalCards, setTotalCards] = useState(0)
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (!user) {
-      setLoading(false)
-      return
-    }
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.profile.emotionAggregates(user?.id ?? '', mode),
+    queryFn: () => fetchEmotionAggregates(user!.id, mode),
+    enabled: !!user,
+  })
 
-    async function load() {
-      let query = supabase
-        .from('profile_emotion_counts')
-        .select('emotion, weight')
-        .eq('user_id', user!.id)
-
-      if (mode === 'season') {
-        query = query.eq('season', currentSeason())
-      }
-
-      const { data } = await query
-
-      if (!data || data.length === 0) {
-        setSlices([])
-        setTotalCards(0)
-        setLoading(false)
-        return
-      }
-
-      const totalWeight = data.reduce((s, r) => s + Number(r.weight), 0)
-      setTotalCards(Math.ceil(totalWeight))
-
-      const computed: SpectrumSlice[] = data
-        .map(r => ({
-          emotion: r.emotion as SpectrumSlice['emotion'],
-          pct: totalWeight > 0 ? Math.round((Number(r.weight) / totalWeight) * 100) : 0,
-        }))
-        .filter(s => s.pct > 0)
-        .sort((a, b) => b.pct - a.pct)
-
-      setSlices(computed)
-      setLoading(false)
-    }
-
-    load()
-  }, [user, mode])
-
-  return { slices, totalCards, loading }
+  return {
+    slices: data?.slices ?? [],
+    totalCards: data?.totalCards ?? 0,
+    loading: isLoading,
+  }
 }
 
 export function personalInsight(slices: SpectrumSlice[]): string {

@@ -1,52 +1,78 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import type { Review } from '../lib/types'
+import { queryKeys } from '../lib/queryKeys'
+import { fetchReviewsByEvent } from '../lib/queries'
 
 export function useReviews(eventId: string) {
   const { user } = useAuth()
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchReviews = useCallback(async () => {
-    const { data } = await supabase
-      .from('reviews')
-      .select('*, profile:profiles(id, username, house_rank)')
-      .eq('event_id', eventId)
-      .order('created_at', { ascending: false })
-    setReviews((data as Review[]) ?? [])
-    setLoading(false)
-  }, [eventId])
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: queryKeys.reviews.byEvent(eventId),
+    queryFn: () => fetchReviewsByEvent(eventId),
+    enabled: !!eventId,
+  })
 
-  useEffect(() => { fetchReviews() }, [fetchReviews])
+  const reviews = data ?? []
 
-  const submitReview = useCallback(async (review: {
+  const submitMutation = useMutation({
+    mutationFn: async (review: {
+      title: string
+      body: string
+      contains_spoilers: boolean
+      emotions?: string[]
+      prompt?: string
+    }) => {
+      if (!user) throw new Error('Not authenticated')
+      await supabase.from('reviews').insert({
+        user_id: user.id,
+        event_id: eventId,
+        ...review,
+      })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviews.byEvent(eventId) })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      await supabase.from('reviews').delete().eq('id', reviewId)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviews.byEvent(eventId) })
+    },
+  })
+
+  const voteMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      await supabase.rpc('increment_helpful_count', { review_id: reviewId })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviews.byEvent(eventId) })
+    },
+  })
+
+  const submitReview = async (review: {
     title: string
     body: string
     contains_spoilers: boolean
     emotions?: string[]
     prompt?: string
   }) => {
-    if (!user) return
-    await supabase.from('reviews').insert({
-      user_id: user.id,
-      event_id: eventId,
-      ...review,
-    })
-    await fetchReviews()
-  }, [user, eventId, fetchReviews])
+    await submitMutation.mutateAsync(review)
+  }
 
-  const deleteReview = useCallback(async (reviewId: string) => {
-    await supabase.from('reviews').delete().eq('id', reviewId)
-    await fetchReviews()
-  }, [fetchReviews])
+  const deleteReview = async (reviewId: string) => {
+    await deleteMutation.mutateAsync(reviewId)
+  }
 
-  const voteHelpful = useCallback(async (reviewId: string) => {
-    await supabase.rpc('increment_helpful_count', { review_id: reviewId })
-    await fetchReviews()
-  }, [fetchReviews])
+  const voteHelpful = async (reviewId: string) => {
+    await voteMutation.mutateAsync(reviewId)
+  }
 
-  const userReview = reviews.find(r => r.user_id === user?.id) ?? null
+  const userReview = reviews.find((r) => r.user_id === user?.id) ?? null
 
-  return { reviews, loading, submitReview, deleteReview, voteHelpful, userReview, refetch: fetchReviews }
+  return { reviews, loading: isLoading, submitReview, deleteReview, voteHelpful, userReview, refetch }
 }

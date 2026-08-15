@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-
-interface TrendBucket {
-  month: string
-  count: number
-}
+import { queryKeys } from '../lib/queryKeys'
+import { fetchPlayInterest, fetchProfileCity } from '../lib/queries'
+import type { TrendBucket } from '../lib/types'
 
 export interface UsePlayInterestResult {
   isWaiting: boolean
@@ -15,91 +13,76 @@ export interface UsePlayInterestResult {
   toggle: () => Promise<void>
 }
 
+interface InterestData {
+  isWaiting: boolean
+  waitingCount: number
+  trend: TrendBucket[]
+  city: string
+}
+
 export function usePlayInterest(playId: string): UsePlayInterestResult {
   const { user } = useAuth()
-  const [isWaiting, setIsWaiting] = useState(false)
-  const [waitingCount, setWaitingCount] = useState(0)
-  const [trend, setTrend] = useState<TrendBucket[]>([])
-  const [loading, setLoading] = useState(true)
-  const [city, setCity] = useState('chicago')
+  const queryClient = useQueryClient()
+  const qk = queryKeys.plays.interest(playId)
 
-  useEffect(() => {
-    if (!playId) return
+  const { data, isLoading } = useQuery({
+    queryKey: qk,
+    queryFn: async (): Promise<InterestData> => {
+      const city = user ? await fetchProfileCity(user.id) : 'chicago'
+      const result = await fetchPlayInterest(playId, user?.id ?? null, city)
+      return { ...result, city }
+    },
+    enabled: !!playId,
+  })
 
-    async function load() {
-      setLoading(true)
-
-      let userCity = 'chicago'
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('home_city')
-          .eq('id', user.id)
-          .single()
-        userCity = profile?.home_city ?? 'chicago'
-        setCity(userCity)
-      }
-
-      if (user) {
-        const { data } = await supabase
+  const toggleMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !data) throw new Error('Not ready')
+      if (data.isWaiting) {
+        await supabase
           .from('play_interest')
-          .select('id')
+          .delete()
           .eq('user_id', user.id)
           .eq('play_id', playId)
-          .maybeSingle()
-        setIsWaiting(!!data)
+      } else {
+        await supabase
+          .from('play_interest')
+          .insert({ user_id: user.id, play_id: playId, city: data.city })
       }
-
-      const { data: countData } = await supabase
-        .from('play_waiting_counts')
-        .select('waiting')
-        .eq('play_id', playId)
-        .eq('city', userCity)
-        .maybeSingle()
-      setWaitingCount((countData as { waiting: number } | null)?.waiting ?? 0)
-
-      const { data: trendData } = await supabase
-        .from('play_waiting_trend')
-        .select('month, count')
-        .eq('play_id', playId)
-        .eq('city', userCity)
-        .order('month', { ascending: true })
-        .limit(8)
-      setTrend((trendData as TrendBucket[] | null) ?? [])
-
-      setLoading(false)
-    }
-
-    load()
-  }, [playId, user])
-
-  const toggle = useCallback(async () => {
-    if (!user || !playId) return
-
-    if (isWaiting) {
-      setIsWaiting(false)
-      setWaitingCount(c => Math.max(0, c - 1))
-      const { error } = await supabase
-        .from('play_interest')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('play_id', playId)
-      if (error) {
-        setIsWaiting(true)
-        setWaitingCount(c => c + 1)
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<InterestData>(qk)
+      if (previous) {
+        queryClient.setQueryData<InterestData>(qk, {
+          ...previous,
+          isWaiting: !previous.isWaiting,
+          waitingCount: previous.isWaiting
+            ? Math.max(0, previous.waitingCount - 1)
+            : previous.waitingCount + 1,
+        })
       }
-    } else {
-      setIsWaiting(true)
-      setWaitingCount(c => c + 1)
-      const { error } = await supabase
-        .from('play_interest')
-        .insert({ user_id: user.id, play_id: playId, city })
-      if (error) {
-        setIsWaiting(false)
-        setWaitingCount(c => Math.max(0, c - 1))
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(qk, context.previous)
       }
-    }
-  }, [user, playId, isWaiting, city])
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qk })
+    },
+  })
 
-  return { isWaiting, waitingCount, trend, loading, toggle }
+  const toggle = async () => {
+    await toggleMutation.mutateAsync()
+  }
+
+  return {
+    isWaiting: data?.isWaiting ?? false,
+    waitingCount: data?.waitingCount ?? 0,
+    trend: data?.trend ?? [],
+    loading: isLoading,
+    toggle,
+  }
 }

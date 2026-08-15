@@ -1,4 +1,4 @@
-import type { AuditVenue } from '../../hooks/useVenueAudit'
+import type { AuditVenue } from '../../lib/types'
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 

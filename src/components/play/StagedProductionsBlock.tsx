@@ -1,10 +1,4 @@
-import type { Event } from '../../lib/types'
-
-interface ProductionRow {
-  event: Event
-  userSeen: boolean
-  userSeenDate: string | null
-}
+import type { ProductionRow } from '../../lib/types'
 
 interface Props {
   productions: ProductionRow[]

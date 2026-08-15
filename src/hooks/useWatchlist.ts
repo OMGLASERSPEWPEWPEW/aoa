@@ -1,40 +1,36 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { queryKeys } from '../lib/queryKeys'
+import { fetchWatchlist } from '../lib/queries'
 import type { WatchlistItem, WatchlistStatus, Emotion, RoomVolume } from '../lib/types'
 
 export function useWatchlist() {
   const { user } = useAuth()
-  const [items, setItems] = useState<WatchlistItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
+  const userId = user?.id ?? ''
+  const qk = queryKeys.watchlist.all(userId)
 
-  const fetchWatchlist = useCallback(async () => {
-    if (!user) return
-    const { data } = await supabase
-      .from('watchlist')
-      .select('*, event:events(*, venue:venues(*))')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-    setItems((data as WatchlistItem[]) ?? [])
-    setLoading(false)
-  }, [user])
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: qk,
+    queryFn: () => fetchWatchlist(userId),
+    enabled: !!user,
+  })
 
-  useEffect(() => {
-    fetchWatchlist()
-  }, [fetchWatchlist])
+  const items = data ?? []
 
-  const addToWatchlist = useCallback(async (eventId: string, status: WatchlistStatus = 'want_to_see') => {
-    if (!user) return
-    const optimistic: WatchlistItem = {
-      id: crypto.randomUUID(),
-      user_id: user.id,
-      event_id: eventId,
+  // ---- Add / upsert ----
+  const addMutation = useMutation({
+    mutationFn: async ({
+      eventId,
       status,
-      updated_at: new Date().toISOString(),
-    } as WatchlistItem
-    setItems(prev => [optimistic, ...prev.filter(i => i.event_id !== eventId)])
-    try {
-      const { data } = await supabase
+    }: {
+      eventId: string
+      status: WatchlistStatus
+    }) => {
+      if (!user) throw new Error('Not authenticated')
+      const { data: row } = await supabase
         .from('watchlist')
         .upsert(
           { user_id: user.id, event_id: eventId, status, updated_at: new Date().toISOString() },
@@ -42,50 +38,158 @@ export function useWatchlist() {
         )
         .select('*, event:events(*, venue:venues(*))')
         .maybeSingle()
-      if (data) {
-        setItems(prev => {
-          const without = prev.filter(i => i.event_id !== eventId)
-          return [data as WatchlistItem, ...without]
+      return row as WatchlistItem | null
+    },
+    onMutate: async ({ eventId, status }) => {
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<WatchlistItem[]>(qk)
+      const optimistic: WatchlistItem = {
+        id: crypto.randomUUID(),
+        user_id: userId,
+        event_id: eventId,
+        status,
+        emotions: [],
+        room_volume: null,
+        reflection: null,
+        seen_date: null,
+        performance_at: null,
+        seat_note: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      queryClient.setQueryData<WatchlistItem[]>(qk, (old) => {
+        const without = (old ?? []).filter((i) => i.event_id !== eventId)
+        return [optimistic, ...without]
+      })
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(qk, context.previous)
+      }
+    },
+    onSuccess: (row, { eventId }) => {
+      if (row) {
+        queryClient.setQueryData<WatchlistItem[]>(qk, (old) => {
+          const without = (old ?? []).filter((i) => i.event_id !== eventId)
+          return [row, ...without]
         })
       }
-    } catch {
-      setItems(prev => prev.filter(i => i.id !== optimistic.id))
-    }
-  }, [user])
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qk })
+    },
+  })
 
-  const updateStatus = useCallback(async (eventId: string, status: WatchlistStatus, extra?: { reflection?: string; seen_date?: string; emotions?: Emotion[]; room_volume?: RoomVolume | null }) => {
-    if (!user) return
-    const prev = items
-    setItems(p => p.map(i => i.event_id === eventId ? { ...i, status, ...extra } as WatchlistItem : i))
-    try {
-      const { data } = await supabase
+  // ---- Update status ----
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      eventId,
+      status,
+      extra,
+    }: {
+      eventId: string
+      status: WatchlistStatus
+      extra?: {
+        reflection?: string
+        seen_date?: string
+        emotions?: Emotion[]
+        room_volume?: RoomVolume | null
+      }
+    }) => {
+      if (!user) throw new Error('Not authenticated')
+      const { data: row } = await supabase
         .from('watchlist')
         .update({ status, ...extra, updated_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .eq('event_id', eventId)
         .select('*, event:events(*, venue:venues(*))')
         .maybeSingle()
-      if (data) {
-        setItems(p => p.map(i => i.event_id === eventId ? data as WatchlistItem : i))
+      return row as WatchlistItem | null
+    },
+    onMutate: async ({ eventId, status, extra }) => {
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<WatchlistItem[]>(qk)
+      queryClient.setQueryData<WatchlistItem[]>(qk, (old) =>
+        (old ?? []).map((i) =>
+          i.event_id === eventId ? ({ ...i, status, ...extra } as WatchlistItem) : i,
+        ),
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(qk, context.previous)
       }
-    } catch {
-      setItems(prev)
-    }
-  }, [user, items])
+    },
+    onSuccess: (row, { eventId }) => {
+      if (row) {
+        queryClient.setQueryData<WatchlistItem[]>(qk, (old) =>
+          (old ?? []).map((i) => (i.event_id === eventId ? row : i)),
+        )
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qk })
+    },
+  })
 
-  const removeFromWatchlist = useCallback(async (eventId: string) => {
-    if (!user) return
-    await supabase
-      .from('watchlist')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('event_id', eventId)
-    setItems(prev => prev.filter(i => i.event_id !== eventId))
-  }, [user])
+  // ---- Remove ----
+  const removeMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      if (!user) throw new Error('Not authenticated')
+      await supabase
+        .from('watchlist')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('event_id', eventId)
+    },
+    onMutate: async (eventId) => {
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<WatchlistItem[]>(qk)
+      queryClient.setQueryData<WatchlistItem[]>(qk, (old) =>
+        (old ?? []).filter((i) => i.event_id !== eventId),
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(qk, context.previous)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qk })
+    },
+  })
 
-  const getStatus = useCallback((eventId: string): WatchlistStatus | null => {
-    return items.find(i => i.event_id === eventId)?.status ?? null
-  }, [items])
+  // ---- Public API wrappers (preserve signatures) ----
+  const addToWatchlist = async (eventId: string, status: WatchlistStatus = 'want_to_see') => {
+    await addMutation.mutateAsync({ eventId, status })
+  }
 
-  return { items, loading, addToWatchlist, updateStatus, removeFromWatchlist, getStatus, refetch: fetchWatchlist }
+  const updateStatus = async (
+    eventId: string,
+    status: WatchlistStatus,
+    extra?: {
+      reflection?: string
+      seen_date?: string
+      emotions?: Emotion[]
+      room_volume?: RoomVolume | null
+    },
+  ) => {
+    await updateMutation.mutateAsync({ eventId, status, extra })
+  }
+
+  const removeFromWatchlist = async (eventId: string) => {
+    await removeMutation.mutateAsync(eventId)
+  }
+
+  const getStatus = useCallback(
+    (eventId: string): WatchlistStatus | null => {
+      return items.find((i) => i.event_id === eventId)?.status ?? null
+    },
+    [items],
+  )
+
+  return { items, loading: isLoading, addToWatchlist, updateStatus, removeFromWatchlist, getStatus, refetch }
 }
