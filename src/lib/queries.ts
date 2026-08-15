@@ -51,10 +51,20 @@ export async function fetchPlayById(id: string): Promise<Play | null> {
 // ---------------------------------------------------------------------------
 
 export async function fetchEventsWithJoins(): Promise<Event[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('events')
     .select('*, venue:venues(*), play:plays(*)')
     .order('start_date', { ascending: true })
+  if (error) console.error('[queries] fetchEventsWithJoins:', error.message)
+  return (data ?? []) as Event[]
+}
+
+export async function fetchEventsForMap(): Promise<Event[]> {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*, venue:venues(*)')
+    .order('start_date', { ascending: true })
+  if (error) console.error('[queries] fetchEventsForMap:', error.message)
   return (data ?? []) as Event[]
 }
 
@@ -81,11 +91,12 @@ export async function fetchEventsByPlayId(playId: string): Promise<Event[]> {
 // ---------------------------------------------------------------------------
 
 export async function fetchVenuesWithCoords(): Promise<Venue[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('venues')
     .select('*')
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
+  if (error) console.error('[queries] fetchVenuesWithCoords:', error.message)
   return (data ?? []) as Venue[]
 }
 

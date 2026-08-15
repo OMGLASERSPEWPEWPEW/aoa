@@ -1,12 +1,12 @@
 import { EMOTIONS, base } from './emotions'
-import { fetchVenuesWithCoords, fetchEventsWithJoins, fetchWatchlistForMap } from './queries'
+import { fetchVenuesWithCoords, fetchEventsForMap, fetchWatchlistForMap } from './queries'
 import { queryKeys } from './queryKeys'
 import type { MapData, WatchlistMapJoin } from './types'
 
 export async function fetchMapData(userId: string | null): Promise<MapData> {
   const [venues, events] = await Promise.all([
     fetchVenuesWithCoords(),
-    fetchEventsWithJoins(),
+    fetchEventsForMap(),
   ])
 
   const visitCounts: Record<string, number> = {}
