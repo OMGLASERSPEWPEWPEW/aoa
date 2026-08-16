@@ -4,6 +4,22 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.14.1',
+    date: '2026-08-16',
+    title: 'Class scraper strategy tree upgrade',
+    summary: 'Class-discovery now uses the same deterministic strategy tree as the event scraper, gaining link following, completeness scoring, budget enforcement, and gap annotations.',
+    details: [
+      'Upgrade: class-discovery uses shared strategy tree (executeStrategyTree) instead of inline 2-pass code',
+      'New: CLASS_FIELD_WEIGHTS — class-specific completeness scoring (instructor_name: 15, skill_level: 10)',
+      'New: StrategyProfile type for domain-aware scraping (theater vs class)',
+      'New: link following for class pages — up to 3 links with targeted prompts for missing fields',
+      'New: gap annotations on class events — extraction_status, missing_fields, found_by, strategy_trace',
+      'New: budget enforcement for class scraping — max 6 AI calls, $0.012, 120s per school',
+      'Refactor: class-discovery/index.ts reduced from 680 to 307 lines — deleted 430 lines of duplicated code',
+      'Fix: play-catalog-backfill now accepts configurable batch_size (default 100, max 100)',
+    ],
+  },
+  {
     version: '0.14.0',
     date: '2026-08-15',
     title: 'Art classes discovery + data layer refactoring',
