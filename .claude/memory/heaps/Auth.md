@@ -2312,3 +2312,61 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
+## 2026-08-15_14-39-13 (session f9ee169e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Here's the proposed grouping. Excluding unrelated files (design zips, pitch deck, migration, pre-existing test changes, qa/ dir, play-catalog-backfill).
+
+```
+Proposed commits (3):
+
+1. refactor(data-layer): standardize on TanStack Query with centralized queries
+
+   Why: 13 hooks used manual useState/useEffect, 40+ scattered Supabase query
+        chains, 7 as-any casts, and 3 god components over 300 lines. Unified
+        on TanStack Query with queries.ts, queryKeys.ts, type consolidation,
+      ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: 3 commits done. Now push.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Pushed. Now deploy to Vercel.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-15_15-03-25 (session f9ee169e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update mapData.ts to use the map-specific function.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also add error logging to `fetchVenuesWithCoords`.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Committing, pushing, and deploying.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

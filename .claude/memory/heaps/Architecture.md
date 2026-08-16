@@ -3805,3 +3805,51 @@ Let me do the final comprehensive verification against the QA doc.
 
 ---
 
+## 2026-08-15_15-03-25 (session f9ee169e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update mapData.ts to use the map-specific function.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also add error logging to `fetchVenuesWithCoords`.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Committing, pushing, and deploying.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-15_20-29-55 (session f9ee169e)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the Discover Classes button alongside the existing buttons and the class metrics section. Let me add the button after the Play Backfill button.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the class coverage stats and discovery log sections. Let me add them after the existing coverage metrics.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both agents completed. Build passes. Let me do the final verification.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All 16 nodes implemented, build passes clean. Let me run tests to check for regressions.
+
+**assistant**: [tool: Bash]
+
+---
+
