@@ -64,3 +64,4 @@ blob-report/
 # aoa's history. Remove these three lines to restore the previous behavior.
 .claude/journals/
 .claude/memory/daily/
+.claude/memory/heaps/
