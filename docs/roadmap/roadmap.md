@@ -70,6 +70,13 @@
 - **Dependencies:** plays table (shipped), event_emotion_counts trigger (shipped), friendships table (shipped)
 - **Summary:** Two-state PlayDetail page upgrade. Introduces play_interest primitive (want a work, not just a production), 8-bar waiting trend, EVERY ROOM emotion spectrum across all-time productions, JUST ANNOUNCED section for staged plays, UNTIL SOMEBODY STAGES IT with library access for unstaged plays, and YOUR PEOPLE social layer. Adds PLAYS YOU'RE WAITING FOR shelf to MyShows.
 
+## Art Classes Discovery
+- **Status:** In Progress
+- **Target:** September 2026
+- **Priority:** P1
+- **Dependencies:** Event scraper (existing), Venue discovery queue (existing), Mapbox GL JS (existing)
+- **Summary:** Expands the map from show listings to include art education. Seeds 8 canonical Chicago art school venues, extends the event scraper to extract class-specific metadata (instructor, level, session count, format), adds a new class-discovery Edge Function with web-search-based discovery via SerpAPI, and renders class venues as distinct amber diamond markers (38×44px) on the map. Class detail appears in VenueSheet with an ENROLL link.
+
 ## Belt Progression System
 - **Status:** Planned
 - **Target:** September 2026
