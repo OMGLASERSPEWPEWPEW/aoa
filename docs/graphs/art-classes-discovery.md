@@ -1,7 +1,7 @@
 # Graph Engineering: Art Classes Discovery
 
-**Version:** 0.1.0
-**Generated:** 2026-08-15
+**Version:** 0.2.0
+**Generated:** 2026-08-16 (updated from 0.1.0)
 **Nodes:** 16 | **Phases:** 5 | **Loop specs:** 12
 **PRD:** `.claude/docs/prd/art-classes-discovery.md`
 **ADR:** `docs/adr/0006-art-classes-discovery.md`
@@ -15,7 +15,7 @@
 
 ```
 SCHEMA:       acd-class-fields, acd-school-venues-seed, acd-class-coverage-rpc
-SCRAPER:      acd-extraction-prompt, acd-verification-prompt, acd-types, acd-scraper-write
+SCRAPER:      acd-extraction-prompt, acd-verification-prompt, acd-types, acd-strategy-tree-config
 DISCOVERY:    acd-class-discovery-fn
 MAP:          acd-map-marker, acd-map-view-integration, acd-map-filter-chip, acd-map-key
 VENUE SHEET:  acd-venue-sheet-class-section
@@ -38,7 +38,7 @@ acd-class-fields
     │         │         │
     │         │         └──→ acd-verification-prompt
     │         │                     │
-    │         │               acd-scraper-write
+    │         │               acd-strategy-tree-config
     │         │
     │         └──→ acd-class-discovery-fn
     │                     │
@@ -65,7 +65,7 @@ Phase 1 (Schema — must run first):
   [acd-class-fields] → [acd-school-venues-seed] → [acd-class-coverage-rpc]
 
 Phase 2 (Scraper Extension — parallel tracks after Phase 1):
-  Track A: [acd-types] → [acd-extraction-prompt] → [acd-verification-prompt] → [acd-scraper-write]
+  Track A: [acd-types] → [acd-extraction-prompt] → [acd-verification-prompt] → [acd-strategy-tree-config]
   Track B: [acd-types] → [acd-class-discovery-fn]
 
 Phase 3 (Frontend — parallel with Phase 2, depends on Phase 1 types):
@@ -202,45 +202,29 @@ class_format?: string | null;
 
 ---
 
-### Node: acd-scraper-write
+### Node: acd-strategy-tree-config
 
 - **Type**: feature
 - **Agent**: backend-architect
 - **Depends on**: acd-verification-prompt
-- **Inputs**: `.claude/docs/prd/art-classes-discovery.md` §FR-3, `supabase/functions/event-scraper/index.ts`
+- **Inputs**: `.claude/docs/prd/art-classes-discovery.md` §FR-3, `docs/graphs/multi-pass-extraction.md`
 - **Outputs**:
-  - `supabase/functions/event-scraper/index.ts` (modified)
+  - `supabase/functions/_shared/scraper/types.ts` (modified — add `StrategyProfile` interface, extend `TargetedEnrichment` with class fields)
+  - `supabase/functions/_shared/scraper/completeness-evaluator.ts` (modified — add `CLASS_FIELD_WEIGHTS`, make functions accept optional weights, threshold-based `needsFollow`, class field merging)
+  - `supabase/functions/_shared/scraper/targeted-prompt.ts` (modified — add optional `includeClassFields` param)
+  - `supabase/functions/_shared/scraper/strategy-agent.ts` (modified — accept `StrategyProfile`, skip TIC for classes, carry class fields through merge, export `MergedEvent`)
+  - `supabase/functions/_shared/scraper/process-venue.ts` (modified — accept `ProcessVenueOptions`, conditional play matcher, class field validation in upsert)
 - **Loop pattern**: plan-execute-verify
-- **Success criteria**: Trigger `event-scraper` against iO Chicago. Confirm that at least one event with `event_type = 'class'` has a non-null `instructor_name` or `skill_level` in the DB.
-- **Estimated effort**: Small
+- **Success criteria**: `npm run build` clean. Existing event-scraper still works (backward compat — all new params optional with defaults). Class-discovery can call `processVenue(school, runId, { profile: CLASS_PROFILE, defaultEventType: "class" })`.
+- **Estimated effort**: Medium
 
-**Exact changes (3 locations in `event-scraper/index.ts`):**
-
-Location 1 — `MergedEvent` interface (add after `confidence: number`):
-```typescript
-instructor_name: string | null;
-skill_level: string | null;
-session_count: number | null;
-class_format: string | null;
-```
-
-Location 2 — `mergeExtractionResults()` function — both the `p2 === undefined` path and the main `merged.push()` call:
-```typescript
-instructor_name: p2?.instructor_name ?? p1.instructor_name ?? null,
-skill_level: p2?.skill_level ?? p1.skill_level ?? null,
-session_count: p2?.session_count ?? p1.session_count ?? null,
-class_format: p2?.class_format ?? p1.class_format ?? null,
-```
-
-Location 3 — the `row` object in `processVenue()` (add after `extraction_confidence`):
-```typescript
-instructor_name: event.instructor_name ?? null,
-skill_level: ['beginner','intermediate','advanced','all-levels','drop-in'].includes(event.skill_level ?? '')
-  ? event.skill_level : null,
-session_count: typeof event.session_count === 'number' ? event.session_count : null,
-class_format: ['ongoing','workshop','intensive','drop-in','series'].includes(event.class_format ?? '')
-  ? event.class_format : null,
-```
+**Architecture**: Makes the v2 deterministic strategy tree configurable via `StrategyProfile`:
+- `domain: "theater" | "class"` — controls TIC skip, play matcher skip
+- `fieldWeights` — class weights: start_date(30), end_date(10), price(15), ticket_url(10), show_times(5), instructor_name(15), skill_level(10)
+- `logFeaturePrefix` — "class-discovery" for usage logs
+- `needsFollow` changed from `!event.start_date` to `score < 50%` (threshold-based, configurable via weights)
+- `mergeExtractionResults` carries class fields from Pass1/Pass2
+- `process-venue.ts` validates skill_level/class_format against allowlists, skips play matcher for class domain
 
 ---
 
@@ -248,21 +232,21 @@ class_format: ['ongoing','workshop','intensive','drop-in','series'].includes(eve
 
 - **Type**: feature
 - **Agent**: backend-architect
-- **Depends on**: acd-types
-- **Inputs**: `.claude/docs/prd/art-classes-discovery.md` §FR-4, `supabase/functions/event-scraper/index.ts` (NDJSON streaming pattern), `supabase/functions/venue-discovery/index.ts` (queue insertion pattern)
+- **Depends on**: acd-strategy-tree-config
+- **Inputs**: `.claude/docs/prd/art-classes-discovery.md` §FR-4, `supabase/functions/_shared/scraper/process-venue.ts`
 - **Outputs**:
-  - `supabase/functions/class-discovery/index.ts` (new file)
+  - `supabase/functions/class-discovery/index.ts` (rewritten — ~307 lines, down from 680)
 - **Loop pattern**: plan-execute-verify
-- **Success criteria**: `curl -X POST $SUPABASE_URL/functions/v1/class-discovery -H "x-scraper-key: $SCRAPER_SECRET"` returns 200 with NDJSON stream containing at least one `{"type":"school_scrape",...}` line and a final `{"type":"summary",...}` line
-- **Estimated effort**: Medium
+- **Success criteria**: `curl -X POST $SUPABASE_URL/functions/v1/class-discovery -H "x-scraper-key: $SCRAPER_SECRET"` returns 200 with NDJSON stream containing at least one `{"type":"school_scrape",...}` line (with `extraction_status` and `missing_fields`) and a final `{"type":"summary",...}` line
+- **Estimated effort**: Small (v0.2.0 — mostly deletion of duplicated code)
 
-**File structure of `supabase/functions/class-discovery/index.ts`:**
-1. Import `processVenue` by copying its logic (or importing from `_shared/scraper/process-venue.ts` if that shared file exists — check before implementing)
-2. `searchClasses(query: string)` function per PRD §FR-4 spec
-3. `extractDomain(url: string)` helper: `new URL(url).hostname.replace('www.','')`
-4. `isAlreadyKnown(domain: string, supabase)`: checks `venues` and `venue_discovery_queue` tables
-5. Main serve handler: auth check → fetch school venues → stream school scrapes → run SerpAPI searches → stream search results → stream summary
-6. Same CORS pattern as all other Edge Functions
+**Architecture (v0.2.0):**
+- Imports `processVenue` from `_shared/scraper/process-venue.ts` — NO duplicated scraper code
+- Defines `CLASS_PROFILE: StrategyProfile` with `domain: "class"`, `CLASS_FIELD_WEIGHTS`, `logFeaturePrefix: "class-discovery"`
+- Calls `processVenue(school, runId, { profile: CLASS_PROFILE, defaultEventType: "class" })` per school
+- Gets link following, completeness evaluation, budget enforcement, gap annotations, and strategy traces for free via the shared strategy tree
+- Retains unique SerpAPI discovery phase: `searchForSchools()` + `deduplicateAndQueue()`
+- CORS, auth, NDJSON streaming — same pattern as all Edge Functions
 
 ---
 
@@ -495,29 +479,29 @@ SELECT cron.schedule(
 
 ---
 
-### Loop: acd-scraper-write
+### Loop: acd-strategy-tree-config
 
 - **Trigger**: acd-verification-prompt complete
 - **Inner cycle**:
-  1. Plan: Read `event-scraper/index.ts` — locate `MergedEvent` interface, `mergeExtractionResults()`, and the `row` object in `processVenue()`
-  2. Execute: Add class fields to all 3 locations per PRD §FR-3 spec
-  3. Verify: Deploy function (`supabase functions deploy event-scraper`). Trigger a scrape of iO Chicago specifically. Check `SELECT instructor_name, skill_level, class_format FROM events WHERE venue_id = (SELECT id FROM venues WHERE slug = 'io-chicago') LIMIT 5` — at least one row should have non-null values.
-- **Evaluator**: At least one class event with a non-null class field = pass
-- **Retry**: If all null, check that iO Chicago's `calendar_url` returns parseable HTML with class info. Re-examine extraction prompt. Max 2 cycles.
-- **Stop condition**: Class events have class-specific metadata populated
+  1. Plan: Read all 5 shared scraper modules (`types.ts`, `completeness-evaluator.ts`, `targeted-prompt.ts`, `strategy-agent.ts`, `process-venue.ts`) — identify every function signature and `evaluateCompleteness` call site
+  2. Execute: Add `StrategyProfile` type, `CLASS_FIELD_WEIGHTS`, optional params to all functions, class field merge logic, conditional TIC/play-matcher skip
+  3. Verify: `npm run build` clean. Deploy `event-scraper` → trigger scrape of a theater venue → confirm it still works with default profile (no regressions). Deploy `class-discovery` → trigger against iO Chicago → confirm `extraction_status` and `missing_fields` present in scrape_logs.
+- **Evaluator**: Build clean + both functions return valid results = pass. Regression in event scraper = fail (check optional param defaults).
+- **Retry**: Fix TypeScript errors or missing defaults. Max 2 cycles.
+- **Stop condition**: Both scrapers use the shared strategy tree with correct domain-specific behavior
 
 ---
 
 ### Loop: acd-class-discovery-fn
 
-- **Trigger**: acd-types complete
+- **Trigger**: acd-strategy-tree-config complete
 - **Inner cycle**:
-  1. Plan: Design function structure, identify shared utilities to reuse (`processVenue` logic, CORS headers, auth pattern, NDJSON streaming)
-  2. Execute: Write `supabase/functions/class-discovery/index.ts` per PRD §FR-4 spec
-  3. Verify: `supabase functions deploy class-discovery && curl -sX POST $SUPABASE_URL/functions/v1/class-discovery -H "x-scraper-key: $SCRAPER_SECRET"` — expect 200 with valid NDJSON including `{"type":"summary",...}`
-- **Evaluator**: 200 response with parseable NDJSON summary = pass. 401 = auth issue. 500 = runtime error (check Supabase function logs).
-- **Retry**: Fix error per logs. Max 3 cycles.
-- **Stop condition**: curl test returns 200 with summary line
+  1. Plan: Delete duplicated code from `class-discovery/index.ts` (fetchHtml, callDeepSeek, extractEventsPass1, verifyEventsPass2, mergeExtractionResults, processSchool, MergedEvent interface). Import `processVenue` from shared module.
+  2. Execute: Rewrite to call `processVenue(school, runId, { profile: CLASS_PROFILE, defaultEventType: "class" })`. Keep SerpAPI discovery + dedup + CORS + auth + streaming.
+  3. Verify: `supabase functions deploy class-discovery && curl -sX POST $SUPABASE_URL/functions/v1/class-discovery -H "x-scraper-key: $SCRAPER_SECRET"` — expect 200 with valid NDJSON including `{"type":"school_scrape",...}` with strategy trace data and `{"type":"summary",...}`
+- **Evaluator**: 200 response with parseable NDJSON, scrape results include `extraction_status` = pass. 401 = auth issue. 500 = runtime error (check import paths for Deno compatibility).
+- **Retry**: Fix import paths or missing env vars. Max 2 cycles.
+- **Stop condition**: curl test returns 200 with strategy-tree-powered scrape results
 
 ---
 
@@ -577,9 +561,10 @@ SELECT cron.schedule(
 
 | State | Set by | Consumed by |
 |-------|--------|-------------|
-| 8 school venue records in `venues` table | acd-school-venues-seed | acd-scraper-write, acd-class-discovery-fn, acd-map-view-integration, acd-venue-sheet-class-section |
-| `instructor_name`, `skill_level`, `session_count`, `class_format` columns on `events` | acd-class-fields | acd-scraper-write, acd-venue-sheet-class-section, acd-admin-stats |
-| Class events in `events` table | acd-scraper-write, acd-class-discovery-fn | acd-map-view-integration (hasClassEvents), acd-venue-sheet-class-section (classEvents), acd-admin-stats |
+| 8 school venue records in `venues` table | acd-school-venues-seed | acd-strategy-tree-config, acd-class-discovery-fn, acd-map-view-integration, acd-venue-sheet-class-section |
+| `instructor_name`, `skill_level`, `session_count`, `class_format` columns on `events` | acd-class-fields | acd-strategy-tree-config, acd-venue-sheet-class-section, acd-admin-stats |
+| `StrategyProfile` + `CLASS_FIELD_WEIGHTS` in shared scraper modules | acd-strategy-tree-config | acd-class-discovery-fn |
+| Class events in `events` table | acd-class-discovery-fn | acd-map-view-integration (hasClassEvents), acd-venue-sheet-class-section (classEvents), acd-admin-stats |
 | `get_class_coverage_metrics()` RPC | acd-class-coverage-rpc | acd-admin-stats |
 | `hasClassEvents` boolean (frontend) | acd-map-view-integration (computed from events array) | acd-map-marker |
 | `classEvents` array (frontend) | acd-venue-sheet-class-section (computed from allEvents) | VenueSheet render |
@@ -600,17 +585,17 @@ SELECT cron.schedule(
 
 ### Phase 2: Scraper Extension
 
-Track A (extends existing scraper):
-- [ ] acd-types → `supabase/functions/_shared/scraper/types.ts`
-- [ ] acd-extraction-prompt → `supabase/functions/_shared/scraper/extraction-prompt.ts`
-- [ ] acd-verification-prompt → `supabase/functions/_shared/scraper/verification-prompt.ts`
-- [ ] acd-scraper-write → `supabase/functions/event-scraper/index.ts`
+Track A (configurable strategy tree):
+- [x] acd-types → `supabase/functions/_shared/scraper/types.ts`
+- [x] acd-extraction-prompt → `supabase/functions/_shared/scraper/extraction-prompt.ts`
+- [x] acd-verification-prompt → `supabase/functions/_shared/scraper/verification-prompt.ts`
+- [x] acd-strategy-tree-config → `types.ts`, `completeness-evaluator.ts`, `targeted-prompt.ts`, `strategy-agent.ts`, `process-venue.ts`
 
-Track B (new discovery function):
-- [ ] acd-class-discovery-fn → `supabase/functions/class-discovery/index.ts`
+Track B (class discovery using shared pipeline):
+- [x] acd-class-discovery-fn → `supabase/functions/class-discovery/index.ts` (rewritten, 307 lines)
 
-**Gate (Track A):** Run event-scraper against iO Chicago. Confirm class events with metadata in DB.
-**Gate (Track B):** curl test class-discovery returns 200 with valid NDJSON.
+**Gate (Track A):** `npm run build` clean. Event-scraper backward compatible (optional params with defaults).
+**Gate (Track B):** curl test class-discovery returns 200 with NDJSON including `extraction_status` and strategy traces.
 
 ---
 

@@ -1,9 +1,15 @@
 # Graph Engineering: Intelligent Event Scraper (v2)
 
-**Version:** 2.1.0
-**Generated:** 2026-08-14
-**Supersedes:** v2.0 (added TIC detail fetch node)
+**Version:** 2.2.0
+**Generated:** 2026-08-16
+**Supersedes:** v2.1.0 (added configurable StrategyProfile for class domain support)
 **Nodes:** 11 | **Phases:** 4 | **Loop specs:** 3
+
+> **Note (v2.2.0):** `executeStrategyTree()` now accepts an optional `StrategyProfile` parameter
+> that controls domain behavior (theater vs class), field weights, TIC integration, and log prefixes.
+> This allows `class-discovery` to reuse the same pipeline with class-specific completeness scoring
+> (instructor_name: 15, skill_level: 10), TIC skip, and play-matcher skip.
+> See `docs/graphs/art-classes-discovery.md` node `acd-strategy-tree-config` for the class configuration.
 
 ---
 

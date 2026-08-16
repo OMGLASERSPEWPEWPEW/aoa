@@ -97,7 +97,7 @@ Add each school's website as a `venue_sources` record in the DB with `source_typ
 Make `event-scraper` aware of web search — before scraping known venues, search the web for class offerings from unknown venues.
 
 - Pro: One function to trigger for all event ingestion.
-- Con: `event-scraper` is already complex (two-pass AI extraction, enrichment, batch streaming). Adding web search to it creates a monolith where a single failure (SerpAPI down) could affect all event scraping, not just class discovery.
+- Con: `event-scraper` is already complex (multi-pass strategy tree with link following, enrichment, batch streaming). Adding web search to it creates a monolith where a single failure (SerpAPI down) could affect all event scraping, not just class discovery.
 - Con: Conceptually wrong: `event-scraper` processes known venue records. Web search is about finding unknown venues/schools that aren't yet in the DB. These are different concerns.
 - Con: The admin needs separate control over class discovery (trigger weekly class-specific run) vs. show scraping (trigger after venue changes). Combining them removes that control.
 
@@ -113,7 +113,7 @@ New Edge Function that:
 - Pro: Can be triggered independently of the main event scraper.
 - Pro: SerpAPI failure only affects class discovery, not show scraping.
 - Pro: Discovered new schools still go through the existing admin promotion queue (preserving the human-review gate from ADR-0002).
-- Con: Code duplication — the event scraping logic (`processVenue`) exists in `event-scraper` and must be either copied or extracted to a shared utility.
+- Con: ~~Code duplication — resolved in v0.2.0 by using the shared `processVenue` from `_shared/scraper/process-venue.ts` with a `StrategyProfile` (see Decision 4).~~
 
 ### Rationale
 
@@ -195,8 +195,52 @@ The amber gold `#D4A017` color was chosen over alternatives (purple, teal, red) 
 
 ---
 
+## Decision 4: Configurable Strategy Tree (Not Duplicated Scraper Code)
+
+### Decision
+
+The class-discovery function uses the **shared v2 deterministic strategy tree** (`executeStrategyTree` from `_shared/scraper/strategy-agent.ts`) via a configurable `StrategyProfile`, rather than duplicating the scraper logic inline.
+
+### Alternatives Considered
+
+**Option A: Duplicate processVenue logic in class-discovery (original v0.1.0 approach)**
+
+Copy the extract→verify→merge→upsert logic into `class-discovery/index.ts` as `processSchool()`.
+
+- Pro: No changes to shared modules. Zero risk of breaking event-scraper.
+- Con: 430 lines of duplicated code (fetchHtml, callDeepSeek, extractEventsPass1, verifyEventsPass2, mergeExtractionResults).
+- Con: class-discovery lacks link following, completeness evaluation, budget enforcement, and gap annotations — the same problems that motivated the v2 event scraper upgrade.
+- Con: Bug fixes to the scraper must be applied in two places.
+
+**Option B: Configurable strategy tree via StrategyProfile (selected)**
+
+Add a `StrategyProfile` type with `domain`, `fieldWeights`, and `logFeaturePrefix`. Make `executeStrategyTree`, `evaluateCompleteness`, `processVenue`, and `buildTargetedExtractionPrompt` accept the profile as an optional parameter (backward compatible).
+
+- Pro: Class-discovery gets link following, completeness scoring, budget enforcement, gap annotations, and strategy traces for free.
+- Pro: Class-specific field weights (instructor_name: 15, skill_level: 10) tune the completeness evaluator for class content.
+- Pro: class-discovery drops from 680 lines to 307 — pure deletion of duplicated code.
+- Pro: All shared modules remain backward compatible (optional params with defaults).
+- Con: Shared modules become slightly more complex (optional parameters, conditional TIC skip).
+
+### Rationale
+
+The v1 two-pass approach for class-discovery suffered from the same 60% NULL start_date problem that motivated building the v2 strategy tree for events. Class websites (Second City, iO, etc.) list class names on their main page but put dates, pricing, and instructor info on linked detail pages. The strategy tree's link-following phase directly addresses this.
+
+The `StrategyProfile` config surface is small (3 fields) and well-bounded. The conditionals it introduces are limited to: TIC on/off (1 line), play-matcher on/off (1 line), and weights passthrough (6 call sites). The risk of breaking the event scraper is minimal because all new parameters are optional with defaults that preserve existing behavior.
+
+### Consequences
+
+- **Positive**: Single scraper pipeline for both domains — bug fixes apply once.
+- **Positive**: Class-discovery gets full gap annotation, strategy traces, and budget enforcement.
+- **Positive**: Class-specific completeness scoring catches missing instructor/level data.
+- **Negative**: Shared modules have slightly more parameters. Acceptable given the small config surface.
+- **Neutral**: Future domain types (e.g., "gallery", "music") can be added by defining a new profile.
+
+---
+
 ## Revision History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-08-15 | prd-specialist | Initial draft |
+| 1.1 | 2026-08-16 | backend-architect | Added Decision 4: configurable strategy tree |
