@@ -108,6 +108,31 @@ git log --since="midnight" --oneline --all | grep -E "^[a-f0-9]+ (Evolve:|Promot
 git log origin/main..HEAD --oneline 2>/dev/null
 ```
 
+### Phase 1.5: VERSION CHECK
+
+Before grouping commits, check if a version bump is needed:
+
+```bash
+# Check if any code files changed (staged + unstaged + untracked)
+CODE_CHANGED=$(git status --short | grep -E '^\s*[MADRCU?]+\s+(src/|supabase/functions/|supabase/migrations/)' | head -1)
+```
+
+If `CODE_CHANGED` is non-empty:
+
+1. Read current version from `package.json`
+2. Read the first entry in `src/data/changelog.ts` — check if its `version` matches `package.json` and its `date` is today
+3. If EITHER check fails (version mismatch or stale date):
+   - **Auto-determine bump type:**
+     - New files created in `src/` or `supabase/functions/` → **minor** bump (0.X.0 → 0.X+1.0)
+     - Only modifications to existing files → **patch** bump (0.x.Y → 0.x.Y+1)
+   - **Prompt the author:** "Code changes detected but version not bumped. Bump to 0.X.Y? [yes / skip]"
+   - If yes: bump `package.json`, prepend changelog entry to `src/data/changelog.ts`, include as the FIRST commit in the proposal (`chore(build): bump version to X.Y.Z`)
+   - If skip: proceed without bump (author's choice, but warn)
+
+If `CODE_CHANGED` is empty (docs/infra only), skip this phase.
+
+---
+
 ### Phase 2: ANALYZE
 
 Apply the grouping rules (in priority order) to partition changed files into commits:

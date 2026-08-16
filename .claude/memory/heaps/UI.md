@@ -1767,3 +1767,27 @@ Proposed commits (3):
 
 ---
 
+## 2026-08-15_20-42-36 (session f9ee169e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Everything deployed. Let me curl-test the class-discovery function before you try it in the app.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Auth header format issue. Let me check the scraper secret pattern.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The secret isn't loading from the patterns env. The class-discovery function needs the same `--no-verify-jwt` flag as other scraper functions. Let me check how event-scraper is deployed.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

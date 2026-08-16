@@ -4814,3 +4814,117 @@ Proposed commits (3):
 
 ---
 
+## 2026-08-15_20-42-36 (session f9ee169e)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Everything deployed. Let me curl-test the class-discovery function before you try it in the app.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Auth header format issue. Let me check the scraper secret pattern.
+
+**assistant**: [tool: Bash]
+
+**assistant**: The secret isn't loading from the patterns env. The class-discovery function needs the same `--no-verify-jwt` flag as other scraper functions. Let me check how event-scraper is deployed.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-15_20-48-58 (session f9ee169e)
+
+**assistant**: All deployed:
+
+- **4 commits** pushed: `5d3bf57` (feature), `3dc7be7` (docs), `1396ff9` (roadmap), `7fd8fa8` (infra)
+- **Frontend**: https://aoa-nine.vercel.app
+- **Edge Functions**: `event-scraper` + `class-discovery` deployed
+- **Cron**: `class-discovery-weekly` scheduled (Mondays 7 AM CST)
+- **DB**: all 4 migrations applied, 8 school venues seeded
+
+Go test — open the map and you should see 8 amber diamond markers for the schools (Second City Training, iO, Annoyance, CIC, Acting Studio Chicago...
+
+**user**: What’s the new version?
+
+---
+
+## 2026-08-16_11-21-38 (session f9ee169e)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Creating the versioning rule first, then updating the `/cap` skill.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the `/cap` skill to add the version check phase.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Both files are done. Let me verify the rules directory is auto-loaded.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_12-20-49 (session bc6a5bce)
+
+**assistant**: Now make the play matcher conditional — skip it for class domain.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Steps 1-5 done. Now the final step — slim down `class-discovery/index.ts` to use the shared pipeline. This is the biggest change — deleting ~430 lines of duplicated code.
+
+**assistant**: [tool: Write]
+
+**assistant**: All 6 files updated. Let me verify the build compiles clean.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes clean. Let me also run the existing tests to check for regressions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Same 4 pre-existing test failures (HouseChips + SeatingChart) — zero new failures. The changes are backward-compatible.
+
+Let me do a quick sanity check on the final state of the key files to make sure everything looks right.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_12-32-55 (session bc6a5bce)
+
+**assistant**: Now let me update the ADR to add a new decision about using the shared strategy tree.
+
+**assistant**: [tool: Read]
+
+**assistant**: Good, I see the relevant section. Let me add a new Decision 4 about the strategy tree upgrade.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also fix the stale reference to "two-pass" in the ADR Decision 2 Option B description.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me verify the build still passes after the doc changes (just to be thorough).
+
+**assistant**: [tool: Bash]
+
+---
+

@@ -1190,3 +1190,27 @@ Let me do the final comprehensive verification against the QA doc.
 
 ---
 
+## 2026-08-16_11-21-38 (session f9ee169e)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Creating the versioning rule first, then updating the `/cap` skill.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the `/cap` skill to add the version check phase.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Both files are done. Let me verify the rules directory is auto-loaded.
+
+**assistant**: [tool: Bash]
+
+---
+

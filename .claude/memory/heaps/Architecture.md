@@ -3853,3 +3853,53 @@ Let me do the final comprehensive verification against the QA doc.
 
 ---
 
+## 2026-08-16_12-20-49 (session bc6a5bce)
+
+**assistant**: Now make the play matcher conditional — skip it for class domain.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Steps 1-5 done. Now the final step — slim down `class-discovery/index.ts` to use the shared pipeline. This is the biggest change — deleting ~430 lines of duplicated code.
+
+**assistant**: [tool: Write]
+
+**assistant**: All 6 files updated. Let me verify the build compiles clean.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes clean. Let me also run the existing tests to check for regressions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Same 4 pre-existing test failures (HouseChips + SeatingChart) — zero new failures. The changes are backward-compatible.
+
+Let me do a quick sanity check on the final state of the key files to make sure everything looks right.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_12-32-55 (session bc6a5bce)
+
+**assistant**: Now let me update the ADR to add a new decision about using the shared strategy tree.
+
+**assistant**: [tool: Read]
+
+**assistant**: Good, I see the relevant section. Let me add a new Decision 4 about the strategy tree upgrade.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also fix the stale reference to "two-pass" in the ADR Decision 2 Option B description.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me verify the build still passes after the doc changes (just to be thorough).
+
+**assistant**: [tool: Bash]
+
+---
+
