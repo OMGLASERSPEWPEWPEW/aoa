@@ -4,6 +4,25 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.14.0',
+    date: '2026-08-15',
+    title: 'Art classes discovery + data layer refactoring',
+    summary: 'The map now shows amber diamond markers for art schools and training centers. Data layer standardized on TanStack Query with centralized queries.',
+    details: [
+      'New: 8 art education venues seeded (Second City Training, iO, Annoyance, CIC, Acting Studio Chicago, Piven, Old Town School, Steppenwolf Education)',
+      'New: amber diamond markers (38x44px) distinguish classes from shows on the map',
+      'New: CLASSES filter chip on the map dims non-school venues',
+      'New: class detail section in venue sheet — instructor, level, format, sessions, ENROLL link',
+      'New: class-discovery Edge Function with SerpAPI web search for new schools',
+      'New: admin "Discover Classes" button + CLASS COVERAGE stats',
+      'New: weekly cron job for automated class discovery (Mondays 7 AM CST)',
+      'Refactor: all 13 data hooks migrated from useState/useEffect to TanStack Query',
+      'Refactor: centralized Supabase queries in queries.ts + queryKeys.ts',
+      'Refactor: god components decomposed — MyShows 807->199, ProductionDetail 570->125, Discover 303->136, PlayDetail 286->98 lines',
+      'Refactor: domain types consolidated in types.ts, as-any casts eliminated',
+    ],
+  },
+  {
     version: '0.13.0',
     date: '2026-08-14',
     title: 'Intelligent scraper v2.1 — TIC detail pages + field visibility',
