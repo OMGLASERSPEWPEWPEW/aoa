@@ -18,12 +18,16 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    const body = await req.json().catch(() => ({}));
+    const limit = Math.min(body.batch_size ?? 100, 100);
+
     const { data: allEvents, error: fetchError } = await supabase
       .from("events")
       .select("id")
       .is("play_id", null)
       .eq("event_type", "show")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
     if (fetchError) {
       return new Response(
