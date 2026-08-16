@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { generateSlug } from "./slug-generator.ts";
 import { executeStrategyTree } from "./strategy-agent.ts";
-import type { VenueTarget, ScrapeResult } from "./types.ts";
+import type { VenueTarget, ScrapeResult, StrategyProfile } from "./types.ts";
 import { logUsage } from "../logUsage.ts";
 import { runPlayMatcherBatch } from "./play-matcher.ts";
 
@@ -10,7 +10,15 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-export async function processVenue(venue: VenueTarget, runId: string): Promise<ScrapeResult> {
+export interface ProcessVenueOptions {
+  profile?: StrategyProfile;
+  defaultEventType?: string;
+}
+
+const VALID_SKILL_LEVELS = new Set(["beginner", "intermediate", "advanced", "all-levels", "drop-in"]);
+const VALID_CLASS_FORMATS = new Set(["ongoing", "workshop", "intensive", "drop-in", "series"]);
+
+export async function processVenue(venue: VenueTarget, runId: string, options?: ProcessVenueOptions): Promise<ScrapeResult> {
   const start = Date.now();
   const result: ScrapeResult = {
     venue_id: venue.id, venue_name: venue.name, status: "success",
@@ -21,7 +29,7 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
   let strategyTrace = null;
 
   try {
-    const { mergedEvents, trace, totalInputTokens, totalOutputTokens } = await executeStrategyTree(venue, runId);
+    const { mergedEvents, trace, totalInputTokens, totalOutputTokens } = await executeStrategyTree(venue, runId, options?.profile);
     strategyTrace = trace;
     result.ai_input_tokens = totalInputTokens;
     result.ai_output_tokens = totalOutputTokens;
@@ -53,12 +61,14 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
     }));
     result.field_summary = { with_dates: withDates, total: mergedEvents.length, missing: [...missingSet], sources: [...sourceSet], event_details: eventDetails };
 
+    const logPrefix = options?.profile?.logFeaturePrefix ?? "event-scraper";
     for (const step of trace.steps) {
       if (step.aiCalls > 0) {
-        const feature = step.step === "verify" ? "event-scraper-verify"
-          : step.step === "link_follow" ? "event-scraper-follow"
-          : step.step === "website_fallback" ? "event-scraper-fallback"
-          : "event-scraper-extract";
+        const featureSuffix = step.step === "verify" ? "verify"
+          : step.step === "link_follow" ? "follow"
+          : step.step === "website_fallback" ? "fallback"
+          : "extract";
+        const feature = `${logPrefix}-${featureSuffix}`;
         try {
           await logUsage(supabase, {
             userId: null, model: "deepseek-v4-flash", provider: "deepseek",
@@ -76,9 +86,10 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
       const { data: existing } = await supabase.from("events").select("id, source").eq("slug", slug).maybeSingle();
       if (existing?.source === "manual") continue;
 
-      const row = {
+      const defaultType = options?.defaultEventType ?? "show";
+      const row: Record<string, unknown> = {
         venue_id: venue.id, title: event.title, slug, description: event.description,
-        event_type: ["show", "class", "workshop", "festival", "open-call"].includes(event.event_type) ? event.event_type : "show",
+        event_type: ["show", "class", "workshop", "festival", "open-call"].includes(event.event_type) ? event.event_type : defaultType,
         genre_tags: event.genre_tags, start_date: event.start_date, end_date: event.end_date,
         price_min: event.price_min, price_max: event.price_max,
         ticket_url: event.ticket_url || venue.calendar_url, hottix_available: false,
@@ -89,6 +100,10 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
         extraction_status: event.extraction_status,
         missing_fields: event.missing_fields,
         found_by: event.found_by,
+        instructor_name: event.instructor_name ?? null,
+        skill_level: VALID_SKILL_LEVELS.has(event.skill_level ?? "") ? event.skill_level : null,
+        session_count: typeof event.session_count === "number" ? event.session_count : null,
+        class_format: VALID_CLASS_FORMATS.has(event.class_format ?? "") ? event.class_format : null,
       };
 
       if (existing) {
@@ -104,7 +119,7 @@ export async function processVenue(venue: VenueTarget, runId: string): Promise<S
       }
     }
 
-    if (upsertedEventIds.length > 0) {
+    if (upsertedEventIds.length > 0 && options?.profile?.domain !== "class") {
       try {
         await runPlayMatcherBatch(upsertedEventIds, supabase, runId);
       } catch (e) {

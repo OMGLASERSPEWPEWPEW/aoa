@@ -1,6 +1,6 @@
 import type { Pass1Event, EventCompleteness, CandidateLink, TargetedEnrichment } from "./types.ts";
 
-const FIELD_WEIGHTS: Record<string, number> = {
+export const DEFAULT_FIELD_WEIGHTS: Record<string, number> = {
   start_date: 40,
   end_date: 10,
   price: 15,
@@ -8,39 +8,55 @@ const FIELD_WEIGHTS: Record<string, number> = {
   show_times: 10,
 };
 
-export function evaluateCompleteness(event: Pass1Event, index: number): EventCompleteness {
+export const CLASS_FIELD_WEIGHTS: Record<string, number> = {
+  start_date: 30,
+  end_date: 10,
+  price: 15,
+  ticket_url: 10,
+  show_times: 5,
+  instructor_name: 15,
+  skill_level: 10,
+};
+
+const NEEDS_FOLLOW_THRESHOLD = 50;
+
+export function evaluateCompleteness(
+  event: Pass1Event,
+  index: number,
+  weights?: Record<string, number>,
+): EventCompleteness {
+  const w = weights ?? DEFAULT_FIELD_WEIGHTS;
   let score = 0;
   const missingFields: string[] = [];
+  let maxScore = 0;
 
-  if (event.start_date) score += FIELD_WEIGHTS.start_date;
-  else missingFields.push("start_date");
+  for (const [field, weight] of Object.entries(w)) {
+    maxScore += weight;
+    const value = field === "price"
+      ? (event.price_min != null || event.price_max != null)
+      : !!(event as Record<string, unknown>)[field];
 
-  if (event.end_date) score += FIELD_WEIGHTS.end_date;
-  else missingFields.push("end_date");
+    if (value) score += weight;
+    else missingFields.push(field === "price" ? "price_min" : field);
+  }
 
-  if (event.price_min != null || event.price_max != null) score += FIELD_WEIGHTS.price;
-  else missingFields.push("price_min");
-
-  if (event.ticket_url) score += FIELD_WEIGHTS.ticket_url;
-  else missingFields.push("ticket_url");
-
-  if (event.show_times) score += FIELD_WEIGHTS.show_times;
-  else missingFields.push("show_times");
+  const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 100;
 
   return {
     eventIndex: index,
     title: event.title,
     score,
     missingFields,
-    needsFollow: !event.start_date,
+    needsFollow: pct < NEEDS_FOLLOW_THRESHOLD,
   };
 }
 
 export function shouldFollowLinks(
   events: Pass1Event[],
   candidateLinks: CandidateLink[],
+  weights?: Record<string, number>,
 ): { shouldFollow: boolean; reason: string; incompleteEvents: EventCompleteness[] } {
-  const completeness = events.map((e, i) => evaluateCompleteness(e, i));
+  const completeness = events.map((e, i) => evaluateCompleteness(e, i, weights));
   const needFollow = completeness.filter(c => c.needsFollow);
 
   if (needFollow.length === 0) {
@@ -100,13 +116,29 @@ export function mergeTargetedExtraction(
       event.show_times = enrichment.show_times;
       fieldsFilledIn.push("show_times");
     }
+    if (!event.instructor_name && enrichment.instructor_name) {
+      event.instructor_name = enrichment.instructor_name;
+      fieldsFilledIn.push("instructor_name");
+    }
+    if (!event.skill_level && enrichment.skill_level) {
+      event.skill_level = enrichment.skill_level;
+      fieldsFilledIn.push("skill_level");
+    }
+    if (event.session_count == null && enrichment.session_count != null) {
+      event.session_count = enrichment.session_count;
+      fieldsFilledIn.push("session_count");
+    }
+    if (!event.class_format && enrichment.class_format) {
+      event.class_format = enrichment.class_format;
+      fieldsFilledIn.push("class_format");
+    }
   }
 
   return { events: updated, fieldsFilledIn };
 }
 
-export function averageCompleteness(events: Pass1Event[]): number {
+export function averageCompleteness(events: Pass1Event[], weights?: Record<string, number>): number {
   if (events.length === 0) return 0;
-  const total = events.reduce((sum, e, i) => sum + evaluateCompleteness(e, i).score, 0);
+  const total = events.reduce((sum, e, i) => sum + evaluateCompleteness(e, i, weights).score, 0);
   return Math.round(total / events.length);
 }

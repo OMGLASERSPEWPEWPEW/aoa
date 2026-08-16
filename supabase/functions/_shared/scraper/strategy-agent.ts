@@ -3,7 +3,7 @@ import { buildExtractionPrompt } from "./extraction-prompt.ts";
 import { buildVerificationPrompt } from "./verification-prompt.ts";
 import { buildTargetedExtractionPrompt } from "./targeted-prompt.ts";
 import { extractCandidateLinks, prioritizeLinks } from "./link-extractor.ts";
-import { shouldFollowLinks, mergeTargetedExtraction, averageCompleteness, evaluateCompleteness } from "./completeness-evaluator.ts";
+import { DEFAULT_FIELD_WEIGHTS, shouldFollowLinks, mergeTargetedExtraction, averageCompleteness, evaluateCompleteness } from "./completeness-evaluator.ts";
 import { CostBudget } from "./cost-budget.ts";
 import { lookupVenueOnTic, ticShowsToEnrichments, enrichFromTicDetail } from "./tic-lookup.ts";
 import type {
@@ -14,6 +14,7 @@ import type {
   StrategyTrace,
   StrategyStep,
   TargetedEnrichment,
+  StrategyProfile,
 } from "./types.ts";
 
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY")!;
@@ -71,7 +72,7 @@ async function callDeepSeek(
   }
 }
 
-interface MergedEvent {
+export interface MergedEvent {
   title: string;
   event_type: string;
   start_date: string | null;
@@ -88,17 +89,34 @@ interface MergedEvent {
   extraction_status: string;
   missing_fields: string[];
   found_by: string[];
+  instructor_name?: string | null;
+  skill_level?: string | null;
+  session_count?: number | null;
+  class_format?: string | null;
 }
 
-function mergeExtractionResults(pass1Events: Pass1Event[], pass2Events: Pass2Verification[]): MergedEvent[] {
+function mergeExtractionResults(
+  pass1Events: Pass1Event[],
+  pass2Events: Pass2Verification[],
+  weights?: Record<string, number>,
+): MergedEvent[] {
   const merged: MergedEvent[] = [];
   for (let i = 0; i < pass1Events.length; i++) {
     const p1 = pass1Events[i];
     const p2 = pass2Events[i] ?? pass2Events.find((e) => e.title === p1.title);
 
     if (!p2) {
-      const comp = evaluateCompleteness(p1, i);
-      merged.push({ ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null, description: null, genre_tags: [], cast_members: null, photo_url: null, confidence: 0.5, extraction_status: comp.needsFollow ? "partial" : "complete", missing_fields: comp.missingFields, found_by: [] });
+      const comp = evaluateCompleteness(p1, i, weights);
+      merged.push({
+        ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
+        description: null, genre_tags: [], cast_members: null, photo_url: null,
+        confidence: 0.5, extraction_status: comp.needsFollow ? "partial" : "complete",
+        missing_fields: comp.missingFields, found_by: [],
+        instructor_name: p1.instructor_name ?? null,
+        skill_level: p1.skill_level ?? null,
+        session_count: p1.session_count ?? null,
+        class_format: p1.class_format ?? null,
+      });
       continue;
     }
     if (p2.status === "rejected") continue;
@@ -113,8 +131,12 @@ function mergeExtractionResults(pass1Events: Pass1Event[], pass2Events: Pass2Ver
       price_max: c.price_max !== undefined ? c.price_max : p1.price_max,
       ticket_url: p1.ticket_url,
       show_times: p1.show_times,
+      instructor_name: p2.instructor_name ?? p1.instructor_name ?? null,
+      skill_level: p2.skill_level ?? p1.skill_level ?? null,
+      session_count: p2.session_count ?? p1.session_count ?? null,
+      class_format: p2.class_format ?? p1.class_format ?? null,
     };
-    const comp = evaluateCompleteness(finalEvent, i);
+    const comp = evaluateCompleteness(finalEvent, i, weights);
 
     merged.push({
       ...finalEvent,
@@ -134,7 +156,16 @@ function mergeExtractionResults(pass1Events: Pass1Event[], pass2Events: Pass2Ver
 export async function executeStrategyTree(
   venue: VenueTarget,
   runId: string,
+  profile?: StrategyProfile,
 ): Promise<{ mergedEvents: MergedEvent[]; trace: StrategyTrace; totalInputTokens: number; totalOutputTokens: number }> {
+  const effectiveProfile: StrategyProfile = profile ?? {
+    domain: "theater",
+    fieldWeights: DEFAULT_FIELD_WEIGHTS,
+    logFeaturePrefix: "event-scraper",
+  };
+  const weights = effectiveProfile.fieldWeights;
+  const isClassDomain = effectiveProfile.domain === "class";
+
   const budget = new CostBudget();
   const visitedUrls = new Set<string>();
   const steps: StrategyStep[] = [];
@@ -145,11 +176,14 @@ export async function executeStrategyTree(
   let rawHtml = "";
   const foundByMap = new Map<string, Set<string>>();
 
-  // STEP 1: Parallel fetch — venue calendar + TIC lookup simultaneously
+  // STEP 1: Parallel fetch — venue calendar + TIC lookup (TIC skipped for classes)
   const step1Start = Date.now();
+  const ticPromise = isClassDomain
+    ? Promise.resolve({ shows: [] as import("./types.ts").TicShow[], source: null as string | null })
+    : lookupVenueOnTic(venue.name).catch(() => ({ shows: [] as import("./types.ts").TicShow[], source: null as string | null }));
   const [venueHtml, ticResult] = await Promise.all([
     fetchHtml(venue.calendar_url),
-    lookupVenueOnTic(venue.name).catch(() => ({ shows: [] as import("./types.ts").TicShow[], source: null as string | null })),
+    ticPromise,
   ]);
   rawHtml = venueHtml;
   visitedUrls.add(venue.calendar_url);
@@ -330,9 +364,9 @@ export async function executeStrategyTree(
   }
 
   // STEP 2: Completeness check
-  const completenessBeforeFollows = averageCompleteness(events);
+  const completenessBeforeFollows = averageCompleteness(events, weights);
   const candidateLinks = extractCandidateLinks(rawHtml, venue.calendar_url, events.map(e => e.title));
-  const { shouldFollow, incompleteEvents } = shouldFollowLinks(events, candidateLinks);
+  const { shouldFollow, incompleteEvents } = shouldFollowLinks(events, candidateLinks, weights);
 
   // STEP 3: Link following
   if (shouldFollow) {
@@ -354,14 +388,14 @@ export async function executeStrategyTree(
         if (linkCleaned.length < 100) continue;
 
         const incomplete = events
-          .map((e, i) => evaluateCompleteness(e, i))
+          .map((e, i) => evaluateCompleteness(e, i, weights))
           .filter(c => c.needsFollow)
           .map(c => ({ title: c.title, missingFields: c.missingFields }));
 
         if (incomplete.length === 0) break;
 
         const targetedResult = await callDeepSeek(
-          buildTargetedExtractionPrompt(venue.name, incomplete),
+          buildTargetedExtractionPrompt(venue.name, incomplete, isClassDomain),
           linkCleaned,
           4096,
         );
@@ -396,7 +430,7 @@ export async function executeStrategyTree(
     }
   }
 
-  const completenessAfterFollows = averageCompleteness(events);
+  const completenessAfterFollows = averageCompleteness(events, weights);
 
   // STEP 4: Conditional verification
   let mergedEvents: MergedEvent[];
@@ -424,13 +458,15 @@ export async function executeStrategyTree(
           } catch { /* parse error */ }
         }
 
-        const verifiedMerged = mergeExtractionResults(eventsForVerify, pass2Events);
+        const verifiedMerged = mergeExtractionResults(eventsForVerify, pass2Events, weights);
         const unverifiedMerged = eventsSkipVerify.map((p1, i) => {
-          const comp = evaluateCompleteness(p1, i);
+          const comp = evaluateCompleteness(p1, i, weights);
           return {
             ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
             description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
             confidence: 0.4, extraction_status: "no_dates_on_site", missing_fields: comp.missingFields, found_by: [],
+            instructor_name: p1.instructor_name ?? null, skill_level: p1.skill_level ?? null,
+            session_count: p1.session_count ?? null, class_format: p1.class_format ?? null,
           } as MergedEvent;
         });
         mergedEvents = [...verifiedMerged, ...unverifiedMerged];
@@ -442,34 +478,40 @@ export async function executeStrategyTree(
         });
       } else {
         mergedEvents = events.map((p1, i) => {
-          const comp = evaluateCompleteness(p1, i);
+          const comp = evaluateCompleteness(p1, i, weights);
           return {
             ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
             description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
             confidence: 0.4, extraction_status: "no_dates_on_site", missing_fields: comp.missingFields, found_by: [],
+            instructor_name: p1.instructor_name ?? null, skill_level: p1.skill_level ?? null,
+            session_count: p1.session_count ?? null, class_format: p1.class_format ?? null,
           } as MergedEvent;
         });
       }
     } catch (pass2Error) {
       console.error(`[scraper-v2] Verify failed for ${venue.name}:`, pass2Error);
       mergedEvents = events.map((p1, i) => {
-        const comp = evaluateCompleteness(p1, i);
+        const comp = evaluateCompleteness(p1, i, weights);
         return {
           ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
           description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
           confidence: 0.5, extraction_status: comp.needsFollow ? "partial" : "complete", missing_fields: comp.missingFields, found_by: [],
+          instructor_name: p1.instructor_name ?? null, skill_level: p1.skill_level ?? null,
+          session_count: p1.session_count ?? null, class_format: p1.class_format ?? null,
         } as MergedEvent;
       });
     }
   } else {
     mergedEvents = events.map((p1, i) => {
-      const comp = evaluateCompleteness(p1, i);
+      const comp = evaluateCompleteness(p1, i, weights);
       return {
         ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
         description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
         confidence: 0.4,
         extraction_status: comp.needsFollow ? "budget_exhausted" : "complete",
         missing_fields: comp.missingFields, found_by: [],
+        instructor_name: p1.instructor_name ?? null, skill_level: p1.skill_level ?? null,
+        session_count: p1.session_count ?? null, class_format: p1.class_format ?? null,
       } as MergedEvent;
     });
   }

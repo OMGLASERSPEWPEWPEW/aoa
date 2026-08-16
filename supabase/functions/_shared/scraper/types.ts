@@ -175,6 +175,12 @@ export interface StrategyTrace {
   stopReason: string;
 }
 
+export interface StrategyProfile {
+  domain: "theater" | "class";
+  fieldWeights: Record<string, number>;
+  logFeaturePrefix: string;
+}
+
 export interface TargetedEnrichment {
   title: string;
   start_date?: string | null;
@@ -183,6 +189,10 @@ export interface TargetedEnrichment {
   price_max?: number | null;
   ticket_url?: string | null;
   show_times?: Record<string, string[]> | null;
+  instructor_name?: string | null;
+  skill_level?: string | null;
+  session_count?: number | null;
+  class_format?: string | null;
 }
 
 // --- TheatreInChicago.com types ---
