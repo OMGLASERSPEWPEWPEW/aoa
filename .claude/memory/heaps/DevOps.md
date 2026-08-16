@@ -4732,3 +4732,29 @@ Per-agent results:
 
 ---
 
+## 2026-08-16_01-11-16 (session cf8cd41a)
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: WebFetch]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: ## Zephyr recap
+
+Last session closed with a map fix — venue markers were vanishing because the map query was joining through `play`; that got split into a map-specific event query (`4f45bbc`). Before that, the big move was the TanStack Query data-layer standardization (`ce3f369`) with a full paper trail: PRD, graph doc, QA checklist, and an ADR. `docs/graphs/` now holds ten specs, so the graph-engineering discipline is holding. Phase 3 (Map + Mentor) is functionally done; Phase 4 content/social ...
+
+---
+
