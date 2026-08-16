@@ -23,6 +23,10 @@ Return valid JSON with this structure:
       "genre_tags": ["drama", "comedy"],
       "cast_members": [{"name": "Actor Name", "role": "Character Name or null"}],
       "photo_url": null,
+      "instructor_name": null,
+      "skill_level": null,
+      "session_count": null,
+      "class_format": null,
       "corrections": {
         "price_min": null,
         "price_max": null,
@@ -65,6 +69,10 @@ ENRICHMENT:
 - genre_tags: lowercase kebab-case from: drama, comedy, improv, sketch, musical, new-work, classic, experimental, interactive, physical-theater, adaptation, social-justice, community, diverse-voices, shakespeare, revue, writing, beginner, intermediate, advanced
 - cast_members: Only include if you genuinely know the cast from your training data. Do NOT hallucinate names. Set to null if unsure.
 - photo_url: Always set to null (photos come from HTML extraction, not enrichment)
+- instructor_name: Include if you know the instructor from the extracted data or your training. Do NOT hallucinate names. Null if unsure.
+- skill_level: Infer from class title/description if not explicit ("101" -> "beginner", "Advanced Harold" -> "advanced"). Null if ambiguous.
+- session_count: Infer from title if pattern matches ("8-Week", "6-Session"). Null if not determinable.
+- class_format: Infer from structure ("Drop-In" -> "drop-in", "Conservatory Level 1" -> "series"). Null if unclear.
 
 Return events in the SAME ORDER as the input. If no events survive verification, return {"events": []}`;
 }

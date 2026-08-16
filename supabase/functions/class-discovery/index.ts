@@ -4,30 +4,50 @@ import { cleanHtml } from "../_shared/scraper/html-cleaner.ts";
 import { buildExtractionPrompt } from "../_shared/scraper/extraction-prompt.ts";
 import { buildVerificationPrompt } from "../_shared/scraper/verification-prompt.ts";
 import { generateSlug } from "../_shared/scraper/slug-generator.ts";
-import { extractOgImage } from "../_shared/scraper/og-image-extractor.ts";
 import type {
   VenueTarget,
-  ScrapedEvent,
   ScrapeResult,
-  EnrichmentResult,
   DeepSeekResponse,
   Pass1Event,
   Pass2Verification,
 } from "../_shared/scraper/types.ts";
 import { logUsage } from "../_shared/logUsage.ts";
 
+// --- Config ---
+
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SERPAPI_KEY = Deno.env.get("SERPAPI_KEY") ?? null;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+const ALLOWED_ORIGINS = [
+  "http://localhost:5204",
+  "https://aoa-nine.vercel.app",
+];
+
+// --- CORS ---
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, x-scraper-key",
+    "Vary": "Origin",
+  };
+}
+
+// --- Helpers ---
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchVenueHtml(url: string): Promise<string> {
+async function fetchHtml(url: string): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
   try {
@@ -90,6 +110,8 @@ async function callDeepSeek(
   }
 }
 
+// --- AI Extraction (reuses shared prompts) ---
+
 async function extractEventsPass1(
   html: string,
   venueName: string,
@@ -135,6 +157,8 @@ async function verifyEventsPass2(
     outputTokens: result.outputTokens,
   };
 }
+
+// --- Merged event with class fields ---
 
 interface MergedEvent {
   title: string;
@@ -211,7 +235,9 @@ function mergeExtractionResults(
   return merged;
 }
 
-export async function processVenue(
+// --- School scraping (processSchool is analogous to processVenue) ---
+
+async function processSchool(
   venue: VenueTarget,
   runId: string,
 ): Promise<ScrapeResult> {
@@ -230,7 +256,7 @@ export async function processVenue(
   };
 
   try {
-    const html = await fetchVenueHtml(venue.calendar_url);
+    const html = await fetchHtml(venue.calendar_url);
 
     // --- Pass 1: Extract structural data ---
     const pass1 = await extractEventsPass1(html, venue.name);
@@ -244,13 +270,13 @@ export async function processVenue(
           userId: null,
           model: "deepseek-v4-flash",
           provider: "deepseek",
-          feature: "event-scraper-extract",
+          feature: "class-discovery-extract",
           inputTokens: pass1.inputTokens,
           outputTokens: pass1.outputTokens,
           metadata: { venue_id: venue.id, venue_name: venue.name, run_id: runId, pass: 1 },
         });
       } catch (e) {
-        console.error("[event-scraper] Pass 1 usage logging failed:", e);
+        console.error("[class-discovery] Pass 1 usage logging failed:", e);
       }
     }
 
@@ -278,19 +304,19 @@ export async function processVenue(
             userId: null,
             model: "deepseek-v4-flash",
             provider: "deepseek",
-            feature: "event-scraper-verify",
+            feature: "class-discovery-verify",
             inputTokens: pass2.inputTokens,
             outputTokens: pass2.outputTokens,
             metadata: { venue_id: venue.id, venue_name: venue.name, run_id: runId, pass: 2 },
           });
         } catch (e) {
-          console.error("[event-scraper] Pass 2 usage logging failed:", e);
+          console.error("[class-discovery] Pass 2 usage logging failed:", e);
         }
       }
 
       mergedEvents = mergeExtractionResults(pass1.events, pass2.events);
     } catch (pass2Error) {
-      console.error(`[event-scraper] Pass 2 failed for ${venue.name}, using Pass 1 data:`, pass2Error);
+      console.error(`[class-discovery] Pass 2 failed for ${venue.name}, using Pass 1 data:`, pass2Error);
       mergedEvents = pass1.events.map((p1) => ({
         ...p1,
         start_date: p1.start_date ?? null,
@@ -325,7 +351,7 @@ export async function processVenue(
         slug,
         description: event.description,
         event_type: ["show", "class", "workshop", "festival", "open-call"].includes(event.event_type)
-          ? event.event_type : "show",
+          ? event.event_type : "class",
         genre_tags: event.genre_tags,
         start_date: event.start_date,
         end_date: event.end_date,
@@ -368,7 +394,7 @@ export async function processVenue(
       result.status = "parse_error";
     }
     result.error_message = msg;
-    console.error(`[event-scraper] ${venue.name}: ${msg}`);
+    console.error(`[class-discovery] ${venue.name}: ${msg}`);
   }
 
   result.duration_ms = Date.now() - start;
@@ -384,96 +410,147 @@ export async function processVenue(
   return result;
 }
 
-async function enrichVenue(
-  venue: VenueTarget,
-  runId: string,
-): Promise<EnrichmentResult> {
-  const start = Date.now();
-  const result: EnrichmentResult = {
-    venue_id: venue.id,
-    venue_name: venue.name,
-    photo_extracted: false,
-    photo_url: null,
-    website_url_valid: null,
-    error_message: null,
-    duration_ms: 0,
-  };
+// --- SerpAPI school discovery ---
 
-  if (!venue.website_url) {
-    result.duration_ms = Date.now() - start;
-    return result;
-  }
-
-  try {
-    const html = await fetchVenueHtml(venue.website_url);
-    result.website_url_valid = true;
-
-    // Extract og:image if venue needs a photo
-    const needsPhoto = !venue.photo_url || venue.photo_url_source === "og_image";
-    if (needsPhoto) {
-      const ogImage = extractOgImage(html, venue.website_url);
-      if (ogImage) {
-        result.photo_extracted = true;
-        result.photo_url = ogImage;
-
-        await supabase
-          .from("venues")
-          .update({ photo_url: ogImage, photo_url_source: "og_image" })
-          .eq("id", venue.id);
-      }
-    }
-
-    await supabase
-      .from("venues")
-      .update({ website_url_checked_at: new Date().toISOString() })
-      .eq("id", venue.id);
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    result.website_url_valid = false;
-    result.error_message = msg;
-    console.warn(`[enrichment] ${venue.name}: ${msg}`);
-
-    await supabase
-      .from("venues")
-      .update({ website_url_checked_at: new Date().toISOString() })
-      .eq("id", venue.id);
-  }
-
-  result.duration_ms = Date.now() - start;
-
-  await supabase.from("scrape_logs").insert({
-    run_id: runId,
-    venue_id: venue.id,
-    venue_name: venue.name,
-    status: result.error_message ? "fetch_error" : "success",
-    events_found: 0,
-    events_created: 0,
-    events_updated: 0,
-    error_message: result.error_message,
-    ai_input_tokens: 0,
-    ai_output_tokens: 0,
-    duration_ms: result.duration_ms,
-    phase: "enrichment",
-  });
-
-  return result;
+interface SerpSearchResult {
+  query: string;
+  link: string;
+  title: string;
+  snippet: string;
+  domain: string;
 }
 
-const ALLOWED_ORIGINS = [
-  "http://localhost:5204",
-  "https://aoa-nine.vercel.app",
+const CLASS_SEARCH_QUERIES = [
+  "chicago improv classes 2026",
+  "chicago acting classes adults 2026",
+  "chicago theater workshops beginners 2026",
+  "chicago sketch comedy classes 2026",
+  "chicago musical theater classes adults 2026",
 ];
 
-function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("Origin") ?? "";
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, x-scraper-key",
-    "Vary": "Origin",
-  };
+function extractDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
 }
+
+async function searchForSchools(): Promise<SerpSearchResult[]> {
+  if (!SERPAPI_KEY) return [];
+
+  const allResults: SerpSearchResult[] = [];
+  const seenDomains = new Set<string>();
+
+  for (const query of CLASS_SEARCH_QUERIES) {
+    try {
+      const params = new URLSearchParams({
+        q: query,
+        location: "Chicago, Illinois, United States",
+        hl: "en",
+        gl: "us",
+        num: "10",
+        api_key: SERPAPI_KEY,
+        engine: "google",
+      });
+
+      const res = await fetch(`https://serpapi.com/search.json?${params.toString()}`);
+      if (!res.ok) {
+        console.warn(`[class-discovery] SerpAPI error for "${query}": HTTP ${res.status}`);
+        continue;
+      }
+
+      const data = await res.json();
+      const organicResults = data.organic_results ?? [];
+
+      for (const r of organicResults) {
+        const link = r.link as string;
+        if (!link) continue;
+        const domain = extractDomain(link);
+        if (seenDomains.has(domain)) continue;
+        seenDomains.add(domain);
+
+        allResults.push({
+          query,
+          link,
+          title: r.title ?? "",
+          snippet: r.snippet ?? "",
+          domain,
+        });
+      }
+
+      // Rate limit between queries
+      await delay(500);
+    } catch (err) {
+      console.warn(`[class-discovery] SerpAPI fetch failed for "${query}":`, err);
+    }
+  }
+
+  return allResults;
+}
+
+async function deduplicateAndQueue(
+  results: SerpSearchResult[],
+  runId: string,
+): Promise<Array<{ query: string; link: string; queued: boolean; reason?: string }>> {
+  const output: Array<{ query: string; link: string; queued: boolean; reason?: string }> = [];
+
+  // Get existing venue domains for dedup
+  const { data: existingVenues } = await supabase
+    .from("venues")
+    .select("website_url, calendar_url");
+
+  const existingDomains = new Set<string>();
+  for (const v of existingVenues ?? []) {
+    if (v.website_url) existingDomains.add(extractDomain(v.website_url));
+    if (v.calendar_url) existingDomains.add(extractDomain(v.calendar_url));
+  }
+
+  // Also check domains already in the discovery queue
+  const { data: queuedVenues } = await supabase
+    .from("venue_discovery_queue")
+    .select("raw_website_url, detail_page_url");
+
+  for (const q of queuedVenues ?? []) {
+    if (q.raw_website_url) existingDomains.add(extractDomain(q.raw_website_url));
+    if (q.detail_page_url) existingDomains.add(extractDomain(q.detail_page_url));
+  }
+
+  for (const result of results) {
+    if (existingDomains.has(result.domain)) {
+      output.push({ query: result.query, link: result.link, queued: false, reason: "already_known" });
+      continue;
+    }
+
+    // Queue as a new potential school venue
+    const { error } = await supabase.from("venue_discovery_queue").insert({
+      source_id: null,
+      run_id: runId,
+      raw_name: result.title,
+      raw_address: null,
+      raw_website_url: result.link,
+      raw_genre_tags: [],
+      raw_neighborhood: null,
+      raw_category: "school",
+      raw_description: result.snippet,
+      raw_phone: null,
+      raw_photo_url: null,
+      detail_page_url: result.link,
+    });
+
+    if (error) {
+      // Likely a unique constraint violation — already queued
+      output.push({ query: result.query, link: result.link, queued: false, reason: "insert_error" });
+    } else {
+      existingDomains.add(result.domain);
+      output.push({ query: result.query, link: result.link, queued: true });
+    }
+  }
+
+  return output;
+}
+
+// --- Main handler ---
 
 serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -482,6 +559,7 @@ serve(async (req) => {
     return new Response(null, { status: 204, headers: cors });
   }
 
+  // Auth: same pattern as event-scraper
   const scraperKey = req.headers.get("x-scraper-key") ?? req.headers.get("Authorization")?.replace("Bearer ", "");
   let authed = scraperKey === SCRAPER_SECRET;
   if (!authed && scraperKey) {
@@ -496,95 +574,99 @@ serve(async (req) => {
   }
 
   const runId = crypto.randomUUID();
-  console.log(`[event-scraper] Starting run ${runId}`);
+  console.log(`[class-discovery] Starting run ${runId}`);
 
-  // Get all venues for enrichment + scraping
-  const { data: allVenues, error: venueError } = await supabase
+  // Fetch school venues (venue_type = 'school')
+  const { data: schools, error: schoolError } = await supabase
     .from("venues")
-    .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source");
+    .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
+    .eq("venue_type", "school");
 
-  if (venueError || !allVenues) {
+  if (schoolError || !schools) {
     return new Response(
-      JSON.stringify({ error: "Failed to load venues", detail: venueError?.message }),
+      JSON.stringify({ error: "Failed to load school venues", detail: schoolError?.message }),
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
 
-  const venues = allVenues.filter((v) => v.calendar_url) as VenueTarget[];
-  const enrichmentVenues = allVenues.filter((v) => v.website_url) as VenueTarget[];
+  const schoolsWithCalendar = schools.filter((s) => s.calendar_url) as VenueTarget[];
 
-  // Stream results as NDJSON to keep connection alive (avoids idle timeout)
+  // Stream results as NDJSON
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      // --- Phase 1: Venue enrichment (photos + URL validation) ---
-      const enrichResults: EnrichmentResult[] = [];
-      const ENRICH_BATCH = 5;
+      // --- Phase 1: Scrape each school's calendar for class events ---
+      const scrapeResults: ScrapeResult[] = [];
 
-      for (let i = 0; i < enrichmentVenues.length; i += ENRICH_BATCH) {
-        const batch = enrichmentVenues.slice(i, i + ENRICH_BATCH);
-        const batchResults = await Promise.all(
-          batch.map((v) => enrichVenue(v, runId)),
-        );
-        enrichResults.push(...batchResults);
+      for (let i = 0; i < schoolsWithCalendar.length; i++) {
+        const school = schoolsWithCalendar[i];
+        console.log(`[class-discovery] Scraping school ${i + 1}/${schoolsWithCalendar.length}: ${school.name}`);
 
-        for (const r of batchResults) {
-          controller.enqueue(
-            encoder.encode(JSON.stringify({ type: "enrichment", data: r }) + "\n"),
-          );
-        }
+        const result = await processSchool(school, runId);
+        scrapeResults.push(result);
 
-        if (i + ENRICH_BATCH < enrichmentVenues.length) {
-          await delay(500);
-        }
-      }
-
-      // --- Phase 2: Event scraping ---
-      const results: ScrapeResult[] = [];
-      const BATCH_SIZE = 3;
-
-      for (let i = 0; i < venues.length; i += BATCH_SIZE) {
-        const batch = venues.slice(i, i + BATCH_SIZE) as VenueTarget[];
-        console.log(
-          `[event-scraper] Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.map((v) => v.name).join(", ")}`,
+        controller.enqueue(
+          encoder.encode(JSON.stringify({ type: "school_scrape", data: result }) + "\n"),
         );
 
-        const batchResults = await Promise.all(
-          batch.map((venue) => processVenue(venue, runId)),
-        );
-        results.push(...batchResults);
-
-        for (const r of batchResults) {
-          controller.enqueue(
-            encoder.encode(JSON.stringify({ type: "venue", data: r }) + "\n"),
-          );
-        }
-
-        if (i + BATCH_SIZE < venues.length) {
+        // Rate limit between schools
+        if (i < schoolsWithCalendar.length - 1) {
           await delay(1000);
         }
       }
 
-      const summary = {
+      // --- Phase 2: SerpAPI search for new schools (optional) ---
+      let searchResults: Array<{ query: string; link: string; queued: boolean; reason?: string }> = [];
+      let searchWarning: string | null = null;
+
+      if (SERPAPI_KEY) {
+        try {
+          const serpResults = await searchForSchools();
+          searchResults = await deduplicateAndQueue(serpResults, runId);
+
+          for (const sr of searchResults) {
+            controller.enqueue(
+              encoder.encode(JSON.stringify({ type: "search_result", data: sr }) + "\n"),
+            );
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          searchWarning = `SerpAPI search failed: ${msg}`;
+          console.error(`[class-discovery] ${searchWarning}`);
+        }
+      } else {
+        searchWarning = "SERPAPI_KEY not set — skipping web search for new schools";
+        console.warn(`[class-discovery] ${searchWarning}`);
+      }
+
+      // --- Summary ---
+      const summary: Record<string, unknown> = {
         run_id: runId,
-        enrichment: {
-          venues_checked: enrichResults.length,
-          photos_found: enrichResults.filter((r) => r.photo_extracted).length,
-          url_failures: enrichResults.filter((r) => r.website_url_valid === false).length,
-        },
-        venues_scraped: results.length,
-        total_events_found: results.reduce((s, r) => s + r.events_found, 0),
-        total_created: results.reduce((s, r) => s + r.events_created, 0),
-        total_updated: results.reduce((s, r) => s + r.events_updated, 0),
-        errors: results.filter((r) => r.status !== "success").length,
+        schools_scraped: scrapeResults.length,
+        total_events_found: scrapeResults.reduce((s, r) => s + r.events_found, 0),
+        total_created: scrapeResults.reduce((s, r) => s + r.events_created, 0),
+        total_updated: scrapeResults.reduce((s, r) => s + r.events_updated, 0),
+        scrape_errors: scrapeResults.filter((r) => r.status !== "success").length,
+        ai_input_tokens: scrapeResults.reduce((s, r) => s + r.ai_input_tokens, 0),
+        ai_output_tokens: scrapeResults.reduce((s, r) => s + r.ai_output_tokens, 0),
+        search_results_total: searchResults.length,
+        search_results_queued: searchResults.filter((r) => r.queued).length,
+        search_results_known: searchResults.filter((r) => !r.queued).length,
       };
+
+      if (searchWarning) {
+        summary.warning = searchWarning;
+      }
 
       controller.enqueue(
         encoder.encode(JSON.stringify({ type: "summary", data: summary }) + "\n"),
       );
 
       console.log(
-        `[event-scraper] Run ${runId} complete: ${summary.total_events_found} found, ${summary.total_created} created, ${summary.total_updated} updated, ${summary.errors} errors`,
+        `[class-discovery] Run ${runId} complete: ${summary.schools_scraped} schools scraped, ` +
+        `${summary.total_events_found} events found, ${summary.total_created} created, ` +
+        `${summary.total_updated} updated, ${summary.scrape_errors} errors, ` +
+        `${summary.search_results_queued} new schools queued`,
       );
 
       controller.close();

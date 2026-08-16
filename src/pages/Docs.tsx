@@ -391,6 +391,9 @@ function CoverageTab() {
   const [backfillRunning, setBackfillRunning] = useState(false)
   const [backfillResult, setBackfillResult] = useState<{ exact_matches: number; fuzzy_matches: number; ai_matches: number; plays_created: number; events_unmatched: number; events_processed: number } | null>(null)
   const [unlinkedCount, setUnlinkedCount] = useState<number | null>(null)
+  const [classDiscoveryRunning, setClassDiscoveryRunning] = useState(false)
+  const [classDiscoveryLog, setClassDiscoveryLog] = useState<string[]>([])
+  const [classMetrics, setClassMetrics] = useState<{ class_venue_count: number; class_event_count: number; class_with_instructor: number; class_with_level: number } | null>(null)
 
   useEffect(() => {
     supabase
@@ -400,6 +403,12 @@ function CoverageTab() {
       .eq('event_type', 'show')
       .then(({ count }) => setUnlinkedCount(count ?? 0))
   }, [backfillResult])
+
+  useEffect(() => {
+    supabase.rpc('get_class_coverage_metrics').then(({ data }) => {
+      if (data) setClassMetrics(data as typeof classMetrics)
+    })
+  }, [classDiscoveryRunning])
 
   const handleRunBackfill = async () => {
     setBackfillRunning(true)
@@ -424,6 +433,47 @@ function CoverageTab() {
       setBackfillResult({ exact_matches: 0, fuzzy_matches: 0, ai_matches: 0, plays_created: 0, events_unmatched: 0, events_processed: -1 })
     }
     setBackfillRunning(false)
+  }
+
+  const handleDiscoverClasses = async () => {
+    setClassDiscoveryRunning(true)
+    setClassDiscoveryLog([])
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+        },
+      )
+      const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
+      if (reader) {
+        let buffer = ''
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            if (line.trim()) {
+              setClassDiscoveryLog(prev => [...prev, line])
+            }
+          }
+        }
+        if (buffer.trim()) {
+          setClassDiscoveryLog(prev => [...prev, buffer])
+        }
+      }
+    } catch (e) {
+      setClassDiscoveryLog(prev => [...prev, `Error: ${e instanceof Error ? e.message : 'Unknown error'}`])
+    }
+    setClassDiscoveryRunning(false)
   }
 
   const handleRunDiscovery = async () => {
@@ -501,6 +551,24 @@ function CoverageTab() {
         >
           {backfillRunning ? 'Matching...' : `Play Backfill${unlinkedCount !== null ? ` (${unlinkedCount})` : ''}`}
         </button>
+        <button
+          onClick={handleDiscoverClasses}
+          disabled={classDiscoveryRunning || busy}
+          style={{
+            ...mono,
+            fontSize: 10,
+            padding: '6px 14px',
+            background: classDiscoveryRunning ? 'var(--bg-chrome)' : '#1a1005',
+            color: classDiscoveryRunning ? 'var(--ink-dim)' : '#D4A017',
+            border: '1px solid #D4A017',
+            borderRadius: 2,
+            cursor: classDiscoveryRunning || busy ? 'default' : 'pointer',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          {classDiscoveryRunning ? 'Discovering...' : 'Discover Classes'}
+        </button>
       </div>
       {backfillResult && backfillResult.events_processed >= 0 && (
         <div style={{ ...mono, fontSize: 10, color: 'var(--accent)', marginBottom: 8 }}>
@@ -537,6 +605,40 @@ function CoverageTab() {
       )}
 
       {metrics && <CoverageMetricsCards metrics={metrics} />}
+
+      {classMetrics && (
+        <div style={{ marginTop: 14, marginBottom: 14 }}>
+          <div style={{ ...mono, fontSize: 9, letterSpacing: '0.1em', color: '#D4A017', marginBottom: 6 }}>
+            CLASS COVERAGE
+          </div>
+          <div style={{ display: 'flex', gap: 16 }}>
+            {[
+              { value: classMetrics.class_venue_count, label: 'SCHOOLS' },
+              { value: classMetrics.class_event_count, label: 'CLASSES' },
+              { value: classMetrics.class_with_instructor, label: 'W/ INSTRUCTOR' },
+              { value: classMetrics.class_with_level, label: 'W/ LEVEL' },
+            ].map(s => (
+              <div key={s.label} style={{ textAlign: 'center' }}>
+                <div style={{ ...mono, fontSize: 18, color: 'var(--ink)' }}>{s.value}</div>
+                <div style={{ ...mono, fontSize: 8, letterSpacing: '0.08em', color: 'var(--ink-faint)' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {classDiscoveryLog.length > 0 && (
+        <div style={{ marginBottom: 14, padding: '8px 10px', background: 'var(--bg-card)', borderRadius: 3, border: '1px solid var(--rule)', maxHeight: 200, overflowY: 'auto' }}>
+          <div style={{ ...mono, fontSize: 9, letterSpacing: '0.1em', color: 'var(--ink-faint)', marginBottom: 4 }}>
+            CLASS DISCOVERY LOG
+          </div>
+          {classDiscoveryLog.map((line, i) => (
+            <div key={i} style={{ ...mono, fontSize: 9.5, color: 'var(--ink-dim)', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+              {line}
+            </div>
+          ))}
+        </div>
+      )}
 
       {!audit.loading && (
         <VenueAuditTable

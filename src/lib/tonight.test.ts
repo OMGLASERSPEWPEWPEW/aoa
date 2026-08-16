@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { isUpTonight, getTonightTimes, formatShowTime } from './tonight'
+import { isUpTonight, getTonightTimes, formatShowTime, isThisWeek, isThisMonth } from './tonight'
 import type { Event } from './types'
 
 function makeEvent(overrides: Partial<Event> = {}): Event {
@@ -9,7 +9,9 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     start_date: '2026-07-01', end_date: '2026-08-31',
     show_times: null, price_min: null, price_max: null,
     ticket_url: null, hottix_available: false, photo_url: null, cast_members: null,
-    play_id: null, extraction_confidence: null, created_at: '',
+    play_id: null, extraction_confidence: null,
+    instructor_name: null, skill_level: null, session_count: null, class_format: null,
+    created_at: '',
     ...overrides,
   }
 }
@@ -124,5 +126,75 @@ describe('formatShowTime', () => {
 
   it('formats noon', () => {
     expect(formatShowTime('12:00')).toBe('12:00 PM')
+  })
+})
+
+describe('isThisWeek', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('returns true for event running through today', () => {
+    vi.useFakeTimers()
+    // 2026-08-05 is a Wednesday
+    vi.setSystemTime(new Date('2026-08-05T20:00:00-05:00'))
+    expect(isThisWeek(makeEvent({ start_date: '2026-08-01', end_date: '2026-08-31' }))).toBe(true)
+  })
+
+  it('returns false for event entirely in the past', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-05T20:00:00-05:00'))
+    expect(isThisWeek(makeEvent({ start_date: '2026-07-01', end_date: '2026-07-20' }))).toBe(false)
+  })
+
+  it('returns false for event starting after this week', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-05T20:00:00-05:00'))
+    expect(isThisWeek(makeEvent({ start_date: '2026-08-20', end_date: '2026-09-01' }))).toBe(false)
+  })
+
+  it('returns true for event starting later this week', () => {
+    vi.useFakeTimers()
+    // Wednesday — Sunday is 2026-08-09
+    vi.setSystemTime(new Date('2026-08-05T20:00:00-05:00'))
+    expect(isThisWeek(makeEvent({ start_date: '2026-08-08', end_date: '2026-08-30' }))).toBe(true)
+  })
+
+  it('returns false for event with no dates', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-05T20:00:00-05:00'))
+    expect(isThisWeek(makeEvent({ start_date: null, end_date: null }))).toBe(false)
+  })
+})
+
+describe('isThisMonth', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('returns true for event running through this month', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-15T20:00:00-05:00'))
+    expect(isThisMonth(makeEvent({ start_date: '2026-08-01', end_date: '2026-08-31' }))).toBe(true)
+  })
+
+  it('returns false for event entirely in the past', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-15T20:00:00-05:00'))
+    expect(isThisMonth(makeEvent({ start_date: '2026-06-01', end_date: '2026-06-30' }))).toBe(false)
+  })
+
+  it('returns false for event starting next month', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-15T20:00:00-05:00'))
+    expect(isThisMonth(makeEvent({ start_date: '2026-09-05', end_date: '2026-09-30' }))).toBe(false)
+  })
+
+  it('returns true for event ending this month that started earlier', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-15T20:00:00-05:00'))
+    expect(isThisMonth(makeEvent({ start_date: '2026-07-15', end_date: '2026-08-20' }))).toBe(true)
+  })
+
+  it('returns false for event with no dates', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-15T20:00:00-05:00'))
+    expect(isThisMonth(makeEvent({ start_date: null, end_date: null }))).toBe(false)
   })
 })

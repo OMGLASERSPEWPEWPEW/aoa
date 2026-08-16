@@ -22,6 +22,10 @@ export interface ScrapedEvent {
   photo_url: string | null;
   show_times: Record<string, string[]> | null;
   cast_members: Array<{ name: string; role: string | null }> | null;
+  instructor_name: string | null;
+  skill_level: string | null;
+  session_count: number | null;
+  class_format: string | null;
 }
 
 export interface ScrapeResult {
@@ -91,6 +95,10 @@ export interface Pass1Event {
   price_max: number | null;
   ticket_url: string | null;
   show_times: Record<string, string[]> | null;
+  instructor_name?: string | null;
+  skill_level?: string | null;
+  session_count?: number | null;
+  class_format?: string | null;
 }
 
 export interface Pass2Verification {
@@ -102,6 +110,10 @@ export interface Pass2Verification {
   genre_tags: string[];
   cast_members: Array<{ name: string; role: string | null }> | null;
   photo_url: string | null;
+  instructor_name?: string | null;
+  skill_level?: string | null;
+  session_count?: number | null;
+  class_format?: string | null;
   corrections: {
     price_min?: number | null;
     price_max?: number | null;

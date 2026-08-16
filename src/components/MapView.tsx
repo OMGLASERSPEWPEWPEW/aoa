@@ -78,6 +78,7 @@ export function MapView() {
       if (f === 'under20' && !venueEvents.some(e => e.price_min !== null && e.price_min <= 20)) return true
       if (f === 'storefront' && venue.venue_type !== 'storefront') return true
       if (f === 'never' && (visitCounts[venue.id] ?? 0) > 0) return true
+      if (f === 'classes' && !venueEvents.some(e => e.event_type === 'class' || e.event_type === 'workshop')) return true
     }
     return false
   }, [activeFilters, events, tonightEventsByVenue, visitCounts])
@@ -88,6 +89,7 @@ export function MapView() {
     storefront: timeFilteredVenues.filter(v => v.venue_type === 'storefront').length,
     never: timeFilteredVenues.filter(v => (visitCounts[v.id] ?? 0) === 0).length,
     pwyc: timeFilteredVenues.filter(v => v.pay_what_you_can_days && v.pay_what_you_can_days.length > 0).length,
+    classes: timeFilteredVenues.filter(v => events.some(e => e.venue_id === v.id && (e.event_type === 'class' || e.event_type === 'workshop'))).length,
   }
 
   useEffect(() => {
@@ -137,6 +139,7 @@ export function MapView() {
       const firstEventStatus = venueEvents.length > 0 ? getStatus(venueEvents[0].id) : null
       const tonightEvts = tonightEventsByVenue(venue.id)
       const dimmed = isVenueDimmed(venue)
+      const hasClassEvents = venueEvents.some(e => e.event_type === 'class' || e.event_type === 'workshop')
 
       const el = createMarkerElement({
         venue,
@@ -145,6 +148,7 @@ export function MapView() {
         isTonight: tonightEvts.length > 0,
         isSelected: selectedVenue?.id === venue.id,
         dimmed,
+        hasClassEvents,
         onClick: () => {
           markerClickedRef.current = true
           setSelectedVenue(prev => prev?.id === venue.id ? null : venue)

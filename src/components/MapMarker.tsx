@@ -14,6 +14,7 @@ interface Props {
   isTonight: boolean
   isSelected: boolean
   dimmed: boolean
+  hasClassEvents: boolean
   onClick: () => void
 }
 
@@ -24,6 +25,7 @@ export function createMarkerElement({
   isTonight,
   isSelected,
   dimmed,
+  hasClassEvents,
   onClick,
 }: Props): HTMLDivElement {
   const el = document.createElement('div')
@@ -74,6 +76,26 @@ export function createMarkerElement({
     chip.style.color = isTonight ? 'var(--live)' : 'var(--ink-dim)'
   }
 
+  // Class marker override — AFTER relationship coloring
+  if (hasClassEvents) {
+    const classAmber = '#D4A017'
+    el.style.width = '38px'
+    el.style.height = '44px'
+    chip.style.width = '34px'
+    chip.style.height = '34px'
+    chip.style.fontSize = '16px'
+    chip.style.backgroundColor = '#1a1005'
+    chip.textContent = '◇'
+    chip.style.border = tonightBorder ?? `1.5px solid ${classAmber}`
+    chip.style.color = classAmber
+    // Preserve relationship-specific border styles with amber
+    if (relationship === 'booked') {
+      chip.style.border = tonightBorder ?? `2px solid ${classAmber}`
+    } else if (relationship === 'want_to_see') {
+      chip.style.border = tonightBorder ?? `1.5px dashed ${classAmber}`
+    }
+  }
+
   chip.style.transition = 'transform 120ms'
   chip.style.transform = isSelected ? 'scale(1.18)' : 'scale(1)'
 
@@ -93,6 +115,15 @@ export function createMarkerElement({
     : chip.style.border.replace('dashed', 'solid')
   tail.style.borderRight = tailBorder
   tail.style.borderBottom = tailBorder
+
+  // Class marker tail offset override
+  if (hasClassEvents) {
+    tail.style.left = '14px'
+    tail.style.top = '33px'
+    tail.style.borderRight = chip.style.border
+    tail.style.borderBottom = chip.style.border
+  }
+
   el.appendChild(tail)
 
   el.onclick = (e) => {

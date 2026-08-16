@@ -8,6 +8,7 @@ const FILTERS = [
   { key: 'tonight', label: 'TONIGHT' },
   { key: 'under20', label: 'UNDER $20' },
   { key: 'storefront', label: 'STOREFRONT' },
+  { key: 'classes', label: 'CLASSES' },
   { key: 'usher', label: 'USHER SLOTS' },
   { key: 'never', label: 'NEVER BEEN' },
 ]

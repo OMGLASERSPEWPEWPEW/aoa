@@ -52,5 +52,13 @@ OTHER RULES:
 - Use "show" for performances, "class" for multi-week courses, "workshop" for one-day/weekend sessions
 - show_times: use 3-letter lowercase day keys (mon, tue, wed, thu, fri, sat, sun) with 24h "HH:MM" format. Set to null if not listed
 - If no events are found, return {"events": []}
-- Do NOT invent events — only extract what is actually on the page`;
+- Do NOT invent events — only extract what is actually on the page
+
+CLASS-SPECIFIC FIELDS (for event_type "class" or "workshop" ONLY — null for shows):
+- instructor_name: The name of the instructor or lead facilitator. String or null.
+- skill_level: One of "beginner", "intermediate", "advanced", "all-levels", "drop-in". Null if not stated.
+- session_count: Integer number of sessions in the course (e.g., 8 for an 8-week class). Null for single sessions.
+- class_format: One of "ongoing" (rolling enrollment, no fixed end), "workshop" (one or two days), "intensive" (3-5 day immersive), "drop-in" (no commitment), "series" (fixed number of sessions with defined start/end). Null if unclear.
+
+For show events, omit these keys entirely (do not include them as null).`;
 }

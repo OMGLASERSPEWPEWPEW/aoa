@@ -131,6 +131,13 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
       .slice(0, 5)
   }, [venue, allEvents, tonightEvents, today])
 
+  const classEvents = useMemo(() => {
+    return allEvents
+      .filter(e => e.venue_id === venue.id && (e.event_type === 'class' || e.event_type === 'workshop'))
+      .filter(e => !e.end_date || e.end_date >= today)
+      .sort((a, b) => (a.start_date ?? 'z').localeCompare(b.start_date ?? 'z'))
+  }, [venue, allEvents, today])
+
   const isUp = tonightEvents.length > 0
 
   const historyLine = visitCount > 0
@@ -252,6 +259,59 @@ export function VenueSheet({ venue, tonightEvents, visitCount, lastVisitDate, al
                   USHER SLOTS OPEN
                 </span>
               )}
+            </div>
+          )}
+
+          {/* Classes at this venue */}
+          {classEvents.length > 0 && (
+            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 3, padding: '12px 14px', marginBottom: 14, border: '1px solid #D4A017' }}>
+              <div style={{ ...mono, fontSize: 9, letterSpacing: '0.1em', color: '#D4A017', marginBottom: 10 }}>
+                CLASSES AT THIS VENUE
+              </div>
+              {classEvents.map((e, i) => (
+                <div key={e.id}>
+                  {i > 0 && <div style={{ borderTop: '1px dotted var(--rule)', margin: '8px 0' }} />}
+                  <div style={{ ...serif, fontStyle: 'italic', fontSize: 15, color: 'var(--ink)' }}>{e.title}</div>
+                  {e.instructor_name && (
+                    <div style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', marginTop: 2 }}>
+                      INSTRUCTOR: {e.instructor_name.toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                    {e.skill_level && (
+                      <span style={{ ...mono, fontSize: 9, padding: '2px 6px', borderRadius: 2, backgroundColor: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.4)', color: '#D4A017' }}>
+                        {e.skill_level.toUpperCase()}
+                      </span>
+                    )}
+                    {e.class_format && (
+                      <span style={{ ...mono, fontSize: 9, padding: '2px 6px', borderRadius: 2, border: '1px solid var(--rule)', color: 'var(--ink-dim)' }}>
+                        {e.class_format.toUpperCase()}
+                      </span>
+                    )}
+                    {e.session_count && (
+                      <span style={{ ...mono, fontSize: 9, color: 'var(--ink-dim)' }}>
+                        {e.session_count} SESSIONS
+                      </span>
+                    )}
+                    {e.price_min != null && (
+                      <span style={{ ...mono, fontSize: 9, color: 'var(--ink-dim)' }}>
+                        ${e.price_min}{e.price_max && e.price_max !== e.price_min ? `–$${e.price_max}` : ''}
+                      </span>
+                    )}
+                  </div>
+                  {e.start_date && (
+                    <div style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', marginTop: 2 }}>
+                      {new Date(e.start_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{e.end_date ? ` – ${new Date(e.end_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : '+'}
+                    </div>
+                  )}
+                  {e.ticket_url && /^https?:\/\//i.test(e.ticket_url) && (
+                    <a href={e.ticket_url} target="_blank" rel="noopener noreferrer"
+                      style={{ ...mono, fontSize: 8.5, letterSpacing: '0.08em', color: '#D4A017', textDecoration: 'none', marginTop: 4, display: 'inline-block', padding: '6px 0' }}>
+                      ENROLL →
+                    </a>
+                  )}
+                </div>
+              ))}
             </div>
           )}
 

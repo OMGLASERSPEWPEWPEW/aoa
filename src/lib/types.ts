@@ -78,6 +78,10 @@ export interface Event {
   cast_members: Array<{ name: string; role: string | null }> | null
   play_id: string | null
   extraction_confidence: number | null
+  instructor_name: string | null
+  skill_level: 'beginner' | 'intermediate' | 'advanced' | 'all-levels' | 'drop-in' | null
+  session_count: number | null
+  class_format: 'ongoing' | 'workshop' | 'intensive' | 'drop-in' | 'series' | null
   created_at: string
   venue?: Venue
   play?: Play
