@@ -63,8 +63,8 @@ export function MapKey({ mode, isMarkerSelected }: Props) {
   return (
     <div style={{
       position: 'absolute',
-      right: 14,
-      top: 92,
+      left: 10,
+      bottom: 10,
       zIndex: 1200,
     }}>
       <button

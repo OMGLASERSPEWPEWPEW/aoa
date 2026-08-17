@@ -16,8 +16,8 @@ import { MapModeFilters } from './MapModeFilters'
 import { MapKey } from './MapKey'
 import { VenueSheet } from './VenueSheet'
 import { ClassSheet } from './ClassSheet'
-import { isUpTonight } from '../lib/tonight'
-import type { Venue, MapMode, SchoolWithSession } from '../lib/types'
+import { isUpTonight, isThisWeek, isThisMonth } from '../lib/tonight'
+import type { Venue, MapMode, SchoolWithSession, TimeFilter, Event } from '../lib/types'
 
 const CHICAGO_CENTER: [number, number] = [-87.6298, 41.8781]
 
@@ -32,6 +32,7 @@ export function MapView() {
   const { getStatus } = useWatchlist()
 
   const [mode, setMode] = useState<MapMode>('shows')
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('week')
   const [showFilters, setShowFilters] = useState<Set<string>>(new Set())
   const [classFilters, setClassFilters] = useState<Set<string>>(new Set())
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
@@ -53,6 +54,16 @@ export function MapView() {
   const venueEmotionColors = mapData?.venueEmotionColors ?? {}
 
   const activeFilters = mode === 'shows' ? showFilters : classFilters
+
+  const timeFilterFn = useCallback((e: Event) => {
+    if (timeFilter === 'today') return isUpTonight(e)
+    if (timeFilter === 'week') return isThisWeek(e)
+    return isThisMonth(e)
+  }, [timeFilter])
+
+  const venueIdsInTimeWindow = new Set(
+    events.filter(timeFilterFn).map(e => e.venue_id)
+  )
 
   const tonightEventsByVenue = useCallback((venueId: string) => {
     return events.filter(e => e.venue_id === venueId && isUpTonight(e))
@@ -82,11 +93,18 @@ export function MapView() {
     return false
   }, [classFilters])
 
-  // Filter counts
+  // Time-filtered venues (only venues with events in the selected time window)
   const showVenues = venues.filter(v =>
     v.latitude != null && v.longitude != null &&
-    events.some(e => e.venue_id === v.id)
+    venueIdsInTimeWindow.has(v.id)
   )
+
+  const timePillCounts = {
+    today: new Set(events.filter(e => isUpTonight(e)).map(e => e.venue_id)).size,
+    week: new Set(events.filter(e => isThisWeek(e)).map(e => e.venue_id)).size,
+    month: new Set(events.filter(e => isThisMonth(e)).map(e => e.venue_id)).size,
+  }
+
   const showFilterCounts = {
     tonight: showVenues.filter(v => tonightEventsByVenue(v.id).length > 0).length,
     under20: showVenues.filter(v => events.some(e => e.venue_id === v.id && e.price_min !== null && e.price_min <= 20)).length,
@@ -174,7 +192,7 @@ export function MapView() {
 
       venueMarkersRef.current.set(venue.id, { marker, el, venue })
     }
-  }, [venues, events, showFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors, mode, selectedVenue])
+  }, [venues, events, showFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors, mode, selectedVenue, timeFilter])
 
   // Render class markers (classes mode only)
   useEffect(() => {
@@ -265,8 +283,42 @@ export function MapView() {
         />
       </div>
 
-      {/* Contextual filters — below mode control */}
-      <div style={{ position: 'absolute', top: 60, left: 0, right: 0, zIndex: 1050, padding: '0 14px' }}>
+      {/* Time pills — shows mode only */}
+      {mode === 'shows' && (
+        <div style={{ position: 'absolute', top: 56, left: 0, right: 0, zIndex: 1050, padding: '0 14px', display: 'flex', gap: 6, justifyContent: 'center' }}>
+          {([['today', 'TODAY'], ['week', 'THIS WEEK'], ['month', 'THIS MONTH']] as const).map(([key, label]) => {
+            const active = timeFilter === key
+            return (
+              <button
+                key={key}
+                onClick={() => setTimeFilter(key)}
+                style={{
+                  fontFamily: "'Courier Prime', monospace",
+                  fontSize: 9.5,
+                  letterSpacing: '0.08em',
+                  padding: '5px 10px',
+                  borderRadius: 3,
+                  border: active ? '1px solid var(--accent)' : '1px solid var(--rule)',
+                  background: active ? 'var(--accent)' : 'color-mix(in srgb, var(--bg) 90%, transparent)',
+                  color: active ? 'var(--accent-on)' : 'var(--ink-dim)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  backdropFilter: 'blur(6px)',
+                  WebkitBackdropFilter: 'blur(6px)',
+                }}
+              >
+                {label}
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", marginLeft: 4, opacity: 0.7 }}>
+                  {timePillCounts[key]}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Contextual filters — below time pills (shows) or below mode control (classes) */}
+      <div style={{ position: 'absolute', top: mode === 'shows' ? 92 : 56, left: 0, right: 0, zIndex: 1050, padding: '0 14px' }}>
         <MapModeFilters
           mode={mode}
           activeFilters={activeFilters}

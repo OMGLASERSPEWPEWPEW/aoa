@@ -4,6 +4,61 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.16.4',
+    date: '2026-08-17',
+    title: 'Restore time filters, fix show count, move key to bottom left',
+    summary: 'Time pills (TODAY / THIS WEEK / THIS MONTH) are back on the map in SHOWS mode. Pins now only appear for venues with events in the selected window. Key moved back to bottom left.',
+    details: [
+      'Restored: TODAY / THIS WEEK / THIS MONTH time pills in SHOWS mode — controls which venues appear',
+      'Fix: SHOWS count now reflects the time-filtered venue count, not all 93 venues',
+      'Fix: attribute filters (TONIGHT, UNDER $20, NEVER BEEN) dim within the time window, not across all time',
+      'Moved: THE KEY legend back to bottom-left corner',
+      'Classes mode unaffected — filters still appear directly below mode control',
+    ],
+  },
+  {
+    version: '0.16.3',
+    date: '2026-08-17',
+    title: 'Fix version stamp — SW update was invisible',
+    summary: 'Version in package.json was stuck at 0.16.0 across three deploys, so the app always showed v0.16 even after updates landed.',
+    details: [
+      'Fix: package.json version now correctly bumped (was 0.16.0 for three deploys)',
+      'Added missing changelog entries for 0.16.0–0.16.2',
+    ],
+  },
+  {
+    version: '0.16.2',
+    date: '2026-08-16',
+    title: 'Filter empty venues, mode-exclusive layers, fix class pin drift',
+    summary: 'Map now filters venues with no events or classes, layers are mode-exclusive, and class pins no longer drift on pan.',
+    details: [
+      'Fix: venues with no events or classes filtered from map',
+      'Fix: map layers are now mode-exclusive — shows and classes don\'t overlap',
+      'Fix: class pin markers no longer drift during pan',
+      'Fix: Acting Studio Chicago coordinates corrected to River North',
+    ],
+  },
+  {
+    version: '0.16.1',
+    date: '2026-08-16',
+    title: 'Theme tokens for map overlays',
+    summary: 'Map overlays now use theme tokens so dark mode backgrounds don\'t appear on light mode.',
+    details: [
+      'Fix: map overlays use theme tokens — dark backgrounds no longer show on light mode',
+    ],
+  },
+  {
+    version: '0.16.0',
+    date: '2026-08-16',
+    title: 'Classes layer with dual-mode markers and rethought filters',
+    summary: 'The map now has a dedicated classes layer with amber diamond markers, dual-mode toggle, and reworked filter chips.',
+    details: [
+      'New: classes layer on the map with amber diamond markers',
+      'New: dual-mode toggle — switch between shows and classes views',
+      'New: rethought filter chips for mode-aware filtering',
+    ],
+  },
+  {
     version: '0.15.0',
     date: '2026-08-16',
     title: 'Class discovery dashboard + button wrapping + ribbon',
