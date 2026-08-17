@@ -41,7 +41,9 @@ export function createClassMarkerElement({ school, isSelected, dimmed, onClick }
 
   const el = document.createElement('div')
   el.className = 'cm'
-  el.style.position = 'relative'
+  el.style.position = 'absolute'
+  el.style.top = '0'
+  el.style.left = '0'
   el.style.width = '56px'
   el.style.height = '56px'
   el.style.display = 'flex'

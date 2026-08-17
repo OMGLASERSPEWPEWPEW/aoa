@@ -2,7 +2,6 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import '../styles/map-ghost.css'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { useWatchlist } from '../hooks/useWatchlist'
@@ -84,7 +83,10 @@ export function MapView() {
   }, [classFilters])
 
   // Filter counts
-  const showVenues = venues.filter(v => v.latitude != null && v.longitude != null)
+  const showVenues = venues.filter(v =>
+    v.latitude != null && v.longitude != null &&
+    events.some(e => e.venue_id === v.id)
+  )
   const showFilterCounts = {
     tonight: showVenues.filter(v => tonightEventsByVenue(v.id).length > 0).length,
     under20: showVenues.filter(v => events.some(e => e.venue_id === v.id && e.price_min !== null && e.price_min <= 20)).length,
@@ -134,19 +136,21 @@ export function MapView() {
     }
   }, [hasToken])
 
-  // Render venue markers
+  // Render venue markers (shows mode only)
   useEffect(() => {
     const map = mapRef.current
-    if (!map || venues.length === 0) return
+    if (!map) return
 
     for (const { marker } of venueMarkersRef.current.values()) marker.remove()
     venueMarkersRef.current.clear()
+
+    if (mode !== 'shows' || venues.length === 0) return
 
     for (const venue of showVenues) {
       const venueEvents = events.filter(e => e.venue_id === venue.id)
       const firstEventStatus = venueEvents.length > 0 ? getStatus(venueEvents[0].id) : null
       const tonightEvts = tonightEventsByVenue(venue.id)
-      const dimmed = mode === 'shows' ? isVenueDimmed(venue) : false
+      const dimmed = isVenueDimmed(venue)
 
       const el = createMarkerElement({
         venue,
@@ -157,18 +161,12 @@ export function MapView() {
         dimmed,
         hasClassEvents: false,
         onClick: () => {
-          if (mode === 'classes') return
           markerClickedRef.current = true
           setSelectedVenue(prev => prev?.id === venue.id ? null : venue)
           setSelectedSchool(null)
           map.flyTo({ center: [Number(venue.longitude!), Number(venue.latitude!)], zoom: 14, duration: 600 })
         },
       })
-
-      // Add ghost class in classes mode
-      if (mode === 'classes') {
-        el.classList.add('ghost')
-      }
 
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([Number(venue.longitude), Number(venue.latitude)])
@@ -178,34 +176,30 @@ export function MapView() {
     }
   }, [venues, events, showFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors, mode, selectedVenue])
 
-  // Render class markers
+  // Render class markers (classes mode only)
   useEffect(() => {
     const map = mapRef.current
-    if (!map || schools.length === 0) return
+    if (!map) return
 
     for (const { marker } of classMarkersRef.current.values()) marker.remove()
     classMarkersRef.current.clear()
 
+    if (mode !== 'classes' || schools.length === 0) return
+
     for (const school of schools) {
-      const dimmed = mode === 'classes' ? isSchoolDimmed(school) : false
+      const dimmed = isSchoolDimmed(school)
 
       const el = createClassMarkerElement({
         school,
         isSelected: selectedSchool?.id === school.id,
         dimmed,
         onClick: () => {
-          if (mode === 'shows') return
           markerClickedRef.current = true
           setSelectedSchool(prev => prev?.id === school.id ? null : school)
           setSelectedVenue(null)
           map.flyTo({ center: [school.longitude, school.latitude], zoom: 14, duration: 600 })
         },
       })
-
-      // Add ghost class in shows mode
-      if (mode === 'shows') {
-        el.classList.add('ghost')
-      }
 
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([school.longitude, school.latitude])
