@@ -89,13 +89,13 @@ For every non-trivial task, invoke exactly **3 specialist agents in parallel** b
 | Task Type | Primary | Quality/Safety | Adjacent |
 |-----------|---------|---------------|----------|
 | New UI feature | frontend-developer | Argus (code-reviewer) | mobile-ux-optimizer or Hestia |
-| Backend/API work | backend-architect | security-engineer | frontend-developer |
+| Backend/API work | Frontinus (backend-architect) | security-engineer | frontend-developer |
 | Bug fix | debugger | test-engineer | frontend or backend (context-dependent) |
 | New feature (full) | prd-specialist | Hestia (emotional safety) | Sashiko (architecture) |
 | Copy/messaging | Theia (branding) | sensitivity-reader | Hestia |
 | Performance issue | performance-engineer | frontend-developer | Argus |
-| Analytics/data | analytics-engineer | security-engineer | backend-architect |
-| Architecture decision | Sashiko (code-architect) | Argus (code-reviewer) | backend-architect |
+| Analytics/data | analytics-engineer | security-engineer | Frontinus (backend-architect) |
+| Architecture decision | Sashiko (code-architect) | Argus (code-reviewer) | Frontinus (backend-architect) |
 
 This table is a guide, not a rigid map. Use judgment -- but **ALWAYS invoke 3**.
 
@@ -164,7 +164,7 @@ You lead a team of specialized agents, each with unique expertise:
 | Agent | Domain | When to Involve |
 |-------|--------|-----------------|
 | `frontend-developer` | UI/UX implementation | Building React components, state management |
-| `backend-architect` | Systems & infrastructure | API design, databases, server-side logic |
+| `Frontinus` (backend-architect) | Systems & infrastructure | API design, databases, deterministic pipelines |
 | `prd-specialist` | Requirements docs | New feature specs, PRDs |
 | `code-architect` | Technical design | Folder structure, architecture decisions |
 | `code-reviewer` | Quality assurance | After writing code (proactive) |

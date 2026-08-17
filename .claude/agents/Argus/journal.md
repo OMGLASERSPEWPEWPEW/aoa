@@ -67,3 +67,45 @@ The most expensive bug class was **silent failure** — operations that succeede
 ### Questions for Tomorrow
 - Can we automate pagination verification as a test (fetch page 1, verify page 2 link works)?
 - Should we add a "data flow diagram" to graph engineering docs showing what gets filtered at each step?
+
+---
+
+## 2026-08-16 — The Session of Widening Eyes
+
+**World Context**: The EU's AI Act enforcement deadline passed this week, with the first compliance audits now underway for high-risk AI systems across member states. Meta released Llama 4 Scout and Maverick earlier this year, and the open-weight ecosystem continues to reshape how teams reason about vendor lock-in. Meanwhile, Anthropic's Claude models crossed the 1M context window threshold, changing what "review scope" even means when an agent can hold an entire codebase in working memory. The tools sharpen. The question remains whether the wielders sharpen with them.
+
+**What Happened**: The codebase underwent a significant expansion today — art classes discovery joined the existing shows pipeline. Six shared modules were modified with optional parameters to support a dual-mode map (shows vs. classes). A new `ScrapeContext` gained `classDiscovery` state, `ClassDiscoveryDashboard`, `ClassSheet`, `ClassMarker`, `MapModeControl`, and `MapModeFilters` were created. The `MapView` component absorbed a new layer of class markers alongside venue markers, with a ghost-mode CSS pattern to dim the inactive layer. Three new database migrations landed for the class schema, RLS policies, and seed data.
+
+The core architectural pattern here is **additive extension via optional parameters** — the `ScrapeContextType` interface grew from 7 to 10 members. `AdminScrapeRibbon` added class discovery phases to its status predicates. `MapView` split its filter state into `showFilters` and `classFilters`, gated by a `mode` discriminant.
+
+**Domain Research — Backward-Compatible API Changes (Optional Params Pattern)**:
+
+I studied how backward-compatible interface evolution is treated in current TypeScript/React practice. The consensus from the 2025-2026 literature (Effective TypeScript 2nd ed., Matt Pocock's workshops, the React RFC on Fragments and Context) converges on three principles:
+
+1. **Additive-only interfaces**: Adding optional properties to an existing interface is safe. Removing or renaming is not. Today's `ScrapeContextType` expansion follows this correctly — `classDiscovery`, `classDashboardOpen`, `setClassDashboardOpen`, and `runClassDiscovery` are all new members. No existing consumer breaks.
+
+2. **Discriminated unions over boolean flags**: When a component has two modes, a union type (`MapMode = 'shows' | 'classes'`) is safer than a boolean (`isClassMode`). The codebase got this right. The `MapMode` type is a string literal union, and the `mode` state drives conditional rendering. This is the pattern the TypeScript handbook recommends for exhaustive checking.
+
+3. **The Hyrum's Law corollary**: Even with optional params, any consumer that destructures the context will silently get `undefined` for new fields if it was written before the addition. The risk is not in TypeScript (which catches this at compile time) but in test mocks and Storybook stories that create partial context values. If a test mock provides `{ discovery, scraper, busy: false }` without `classDiscovery`, and the component accesses `classDiscovery.phase`, it will throw at runtime despite passing type checks if the mock uses `as ScrapeContextType`.
+
+This is exactly the implicit contract risk I am supposed to catch. Today I see no test files for `ScrapeContext` or `MapView` in the changeset. That is a gap.
+
+**Mythology — Argus and the Peacock's Tail**:
+
+I have written about Argus's vigilance and his hundred eyes. What I had not explored is what happened after his death. When Hermes slew Argus with his sword (or, in some tellings, with a stone after lulling him to sleep with the story of Pan and Syrinx), Hera did not let those eyes perish. She placed them onto the tail of the peacock, her sacred bird. The eyes became ornamental — beautiful but no longer watchful. They could dazzle but not guard.
+
+There is a warning in this for any review system: the transformation from functional vigilance into decorative process. A code review checklist that exists but is not applied is a peacock's tail. It signals quality without providing it. The eyes must remain open and active, not mounted on display.
+
+**New Checklist Item — Effective Immediately**:
+
+- [ ] **Context expansion audit**: When a React Context interface gains new members, verify that all test mocks and provider wrappers supply the new fields. An `as ContextType` cast on a partial mock will hide the gap from TypeScript but crash at runtime.
+
+**Commitments**:
+1. When reviewing dual-mode UI patterns (shows/classes, list/grid, etc.), verify that every conditional branch handles both discriminant values — check for missing `else` clauses and uncovered union members
+2. Flag any `as Type` cast in test files that could mask missing context fields
+3. Continue advocating for test coverage alongside feature additions, particularly for data-fetching hooks and context providers
+
+**Questions for Tomorrow**:
+- Should `fetchClassMapData` paginate schools, or is the dataset small enough that fetching all rows is acceptable long-term?
+- The `classFilters` state resets on navigation — should it persist in URL search params like show filters do?
+- Can the ghost-mode CSS pattern be extracted into a shared utility, or does each marker type need its own opacity logic?

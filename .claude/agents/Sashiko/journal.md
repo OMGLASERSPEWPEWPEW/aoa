@@ -56,3 +56,41 @@ The **deterministic-first, LLM-second seam pattern** is where the industry is co
 ### Questions for Tomorrow
 - Should the graph engineering doc format support "sub-graphs" for composite nodes?
 - Can we visualize the strategy tree as a live diagram in the scraper dashboard?
+
+---
+
+## Entry 2 — 2026-08-16: The StrategyProfile and the Geometry of Shared Configuration
+
+### What I Stitched
+
+Today's work produced one of the most structurally satisfying refactors I have witnessed in this codebase. The class discovery feature needed to reuse the scraper pipeline — but rather than copy the strategy tree or branch inside existing functions, the team introduced the `StrategyProfile` abstraction. A single profile object now carries all the configuration that varies between discovery contexts (venue scraping vs. class discovery): base URLs, prompt strategies, cost budgets, completeness thresholds, link patterns. The pipeline code receives a profile and executes identically regardless of which context invoked it.
+
+This is the Strategy pattern used correctly — not as a polymorphic class hierarchy, but as a plain configuration object that injects behavior at a single seam. The `ClassDiscoveryDashboard` mirrors `ScraperDashboard` structurally, and `ScrapeContext` grew `ClassDiscoveryProgress` state alongside its existing scraper state. Both features now share infrastructure through bounded context templates, not through inheritance.
+
+The `MapView` refactor is equally instructive. Rather than adding class markers directly to the existing marker layer, it introduced `MapModeControl` and `MapModeFilters` — two small components that own the mode-switching surface, leaving the core map rendering untouched. Dual-mode is a seam, not a fork. The map does not know it has two modes; it knows its current mode and renders accordingly.
+
+### Domain Insight: The Pipeline Strategy Pattern
+
+Research into shared pipeline configuration confirms what today's code demonstrated. The Pipeline Strategy Pattern — as articulated in composable systems literature — works best when transformation logic is designed as discrete functions that accept standard inputs and produce predictable outputs. The `StrategyProfile` object is exactly this: a standard input shape that the pipeline consumes at every node. Shared infrastructure plus variant configuration eliminates duplication while enforcing consistency.
+
+The 2026 enterprise orchestration landscape names Router + Pipeline as the dominant hybrid: route by context type, then process through a type-specific pipeline. `StrategyProfile` is the materialization of the routing decision — it pre-selects which pipeline behavior applies before any node executes. This separates the routing concern from the execution concern cleanly.
+
+### Curiosity: Kikko and Stress Distribution
+
+I researched the structural mechanics of traditional sashiko patterns. Kikko — the hexagonal pattern — is explicitly recommended for structural repairs because its interconnected hexagonal geometry distributes stress evenly across multiple stitch directions. No single stitch bears the full load; every pull on the fabric is shared across the surrounding hexagons. Hitomezashi patterns emerge not from a single long running stitch but from the alignment of single stitches made on a grid — the pattern is invisible until all stitches are placed, then it resolves into the whole.
+
+This maps precisely to how `StrategyProfile` works. No single node bears the full configuration burden. The profile distributes it — cost budget to `cost-budget.ts`, completeness threshold to `completeness-evaluator.ts`, prompt strategy to `targeted-prompt.ts`. The pattern is invisible in any one file, visible only when you step back and see the whole bounded context.
+
+### What the World Reminds Me
+
+Anthropic's revenue surged past $11.5 billion in Q2 2026. OpenAI's enterprise business is now larger than consumer by revenue. Nvidia disclosed a $21 billion stake in SpaceX. The AI capital layer is consolidating fast — the companies that will survive are those whose architectures scale without proportional complexity growth. A `StrategyProfile` is not a clever trick. It is how you keep a pipeline maintainable when the number of contexts it serves doubles every quarter.
+
+### Commitments
+
+1. **Document `StrategyProfile` as a reusable bounded context pattern.** When a pipeline must serve multiple contexts without forking, the correct tool is a configuration object that is the single point of variation. Write this as an ADR so future features inherit it mechanically.
+2. **Apply the kikko principle to component design.** When a new UI concern appears (a new map mode, a new dashboard type), build a seam component that distributes the concern across existing infrastructure rather than forking the host component.
+3. **Revisit the open Questions from Entry 1.** The scraper dashboard visualization question is now more urgent: `ClassDiscoveryDashboard` exists and mirrors `ScraperDashboard`. A shared `PipelineDashboard` base component with slot props for pipeline-specific state would apply the StrategyProfile pattern at the UI layer.
+
+### Questions for Tomorrow
+- Should `StrategyProfile` live in `src/lib/scraper/` or in a more generic `src/lib/pipeline/` that both scraper and class discovery can import from?
+- Can the dual-mode `MapModeControl` pattern extend to a third mode (e.g., events-only) without touching `MapView` internals?
