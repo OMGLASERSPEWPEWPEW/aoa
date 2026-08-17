@@ -387,12 +387,10 @@ function CoverageTab() {
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
   const audit = useVenueAudit()
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
-  const { discovery: progress, scraper, busy, setDashboardOpen, runDiscovery, runScraper } = useScrape()
+  const { discovery: progress, scraper, classDiscovery, busy, setDashboardOpen, setClassDashboardOpen, runDiscovery, runScraper, runClassDiscovery } = useScrape()
   const [backfillRunning, setBackfillRunning] = useState(false)
   const [backfillResult, setBackfillResult] = useState<{ exact_matches: number; fuzzy_matches: number; ai_matches: number; plays_created: number; events_unmatched: number; events_processed: number } | null>(null)
   const [unlinkedCount, setUnlinkedCount] = useState<number | null>(null)
-  const [classDiscoveryRunning, setClassDiscoveryRunning] = useState(false)
-  const [classDiscoveryLog, setClassDiscoveryLog] = useState<string[]>([])
   const [classMetrics, setClassMetrics] = useState<{ class_venue_count: number; class_event_count: number; class_with_instructor: number; class_with_level: number } | null>(null)
 
   useEffect(() => {
@@ -408,7 +406,7 @@ function CoverageTab() {
     supabase.rpc('get_class_coverage_metrics').then(({ data }) => {
       if (data) setClassMetrics(data as typeof classMetrics)
     })
-  }, [classDiscoveryRunning])
+  }, [classDiscovery.phase])
 
   const handleRunBackfill = async () => {
     setBackfillRunning(true)
@@ -435,47 +433,6 @@ function CoverageTab() {
     setBackfillRunning(false)
   }
 
-  const handleDiscoverClasses = async () => {
-    setClassDiscoveryRunning(true)
-    setClassDiscoveryLog([])
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
-          },
-        },
-      )
-      const reader = res.body?.getReader()
-      const decoder = new TextDecoder()
-      if (reader) {
-        let buffer = ''
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() ?? ''
-          for (const line of lines) {
-            if (line.trim()) {
-              setClassDiscoveryLog(prev => [...prev, line])
-            }
-          }
-        }
-        if (buffer.trim()) {
-          setClassDiscoveryLog(prev => [...prev, buffer])
-        }
-      }
-    } catch (e) {
-      setClassDiscoveryLog(prev => [...prev, `Error: ${e instanceof Error ? e.message : 'Unknown error'}`])
-    }
-    setClassDiscoveryRunning(false)
-  }
-
   const handleRunDiscovery = async () => {
     await runDiscovery()
     refetchMetrics()
@@ -489,7 +446,7 @@ function CoverageTab() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
         <div>
           <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>
             Venue Coverage
@@ -508,7 +465,6 @@ function CoverageTab() {
             borderRadius: 2,
             cursor: busy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
-            flexShrink: 0,
           }}
         >
           {progress.phase === 'discovering' && 'Discovering...'}
@@ -528,7 +484,6 @@ function CoverageTab() {
             borderRadius: 2,
             cursor: scraper.phase === 'scraping' ? 'pointer' : busy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
-            flexShrink: 0,
           }}
         >
           {scraper.phase === 'scraping' ? `View Progress ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : ''}` : 'Run Scraper'}
@@ -546,28 +501,26 @@ function CoverageTab() {
             borderRadius: 2,
             cursor: backfillRunning || busy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
-            flexShrink: 0,
           }}
         >
           {backfillRunning ? 'Matching...' : `Play Backfill${unlinkedCount !== null ? ` (${unlinkedCount})` : ''}`}
         </button>
         <button
-          onClick={handleDiscoverClasses}
-          disabled={classDiscoveryRunning || busy}
+          onClick={classDiscovery.phase === 'scraping' ? () => setClassDashboardOpen(true) : () => { runClassDiscovery(); refetchMetrics() }}
+          disabled={busy && classDiscovery.phase !== 'scraping'}
           style={{
             ...mono,
             fontSize: 10,
             padding: '6px 14px',
-            background: classDiscoveryRunning ? 'var(--bg-chrome)' : '#1a1005',
-            color: classDiscoveryRunning ? 'var(--ink-dim)' : '#D4A017',
+            background: classDiscovery.phase === 'scraping' ? '#2a1a05' : '#1a1005',
+            color: classDiscovery.phase === 'scraping' ? '#D4A017' : '#D4A017',
             border: '1px solid #D4A017',
             borderRadius: 2,
-            cursor: classDiscoveryRunning || busy ? 'default' : 'pointer',
+            cursor: classDiscovery.phase === 'scraping' || busy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
-            flexShrink: 0,
           }}
         >
-          {classDiscoveryRunning ? 'Discovering...' : 'Discover Classes'}
+          {classDiscovery.phase === 'scraping' ? `View Progress ${classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : ''}` : 'Discover Classes'}
         </button>
       </div>
       {backfillResult && backfillResult.events_processed >= 0 && (
@@ -624,19 +577,6 @@ function CoverageTab() {
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {classDiscoveryLog.length > 0 && (
-        <div style={{ marginBottom: 14, padding: '8px 10px', background: 'var(--bg-card)', borderRadius: 3, border: '1px solid var(--rule)', maxHeight: 200, overflowY: 'auto' }}>
-          <div style={{ ...mono, fontSize: 9, letterSpacing: '0.1em', color: 'var(--ink-faint)', marginBottom: 4 }}>
-            CLASS DISCOVERY LOG
-          </div>
-          {classDiscoveryLog.map((line, i) => (
-            <div key={i} style={{ ...mono, fontSize: 9.5, color: 'var(--ink-dim)', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-              {line}
-            </div>
-          ))}
         </div>
       )}
 

@@ -46,14 +46,39 @@ export interface ScraperProgress {
   error?: string
 }
 
+export interface RecentSchoolEntry {
+  name: string
+  status: string
+  eventsFound: number
+  eventsCreated: number
+}
+
+export interface ClassDiscoveryProgress {
+  phase: 'idle' | 'scraping' | 'done' | 'error'
+  schoolsScraped: number
+  totalSchools: number
+  currentSchool: string | null
+  eventsFound: number
+  eventsCreated: number
+  eventsUpdated: number
+  errors: number
+  newSchoolsQueued: number
+  recentSchools: RecentSchoolEntry[]
+  error?: string
+}
+
 interface ScrapeContextType {
   discovery: DiscoveryProgress
   scraper: ScraperProgress
+  classDiscovery: ClassDiscoveryProgress
   busy: boolean
   dashboardOpen: boolean
   setDashboardOpen: (open: boolean) => void
+  classDashboardOpen: boolean
+  setClassDashboardOpen: (open: boolean) => void
   runDiscovery: () => Promise<void>
   runScraper: () => Promise<void>
+  runClassDiscovery: () => Promise<void>
 }
 
 const ScrapeContext = createContext<ScrapeContextType | null>(null)
@@ -86,10 +111,12 @@ async function fetchWithRetry(url: string, init: RequestInit): Promise<Response>
 export function ScrapeProvider({ children }: { children: ReactNode }) {
   const [discovery, setDiscovery] = useState<DiscoveryProgress>({ phase: 'idle', found: 0, enriched: 0, promoted: 0, total: 0 })
   const [scraper, setScraper] = useState<ScraperProgress>({ phase: 'idle', scraped: 0, events: 0, total: 0, recentVenues: [] })
+  const [classDiscovery, setClassDiscovery] = useState<ClassDiscoveryProgress>({ phase: 'idle', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, recentSchools: [] })
   const [dashboardOpen, setDashboardOpen] = useState(false)
+  const [classDashboardOpen, setClassDashboardOpen] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const busy = discovery.phase === 'discovering' || discovery.phase === 'enriching' || scraper.phase === 'scraping'
+  const busy = discovery.phase === 'discovering' || discovery.phase === 'enriching' || scraper.phase === 'scraping' || classDiscovery.phase === 'scraping'
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -268,8 +295,109 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
     }
   }, [pollJob])
 
+  const runClassDiscovery = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL
+
+      setClassDiscovery({ phase: 'scraping', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, recentSchools: [] })
+      setClassDashboardOpen(true)
+
+      const res = await fetch(`${baseUrl}/functions/v1/class-discovery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      })
+
+      const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
+      if (!reader) {
+        setClassDiscovery(prev => ({ ...prev, phase: 'error', error: 'No response stream' }))
+        return
+      }
+
+      let buffer = ''
+      let schoolsScraped = 0
+      let eventsFound = 0
+      let eventsCreated = 0
+      let eventsUpdated = 0
+      let errors = 0
+      let newSchoolsQueued = 0
+      const recentSchools: RecentSchoolEntry[] = []
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          if (!line.trim()) continue
+          try {
+            const msg = JSON.parse(line)
+            if (msg.type === 'school_scrape') {
+              schoolsScraped++
+              const d = msg.data
+              eventsFound += d.events_found ?? 0
+              eventsCreated += d.events_created ?? 0
+              eventsUpdated += d.events_updated ?? 0
+              if (d.status !== 'success') errors++
+              recentSchools.unshift({ name: d.venue_name, status: d.status, eventsFound: d.events_found, eventsCreated: d.events_created })
+              if (recentSchools.length > 20) recentSchools.pop()
+              setClassDiscovery(prev => ({
+                ...prev,
+                schoolsScraped,
+                currentSchool: d.venue_name,
+                eventsFound,
+                eventsCreated,
+                eventsUpdated,
+                errors,
+                recentSchools: [...recentSchools],
+              }))
+            } else if (msg.type === 'search_result') {
+              if (msg.data?.queued) {
+                newSchoolsQueued++
+                setClassDiscovery(prev => ({ ...prev, newSchoolsQueued }))
+              }
+            } else if (msg.type === 'summary') {
+              const s = msg.data
+              setClassDiscovery(prev => ({
+                ...prev,
+                phase: 'done',
+                schoolsScraped: s.schools_scraped ?? schoolsScraped,
+                totalSchools: s.schools_scraped ?? schoolsScraped,
+                eventsFound: s.total_events_found ?? eventsFound,
+                eventsCreated: s.total_created ?? eventsCreated,
+                eventsUpdated: s.total_updated ?? eventsUpdated,
+                errors: s.scrape_errors ?? errors,
+                newSchoolsQueued: s.search_results_queued ?? newSchoolsQueued,
+                currentSchool: null,
+              }))
+              queryClient.invalidateQueries()
+            }
+          } catch { /* parse error — skip line */ }
+        }
+      }
+
+      if (buffer.trim()) {
+        try {
+          const msg = JSON.parse(buffer)
+          if (msg.type === 'summary') {
+            setClassDiscovery(prev => ({ ...prev, phase: 'done', currentSchool: null }))
+            queryClient.invalidateQueries()
+          }
+        } catch { /* ignore */ }
+      }
+
+      setClassDiscovery(prev => prev.phase === 'scraping' ? { ...prev, phase: 'done', currentSchool: null } : prev)
+    } catch (err) {
+      setClassDiscovery(prev => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
+    }
+  }, [])
+
   return (
-    <ScrapeContext.Provider value={{ discovery, scraper, busy, dashboardOpen, setDashboardOpen, runDiscovery, runScraper }}>
+    <ScrapeContext.Provider value={{ discovery, scraper, classDiscovery, busy, dashboardOpen, setDashboardOpen, classDashboardOpen, setClassDashboardOpen, runDiscovery, runScraper, runClassDiscovery }}>
       {children}
     </ScrapeContext.Provider>
   )

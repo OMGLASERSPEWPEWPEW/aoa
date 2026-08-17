@@ -3,13 +3,14 @@ import { useLocation } from 'react-router-dom'
 import { useProfile } from '../hooks/useProfile'
 import { useScrape } from '../contexts/ScrapeContext'
 import { ScraperDashboard } from './ScraperDashboard'
+import { ClassDiscoveryDashboard } from './ClassDiscoveryDashboard'
 import { ADMINS } from '../lib/constants'
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 
 export function AdminScrapeRibbon() {
   const { profile } = useProfile()
-  const { discovery, scraper, busy, dashboardOpen, setDashboardOpen } = useScrape()
+  const { discovery, scraper, classDiscovery, busy, dashboardOpen, setDashboardOpen, classDashboardOpen, setClassDashboardOpen } = useScrape()
   const location = useLocation()
   const [hidden, setHidden] = useState(true)
 
@@ -17,8 +18,8 @@ export function AdminScrapeRibbon() {
   const onCoveragePage = location.pathname === '/app/admin'
 
   const isRunning = busy
-  const isDone = (discovery.phase === 'done' || scraper.phase === 'done') && !busy
-  const isError = (discovery.phase === 'error' || scraper.phase === 'error') && !busy
+  const isDone = (discovery.phase === 'done' || scraper.phase === 'done' || classDiscovery.phase === 'done') && !busy
+  const isError = (discovery.phase === 'error' || scraper.phase === 'error' || classDiscovery.phase === 'error') && !busy
 
   useEffect(() => {
     if (isRunning) {
@@ -33,12 +34,23 @@ export function AdminScrapeRibbon() {
   }, [isRunning, isDone, isError])
 
   if (!isAdmin) return null
-  if (hidden && !isRunning && !dashboardOpen) return null
+  if (hidden && !isRunning && !dashboardOpen && !classDashboardOpen) return null
 
   let message = ''
   let color = 'var(--ink-dim)'
 
-  if (scraper.phase === 'scraping') {
+  if (classDiscovery.phase === 'scraping') {
+    const progress = classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : `${classDiscovery.schoolsScraped}`
+    const school = classDiscovery.currentSchool ? ` · ${classDiscovery.currentSchool}` : ''
+    message = `Discovering classes ${progress}${school}`
+    color = '#D4A017'
+  } else if (classDiscovery.phase === 'done' && !busy) {
+    message = `Classes done — ${classDiscovery.eventsFound} found, ${classDiscovery.eventsCreated} created across ${classDiscovery.schoolsScraped} schools`
+    color = '#D4A017'
+  } else if (classDiscovery.phase === 'error' && !busy) {
+    message = `Class discovery error: ${classDiscovery.error}`
+    color = '#ef4444'
+  } else if (scraper.phase === 'scraping') {
     const progress = scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : `${scraper.scraped}`
     const venue = scraper.currentVenue ? ` · ${scraper.currentVenue}` : ''
     const strategy = scraper.lastStrategy ? ` → ${scraper.lastStrategy}` : ''
@@ -59,16 +71,22 @@ export function AdminScrapeRibbon() {
     color = '#ef4444'
   }
 
-  if (!message && !dashboardOpen) return null
+  if (!message && !dashboardOpen && !classDashboardOpen) return null
 
   return (
     <>
       {dashboardOpen && (scraper.phase === 'scraping' || scraper.phase === 'done' || scraper.phase === 'error') && (
         <ScraperDashboard onMinimize={() => setDashboardOpen(false)} />
       )}
-      {message && !dashboardOpen && !onCoveragePage && (
+      {classDashboardOpen && (classDiscovery.phase === 'scraping' || classDiscovery.phase === 'done' || classDiscovery.phase === 'error') && (
+        <ClassDiscoveryDashboard onMinimize={() => setClassDashboardOpen(false)} />
+      )}
+      {message && !dashboardOpen && !classDashboardOpen && !onCoveragePage && (
         <div
-          onClick={() => setDashboardOpen(true)}
+          onClick={() => {
+            if (classDiscovery.phase === 'scraping' || classDiscovery.phase === 'done' || classDiscovery.phase === 'error') setClassDashboardOpen(true)
+            else setDashboardOpen(true)
+          }}
           style={{
             background: 'var(--bg-chrome)',
             borderBottom: '1px solid var(--rule)',
