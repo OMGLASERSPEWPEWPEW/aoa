@@ -2,35 +2,41 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import '../styles/map-ghost.css'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { useLastScrape } from '../hooks/useLastScrape'
+import { useClassMap } from '../hooks/useClassMap'
 import { fetchMapData, mapDataQueryKey } from '../lib/mapData'
+import { isEnrolling } from '../lib/classData'
 import { createMarkerElement } from './MapMarker'
-import { MapFilterChips } from './MapFilterChips'
-import { MapTimePills } from './MapTimePills'
-import type { TimeFilter } from '../lib/types'
-import { isThisWeek, isThisMonth } from '../lib/tonight'
+import { createClassMarkerElement } from './ClassMarker'
+import { MapModeControl } from './MapModeControl'
+import { MapModeFilters } from './MapModeFilters'
 import { MapKey } from './MapKey'
 import { VenueSheet } from './VenueSheet'
+import { ClassSheet } from './ClassSheet'
 import { isUpTonight } from '../lib/tonight'
-import type { Venue, Event } from '../lib/types'
+import type { Venue, MapMode, SchoolWithSession } from '../lib/types'
 
 const CHICAGO_CENTER: [number, number] = [-87.6298, 41.8781]
 
 export function MapView() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
-  const markersRef = useRef<Map<string, { marker: mapboxgl.Marker; el: HTMLDivElement; venue: Venue }>>(new Map())
+  const venueMarkersRef = useRef<Map<string, { marker: mapboxgl.Marker; el: HTMLDivElement; venue: Venue }>>(new Map())
+  const classMarkersRef = useRef<Map<string, { marker: mapboxgl.Marker; el: HTMLDivElement; school: SchoolWithSession }>>(new Map())
   const markerClickedRef = useRef(false)
   const { user } = useAuth()
   const { resolved: theme } = useTheme()
   const { getStatus } = useWatchlist()
 
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('week')
+  const [mode, setMode] = useState<MapMode>('shows')
+  const [showFilters, setShowFilters] = useState<Set<string>>(new Set())
+  const [classFilters, setClassFilters] = useState<Set<string>>(new Set())
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
+  const [selectedSchool, setSelectedSchool] = useState<SchoolWithSession | null>(null)
 
   const hasToken = !!import.meta.env.VITE_MAPBOX_TOKEN
   const lastScrapeTs = useLastScrape()
@@ -40,58 +46,60 @@ export function MapView() {
     queryFn: () => fetchMapData(user?.id ?? null),
   })
 
+  const { schools } = useClassMap()
+
   const venues = mapData?.venues ?? []
   const events = mapData?.events ?? []
   const visitCounts = mapData?.visitCounts ?? {}
-  const lastVisitDates = mapData?.lastVisitDates ?? {}
   const venueEmotionColors = mapData?.venueEmotionColors ?? {}
 
-  const timeFilterFn = useCallback((e: Event) => {
-    if (timeFilter === 'today') return isUpTonight(e)
-    if (timeFilter === 'week') return isThisWeek(e)
-    return isThisMonth(e)
-  }, [timeFilter])
-
-  const venueIdsInTimeWindow = new Set(
-    events.filter(timeFilterFn).map(e => e.venue_id)
-  )
-
-  const timeFilteredVenues = venues.filter(v => venueIdsInTimeWindow.has(v.id))
-
-  const timePillCounts = {
-    today: new Set(events.filter(e => isUpTonight(e)).map(e => e.venue_id)).size,
-    week: new Set(events.filter(e => isThisWeek(e)).map(e => e.venue_id)).size,
-    month: new Set(events.filter(e => isThisMonth(e)).map(e => e.venue_id)).size,
-  }
+  const activeFilters = mode === 'shows' ? showFilters : classFilters
 
   const tonightEventsByVenue = useCallback((venueId: string) => {
     return events.filter(e => e.venue_id === venueId && isUpTonight(e))
   }, [events])
 
   const isVenueDimmed = useCallback((venue: Venue) => {
-    if (activeFilters.size === 0) return false
-    const tonightEvts = tonightEventsByVenue(venue.id)
+    if (showFilters.size === 0) return false
     const venueEvents = events.filter(e => e.venue_id === venue.id)
 
-    for (const f of activeFilters) {
-      if (f === 'tonight' && tonightEvts.length === 0) return true
+    for (const f of showFilters) {
+      if (f === 'tonight' && !venueEvents.some(e => isUpTonight(e))) return true
       if (f === 'under20' && !venueEvents.some(e => e.price_min !== null && e.price_min <= 20)) return true
-      if (f === 'storefront' && venue.venue_type !== 'storefront') return true
       if (f === 'never' && (visitCounts[venue.id] ?? 0) > 0) return true
-      if (f === 'classes' && !venueEvents.some(e => e.event_type === 'class' || e.event_type === 'workshop')) return true
     }
     return false
-  }, [activeFilters, events, tonightEventsByVenue, visitCounts])
+  }, [showFilters, events, visitCounts])
 
-  const filterCounts = {
-    tonight: timeFilteredVenues.filter(v => tonightEventsByVenue(v.id).length > 0).length,
-    under20: timeFilteredVenues.filter(v => events.some(e => e.venue_id === v.id && e.price_min !== null && e.price_min <= 20)).length,
-    storefront: timeFilteredVenues.filter(v => v.venue_type === 'storefront').length,
-    never: timeFilteredVenues.filter(v => (visitCounts[v.id] ?? 0) === 0).length,
-    pwyc: timeFilteredVenues.filter(v => v.pay_what_you_can_days && v.pay_what_you_can_days.length > 0).length,
-    classes: timeFilteredVenues.filter(v => events.some(e => e.venue_id === v.id && (e.event_type === 'class' || e.event_type === 'workshop'))).length,
+  const isSchoolDimmed = useCallback((school: SchoolWithSession) => {
+    if (classFilters.size === 0) return false
+    const session = school.next_session
+
+    for (const f of classFilters) {
+      if (f === 'enrolling' && !isEnrolling(session)) return true
+      if (f === 'drop_in' && !session?.drop_in) return true
+      if (f === 'no_experience' && !session?.no_experience) return true
+    }
+    return false
+  }, [classFilters])
+
+  // Filter counts
+  const showVenues = venues.filter(v => v.latitude != null && v.longitude != null)
+  const showFilterCounts = {
+    tonight: showVenues.filter(v => tonightEventsByVenue(v.id).length > 0).length,
+    under20: showVenues.filter(v => events.some(e => e.venue_id === v.id && e.price_min !== null && e.price_min <= 20)).length,
+    never: showVenues.filter(v => (visitCounts[v.id] ?? 0) === 0).length,
   }
 
+  const classFilterCounts = {
+    enrolling: schools.filter(s => isEnrolling(s.next_session)).length,
+    drop_in: schools.filter(s => s.next_session?.drop_in).length,
+    no_experience: schools.filter(s => s.next_session?.no_experience).length,
+  }
+
+  const filterCounts = mode === 'shows' ? showFilterCounts : classFilterCounts
+
+  // Map init
   useEffect(() => {
     if (!containerRef.current || !hasToken) return
 
@@ -113,6 +121,7 @@ export function MapView() {
         return
       }
       setSelectedVenue(null)
+      setSelectedSchool(null)
     })
 
     mapRef.current = map
@@ -120,26 +129,24 @@ export function MapView() {
     return () => {
       map.remove()
       mapRef.current = null
-      markersRef.current.clear()
+      venueMarkersRef.current.clear()
+      classMarkersRef.current.clear()
     }
   }, [hasToken])
 
+  // Render venue markers
   useEffect(() => {
     const map = mapRef.current
     if (!map || venues.length === 0) return
 
-    // Clear old markers
-    for (const { marker } of markersRef.current.values()) marker.remove()
-    markersRef.current.clear()
+    for (const { marker } of venueMarkersRef.current.values()) marker.remove()
+    venueMarkersRef.current.clear()
 
-    for (const venue of timeFilteredVenues) {
-      if (venue.latitude == null || venue.longitude == null) continue
-
+    for (const venue of showVenues) {
       const venueEvents = events.filter(e => e.venue_id === venue.id)
       const firstEventStatus = venueEvents.length > 0 ? getStatus(venueEvents[0].id) : null
       const tonightEvts = tonightEventsByVenue(venue.id)
-      const dimmed = isVenueDimmed(venue)
-      const hasClassEvents = venueEvents.some(e => e.event_type === 'class' || e.event_type === 'workshop')
+      const dimmed = mode === 'shows' ? isVenueDimmed(venue) : false
 
       const el = createMarkerElement({
         venue,
@@ -148,33 +155,78 @@ export function MapView() {
         isTonight: tonightEvts.length > 0,
         isSelected: selectedVenue?.id === venue.id,
         dimmed,
-        hasClassEvents,
+        hasClassEvents: false,
         onClick: () => {
+          if (mode === 'classes') return
           markerClickedRef.current = true
           setSelectedVenue(prev => prev?.id === venue.id ? null : venue)
+          setSelectedSchool(null)
           map.flyTo({ center: [Number(venue.longitude!), Number(venue.latitude!)], zoom: 14, duration: 600 })
         },
       })
+
+      // Add ghost class in classes mode
+      if (mode === 'classes') {
+        el.classList.add('ghost')
+      }
 
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([Number(venue.longitude), Number(venue.latitude)])
         .addTo(map)
 
-      markersRef.current.set(venue.id, { marker, el, venue })
+      venueMarkersRef.current.set(venue.id, { marker, el, venue })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeFilteredVenues, events, activeFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors])
+  }, [venues, events, showFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors, mode, selectedVenue])
 
+  // Render class markers
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || schools.length === 0) return
+
+    for (const { marker } of classMarkersRef.current.values()) marker.remove()
+    classMarkersRef.current.clear()
+
+    for (const school of schools) {
+      const dimmed = mode === 'classes' ? isSchoolDimmed(school) : false
+
+      const el = createClassMarkerElement({
+        school,
+        isSelected: selectedSchool?.id === school.id,
+        dimmed,
+        onClick: () => {
+          if (mode === 'shows') return
+          markerClickedRef.current = true
+          setSelectedSchool(prev => prev?.id === school.id ? null : school)
+          setSelectedVenue(null)
+          map.flyTo({ center: [school.longitude, school.latitude], zoom: 14, duration: 600 })
+        },
+      })
+
+      // Add ghost class in shows mode
+      if (mode === 'shows') {
+        el.classList.add('ghost')
+      }
+
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([school.longitude, school.latitude])
+        .addTo(map)
+
+      classMarkersRef.current.set(school.id, { marker, el, school })
+    }
+  }, [schools, classFilters, isSchoolDimmed, mode, selectedSchool])
+
+  // Theme change
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
     map.setStyle(`mapbox://styles/mapbox/${theme}-v11`)
   }, [theme])
 
+  // Selected state styling for venue markers
   useEffect(() => {
-    for (const [id, { el }] of markersRef.current) {
+    for (const [id, { el }] of venueMarkersRef.current) {
       const selected = selectedVenue?.id === id
-      const chip = el.firstElementChild as HTMLElement | null
+      const chip = el.querySelector('.chip') as HTMLElement | null
       if (chip) {
         chip.style.transform = selected ? 'scale(1.18)' : 'scale(1)'
         chip.style.boxShadow = selected
@@ -199,40 +251,77 @@ export function MapView() {
     )
   }
 
+  const isMarkerSelected = selectedVenue !== null || selectedSchool !== null
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }} />
 
-      <MapTimePills
-        selected={timeFilter}
-        onSelect={setTimeFilter}
-        counts={timePillCounts}
-      />
+      {/* Mode control — centered top */}
+      <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 1050 }}>
+        <MapModeControl
+          mode={mode}
+          onModeChange={(m) => {
+            setMode(m)
+            setSelectedVenue(null)
+            setSelectedSchool(null)
+          }}
+          showCount={showVenues.length}
+          classCount={schools.length}
+        />
+      </div>
 
-      <MapFilterChips
-        activeFilters={activeFilters}
-        onToggle={(f) => {
-          setActiveFilters(prev => {
-            const next = new Set(prev)
-            if (next.has(f)) next.delete(f)
-            else next.add(f)
-            return next
-          })
-        }}
-        counts={filterCounts}
-      />
+      {/* Contextual filters — below mode control */}
+      <div style={{ position: 'absolute', top: 60, left: 0, right: 0, zIndex: 1050, padding: '0 14px' }}>
+        <MapModeFilters
+          mode={mode}
+          activeFilters={activeFilters}
+          onToggle={(f) => {
+            if (mode === 'shows') {
+              setShowFilters(prev => {
+                const next = new Set(prev)
+                if (next.has(f)) next.delete(f)
+                else next.add(f)
+                return next
+              })
+            } else {
+              setClassFilters(prev => {
+                const next = new Set(prev)
+                if (next.has(f)) next.delete(f)
+                else next.add(f)
+                return next
+              })
+            }
+          }}
+          counts={filterCounts}
+        />
+      </div>
 
-      <MapKey />
+      <MapKey mode={mode} isMarkerSelected={isMarkerSelected} />
 
-      {selectedVenue && (
+      {/* Venue sheet (shows mode) */}
+      {selectedVenue && mode === 'shows' && (
         <VenueSheet
           venue={selectedVenue}
           tonightEvents={tonightEventsByVenue(selectedVenue.id)}
           visitCount={visitCounts[selectedVenue.id] ?? 0}
-          lastVisitDate={lastVisitDates[selectedVenue.id] ?? null}
+          lastVisitDate={mapData?.lastVisitDates?.[selectedVenue.id] ?? null}
           allVenues={venues}
           allEvents={events}
           onClose={() => setSelectedVenue(null)}
+        />
+      )}
+
+      {/* Class sheet (classes mode) */}
+      {selectedSchool && mode === 'classes' && (
+        <ClassSheet
+          school={selectedSchool}
+          allSchools={schools}
+          onClose={() => setSelectedSchool(null)}
+          onSelectSchool={(s) => {
+            setSelectedSchool(s)
+            mapRef.current?.flyTo({ center: [s.longitude, s.latitude], zoom: 14, duration: 600 })
+          }}
         />
       )}
 
@@ -240,7 +329,6 @@ export function MapView() {
       <div
         style={{
           position: 'absolute',
-          bottom: 'auto',
           top: 4,
           right: 4,
           fontFamily: "'Courier Prime', monospace",
@@ -252,7 +340,6 @@ export function MapView() {
       >
         © OpenStreetMap contributors
       </div>
-
     </div>
   )
 }

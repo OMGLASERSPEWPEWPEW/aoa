@@ -29,6 +29,7 @@ export function createMarkerElement({
   onClick,
 }: Props): HTMLDivElement {
   const el = document.createElement('div')
+  el.className = 'vm'
   el.style.position = 'absolute'
   el.style.top = '0'
   el.style.left = '0'
@@ -39,6 +40,7 @@ export function createMarkerElement({
   el.style.opacity = dimmed ? '0.22' : '1'
 
   const chip = document.createElement('div')
+  chip.className = 'chip'
   chip.style.width = '30px'
   chip.style.height = '30px'
   chip.style.borderRadius = '4px'

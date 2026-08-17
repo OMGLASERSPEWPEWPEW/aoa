@@ -318,3 +318,77 @@ export interface EventSpectrumRow {
   emotion: string
   pct: number
 }
+
+// F70-F74: Classes and Schools
+
+export type Discipline = 'improv' | 'acting' | 'writing' | 'musical' | 'devised' | 'youth'
+
+export type MapMode = 'shows' | 'classes'
+
+export interface School {
+  id: string
+  name: string
+  short_name: string
+  slug: string
+  latitude: number
+  longitude: number
+  neighborhood: string
+  discipline: Discipline
+  price_band: '$' | '$$' | '$$$' | null
+  venue_id: string | null
+  financial_aid: boolean
+  payment_plan: boolean
+  sliding_scale: boolean
+  url: string | null
+  photo_url: string | null
+  created_at: string
+}
+
+export interface ClassSession {
+  id: string
+  school_id: string
+  title: string
+  level: 1 | 2 | 3 | 4 | 5
+  starts_on: string | null
+  schedule: string | null
+  weeks: number | null
+  price: number | null
+  seats_total: number | null
+  seats_taken: number | null
+  drop_in: boolean
+  no_experience: boolean
+  audition_required: boolean
+  prerequisite: string | null
+  signup_url: string | null
+  scraped_at: string | null
+  source_url: string | null
+  created_at: string
+}
+
+export interface ClassTeacher {
+  id: string
+  session_id: string
+  artist_id: string | null
+  name: string
+  credential: string | null
+  photo_url: string | null
+}
+
+export type ClassInterestStatus = 'watching' | 'held' | 'enrolled' | 'took_it'
+
+export interface ClassInterest {
+  user_id: string
+  session_id: string
+  status: ClassInterestStatus
+  created_at: string
+}
+
+export interface SchoolWithSession extends School {
+  next_session: ClassSession | null
+  teachers: ClassTeacher[]
+}
+
+export interface ClassMapData {
+  schools: SchoolWithSession[]
+  userInterests: ClassInterest[]
+}

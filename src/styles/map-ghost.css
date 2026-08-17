@@ -1,0 +1,33 @@
+/* Show markers ghosted in classes mode */
+.vm.ghost { opacity: .5; pointer-events: none; }
+.vm.ghost .chip {
+  background: #0f0d08 !important;
+  border-color: #332e26 !important;
+  border-style: solid !important;
+  transform: scale(.82) !important;
+  box-shadow: none !important;
+  pointer-events: auto;
+}
+.vm.ghost .chip-glyph { color: #4a453a !important; }
+.vm.ghost .tail {
+  background: #0f0d08 !important;
+  border-color: #332e26 !important;
+}
+.vm.ghost .dot-live,
+.vm.ghost .dot-seen { display: none; }
+
+/* Class markers ghosted in shows mode */
+.cm.ghost { opacity: .42; pointer-events: none; }
+.cm.ghost .ring {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 11px !important;
+  border-width: 1.5px !important;
+  border-color: #332e26 !important;
+  color: #4a453a !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: auto;
+}
+.cm.ghost .lab,
+.cm.ghost .soon { display: none; }
