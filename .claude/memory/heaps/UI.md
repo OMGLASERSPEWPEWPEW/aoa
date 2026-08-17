@@ -1791,3 +1791,51 @@ Proposed commits (3):
 
 ---
 
+## 2026-08-16_14-24-29 (session bc6a5bce)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the class discovery messages and dashboard mount.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the ClassDiscoveryDashboard mount and update the ribbon click handler.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me check the build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes clean. Let me run tests for regressions.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_14-26-13 (session c6b63ba5)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Let me read the rest of BUILD-SPEC and the Map prototype HTML to understand the full scope, especially the class features.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now let me check what existing class infrastructure we already have from recent sessions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — we have the scraper backend (class-discovery edge function, migrations for class fields, seed data, and coverage RPC) but no frontend rendering of classes on the map. Let me look at the existing map components quickly to understand what we're working with.
+
+**assistant**: [tool: Bash]
+
+---
+

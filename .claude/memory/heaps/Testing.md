@@ -3817,3 +3817,91 @@ Let me do a quick sanity check on the final state of the key files to make sure 
 
 ---
 
+## 2026-08-16_12-36-57 (session bc6a5bce)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: 5 commits done. Pushing.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Now deploying.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_13-58-16 (session bc6a5bce)
+
+**assistant**: Yes — re-run the class scraper from the admin panel. The old run used the v1 two-pass code, so your existing class events have no gap annotations, no strategy traces, and likely missing data that link following would have caught.
+
+**What to do:**
+
+1. Open the app → admin panel → Coverage tab
+2. Hit **Discover Classes**
+3. Watch the NDJSON stream — you should now see `extraction_status`, `missing_fields`, and strategy trace data in the results (that's new)
+
+The scraper will re-process all 8 schoo...
+
+**user**: is this  aversion bump
+
+---
+
+## 2026-08-16_14-24-29 (session bc6a5bce)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the class discovery messages and dashboard mount.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the ClassDiscoveryDashboard mount and update the ribbon click handler.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me check the build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes clean. Let me run tests for regressions.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_14-26-13 (session c6b63ba5)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Let me read the rest of BUILD-SPEC and the Map prototype HTML to understand the full scope, especially the class features.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now let me check what existing class infrastructure we already have from recent sessions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — we have the scraper backend (class-discovery edge function, migrations for class fields, seed data, and coverage RPC) but no frontend rendering of classes on the map. Let me look at the existing map components quickly to understand what we're working with.
+
+**assistant**: [tool: Bash]
+
+---
+

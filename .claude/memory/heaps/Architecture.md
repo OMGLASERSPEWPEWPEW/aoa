@@ -3903,3 +3903,114 @@ Let me do a quick sanity check on the final state of the key files to make sure 
 
 ---
 
+## 2026-08-16_12-36-57 (session bc6a5bce)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: 5 commits done. Pushing.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Now deploying.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_12-37-05 (session bc6a5bce)
+
+**assistant**: Frontend deployed to https://aoa-nine.vercel.app. Edge Functions deploying in background — I'll report when they finish.
+
+**5 commits pushed, frontend live:**
+
+```
+43d5505 chore(infra): session journals + memory heap + versioning rule
+11981f6 docs(classes): update graph, ADR, and scraper docs for strategy tree upgrade
+b412fbf fix(scraper): add configurable batch size to play-catalog-backfill
+2c0a98f refactor(scraper): upgrade class-discovery to shared strategy tree
+1b8b21f chore(build): bump ver...
+
+**user**: <task-notification>
+<task-id>bp7o91ib6</task-id>
+<tool-use-id>toolu_0138WBGvbBpCZDiuJnuFTRbU</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/bp7o91ib6.output</output-file>
+<status>completed</status>
+<summary>Background command "Deploy event-scraper Edge Function" completed (exit code 0)</summary>
+</task-notification>
+
+**user**: <task-notification>
+<task-id>bl9w7lwdm</task-id>
+<tool-use-id>toolu_012vuMTKrFps8oWDZKygAhgh</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/bl9w7lwdm.output</output-file>
+<status>completed</status>
+<summary>Background command "Deploy class-discovery Edge Function" completed (exit code 0)</summary>
+</task-notification>
+
+**user**: <task-notification>
+<task-id>bq0j20am0</task-id>
+<tool-use-id>toolu_01KcKrqdDHDAaZMW2Jx6wynY</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/bq0j20am0.output</output-file>
+<status>completed</status>
+<summary>Background command "Deploy play-catalog-backfill Edge Function" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+## 2026-08-16_14-24-29 (session bc6a5bce)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the class discovery messages and dashboard mount.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now add the ClassDiscoveryDashboard mount and update the ribbon click handler.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me check the build.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes clean. Let me run tests for regressions.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_14-26-13 (session c6b63ba5)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Let me read the rest of BUILD-SPEC and the Map prototype HTML to understand the full scope, especially the class features.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now let me check what existing class infrastructure we already have from recent sessions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — we have the scraper backend (class-discovery edge function, migrations for class fields, seed data, and coverage RPC) but no frontend rendering of classes on the map. Let me look at the existing map components quickly to understand what we're working with.
+
+**assistant**: [tool: Bash]
+
+---
+
