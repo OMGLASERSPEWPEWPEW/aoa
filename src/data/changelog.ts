@@ -4,6 +4,19 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.15.0',
+    date: '2026-08-16',
+    title: 'Class discovery dashboard + button wrapping + ribbon',
+    summary: 'Class discovery now has a full-screen amber dashboard with progress arc, pipeline dots, and activity log — matching the event scraper experience. Buttons wrap on mobile and the ribbon tracks class discovery across navigation.',
+    details: [
+      'New: ClassDiscoveryDashboard — full-screen amber-themed modal with progress arc, pipeline dots, activity log, and stats bar',
+      'New: class discovery state in ScrapeContext — survives navigation, streams NDJSON into structured state',
+      'New: AdminScrapeRibbon shows class discovery progress and opens dashboard on tap',
+      'Fix: Coverage tab buttons wrap on mobile — no more horizontal scrolling to reach Discover Classes',
+      'Refactor: removed inline class discovery log from Docs.tsx — replaced by dashboard modal',
+    ],
+  },
+  {
     version: '0.14.1',
     date: '2026-08-16',
     title: 'Class scraper strategy tree upgrade',
