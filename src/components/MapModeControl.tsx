@@ -27,7 +27,7 @@ export function MapModeControl({ mode, onModeChange, showCount, classCount }: Pr
   return (
     <div style={{
       display: 'inline-flex',
-      background: 'rgba(12,10,5,.92)',
+      background: 'color-mix(in srgb, var(--bg) 92%, transparent)',
       border: '1px solid var(--rule)',
       borderRadius: 3,
       padding: 2,
@@ -38,8 +38,8 @@ export function MapModeControl({ mode, onModeChange, showCount, classCount }: Pr
         onClick={() => onModeChange('shows')}
         style={{
           ...baseStyle,
-          background: mode === 'shows' ? 'oklch(.80 .14 55)' : 'transparent',
-          color: mode === 'shows' ? '#0c0a05' : 'var(--ink-dim)',
+          background: mode === 'shows' ? 'var(--accent)' : 'transparent',
+          color: mode === 'shows' ? 'var(--accent-on)' : 'var(--ink-dim)',
         }}
       >
         SHOWS
@@ -56,7 +56,7 @@ export function MapModeControl({ mode, onModeChange, showCount, classCount }: Pr
         style={{
           ...baseStyle,
           background: mode === 'classes' ? 'oklch(.80 .16 110)' : 'transparent',
-          color: mode === 'classes' ? '#0c0a05' : 'var(--ink-dim)',
+          color: mode === 'classes' ? 'var(--accent-on)' : 'var(--ink-dim)',
         }}
       >
         CLASSES

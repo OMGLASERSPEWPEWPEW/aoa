@@ -64,15 +64,15 @@ export function createClassMarkerElement({ school, isSelected, dimmed, onClick }
   ring.textContent = glyph
 
   if (enrolling) {
-    ring.style.background = '#0c0a05'
+    ring.style.background = 'var(--bg)'
     ring.style.border = `2px solid ${dc}`
     ring.style.color = dc
-    ring.style.boxShadow = `0 3px 10px rgba(0,0,0,.85), 0 0 15px -4px ${dc}`
+    ring.style.boxShadow = `0 3px 10px rgba(0,0,0,.45), 0 0 15px -4px ${dc}`
   } else {
-    ring.style.background = '#0c0a05'
-    ring.style.border = '2px dashed #4f4a3e'
-    ring.style.color = '#625b4c'
-    ring.style.boxShadow = '0 3px 10px rgba(0,0,0,.85)'
+    ring.style.background = 'var(--bg)'
+    ring.style.border = '2px dashed var(--ink-ghost)'
+    ring.style.color = 'var(--ink-faint)'
+    ring.style.boxShadow = '0 3px 10px rgba(0,0,0,.45)'
   }
 
   if (isSelected) {
@@ -89,12 +89,12 @@ export function createClassMarkerElement({ school, isSelected, dimmed, onClick }
   lab.style.fontFamily = "'Courier Prime', monospace"
   lab.style.fontSize = '8px'
   lab.style.letterSpacing = '0.06em'
-  lab.style.background = 'rgba(12,10,5,.9)'
-  lab.style.border = '1px solid #2b2720'
+  lab.style.background = 'color-mix(in srgb, var(--bg) 90%, transparent)'
+  lab.style.border = '1px solid var(--rule)'
   lab.style.padding = '1px 5px'
   lab.style.borderRadius = '2px'
   lab.style.whiteSpace = 'nowrap'
-  lab.style.color = enrolling ? dc : '#625b4c'
+  lab.style.color = enrolling ? dc : 'var(--ink-faint)'
   lab.textContent = school.short_name
   el.appendChild(lab)
 
@@ -107,7 +107,7 @@ export function createClassMarkerElement({ school, isSelected, dimmed, onClick }
     soon.style.top = '-3px'
     soon.style.fontFamily = "'JetBrains Mono', monospace"
     soon.style.fontSize = '8px'
-    soon.style.color = '#0c0a05'
+    soon.style.color = 'var(--accent-on)'
     soon.style.background = dc
     soon.style.borderRadius = '2px'
     soon.style.padding = '1px 3px'

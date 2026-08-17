@@ -7,7 +7,7 @@ interface Props {
 }
 
 const panelStyle: React.CSSProperties = {
-  background: 'rgba(12,10,5,.92)',
+  background: 'color-mix(in srgb, var(--bg) 92%, transparent)',
   border: '1px solid var(--rule)',
   borderRadius: 3,
   padding: '9px 11px',
@@ -75,7 +75,7 @@ export function MapKey({ mode, isMarkerSelected }: Props) {
           letterSpacing: '0.14em',
           padding: '6px 11px',
           borderRadius: 15,
-          background: 'rgba(12,10,5,.92)',
+          background: 'color-mix(in srgb, var(--bg) 92%, transparent)',
           border: '1px solid var(--rule)',
           color: 'var(--ink-dim)',
           cursor: 'pointer',

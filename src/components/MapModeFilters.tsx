@@ -21,7 +21,7 @@ interface Props {
 
 export function MapModeFilters({ mode, activeFilters, onToggle, counts }: Props) {
   const filters = mode === 'shows' ? SHOWS_FILTERS : CLASSES_FILTERS
-  const accentColor = mode === 'shows' ? 'oklch(.80 .14 55)' : 'oklch(.80 .16 110)'
+  const accentColor = mode === 'shows' ? 'var(--accent)' : 'oklch(.80 .16 110)'
 
   return (
     <div style={{
@@ -42,8 +42,8 @@ export function MapModeFilters({ mode, activeFilters, onToggle, counts }: Props)
               padding: '6px 10px',
               borderRadius: 3,
               border: active ? `1px solid ${accentColor}` : '1px solid var(--rule)',
-              background: active ? accentColor : 'rgba(12,10,5,.9)',
-              color: active ? '#0c0a05' : 'var(--ink-dim)',
+              background: active ? accentColor : 'color-mix(in srgb, var(--bg) 90%, transparent)',
+              color: active ? 'var(--accent-on)' : 'var(--ink-dim)',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
               backdropFilter: 'blur(6px)',

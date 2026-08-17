@@ -1,20 +1,18 @@
 /* Show markers ghosted in classes mode */
 .vm.ghost { opacity: .5; pointer-events: none; }
 .vm.ghost .chip {
-  background: #0f0d08 !important;
-  border-color: #332e26 !important;
+  background: var(--bg-card) !important;
+  border-color: var(--rule) !important;
   border-style: solid !important;
   transform: scale(.82) !important;
   box-shadow: none !important;
   pointer-events: auto;
 }
-.vm.ghost .chip-glyph { color: #4a453a !important; }
+.vm.ghost .chip { color: var(--ink-faint) !important; }
 .vm.ghost .tail {
-  background: #0f0d08 !important;
-  border-color: #332e26 !important;
+  background: var(--bg-card) !important;
+  border-color: var(--rule) !important;
 }
-.vm.ghost .dot-live,
-.vm.ghost .dot-seen { display: none; }
 
 /* Class markers ghosted in shows mode */
 .cm.ghost { opacity: .42; pointer-events: none; }
@@ -23,8 +21,8 @@
   height: 24px !important;
   font-size: 11px !important;
   border-width: 1.5px !important;
-  border-color: #332e26 !important;
-  color: #4a453a !important;
+  border-color: var(--rule) !important;
+  color: var(--ink-faint) !important;
   transform: none !important;
   box-shadow: none !important;
   pointer-events: auto;
