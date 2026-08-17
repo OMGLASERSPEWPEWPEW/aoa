@@ -1238,3 +1238,192 @@ Let me do the final comprehensive verification against the QA doc.
 
 ---
 
+## 2026-08-16_20-04-31 (session bc6a5bce)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Excluding pre-existing untracked files (design zips, qa/, tests, migration) — those are from prior sessions.
+
+```
+Proposed commits (3):
+
+1. chore(build): bump version to 0.15.0 — class discovery dashboard
+
+   Files: package.json, src/data/changelog.ts
+
+2. feat(ui,gateway): add class discovery dashboard, ribbon, and button wrapping
+
+   Why: Class discovery had no modal (just raw NDJSON in an inline box),
+        no ribbon for navigation survival, and the Discover Classes button
+     ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_21-33-41 (session c6b63ba5)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — deletions are staged. Let me commit.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploying to Vercel.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deployed. Let me verify it's live by testing the map data endpoint.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_22-27-59 (session bc6a5bce)
+
+**assistant**: Final batch launched — 5 agents evolving (git-manager, technical-writer, public-relations, legal-advisor, montessori-guide). Once they finish I'll commit all 25 journal updates.
+
+**user**: <task-notification>
+<task-id>a5327f8262db33318</task-id>
+<tool-use-id>toolu_015ijkWLAehMHNVMBxmaRnvf</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a5327f8262db33318.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve git-manager" completed</summary>
+<result>Here is the summary:
+
+Today's ten commits across four version bumps (0.14.0 through 0.16.1) demonstrated strong versioning discipline — semve...
+
+---
+
+## 2026-08-16_22-28-31 (session bc6a5bce)
+
+**assistant**: Git-manager complete. 4 more in Batch 5 still running.
+
+**user**: <task-notification>
+<task-id>af6f755e00e634330</task-id>
+<tool-use-id>toolu_0189Sqq6MM3eLMeaaY8AGoPM</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/af6f755e00e634330.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve technical-writer" completed</summary>
+<result>**Summary:** The AOA documentation system has matured into a reliable triangle pattern — graph engineering specs, ADRs, and QA checklist...
+
+---
+
+## 2026-08-16_22-28-37 (session bc6a5bce)
+
+**assistant**: Technical-writer complete. 3 more in Batch 5 (public-relations, legal-advisor, montessori-guide) still running.
+
+**user**: <task-notification>
+<task-id>aa19c10c9ecad6630</task-id>
+<tool-use-id>toolu_01YSQWetk81j3e1FKfASr4px</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/aa19c10c9ecad6630.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve public-relations" completed</summary>
+<result>**Evolution Summary:**
+
+Art of Art does not need a national PR playbook -- it needs a hyperlocal one built on Chicago's existing theater...
+
+---
+
+## 2026-08-16_22-29-06 (session bc6a5bce)
+
+**assistant**: Public-relations complete. 2 more in Batch 5 (legal-advisor, montessori-guide) still running.
+
+**user**: <task-notification>
+<task-id>a5a6866b3aaf1215c</task-id>
+<tool-use-id>toolu_013EiKzwGEkw3t8fYhmChUc4</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a5a6866b3aaf1215c.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve montessori-guide" completed</summary>
+<result>Here is the summary:
+
+Today's evolution is my first journal entry, written after observing rather than teaching -- which is the Montesso...
+
+---
+
+## 2026-08-16_22-29-46 (session bc6a5bce)
+
+**assistant**: Montessori-guide complete. 1 more in Batch 5 (legal-advisor) still running.
+
+**user**: <task-notification>
+<task-id>a61d96c51d58b3535</task-id>
+<tool-use-id>toolu_01KNWPegSCVkLwypYrfhkaJj</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a61d96c51d58b3535.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve legal-advisor" completed</summary>
+<result>**Summary:** The Art of Art's scraping pipelines are on reasonable legal footing for CFAA purposes -- they target only public data and self...
+
+**assistant**: All 25 agents evolved across 5 batches. Let me commit everything.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_12-57-34 (session d98b3cc0)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Bumping the version and adding the missing changelog entries.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now adding the missing changelog entries. Let me check the git log for what v0.16.0–0.16.2 contained.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me build to make sure it compiles, then deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build succeeded. Let me deploy.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_13-06-54 (session d98b3cc0)
+
+**assistant**: Now let me build to verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me verify the final state of both files looks correct.
+
+**assistant**: [tool: Read]
+
+**assistant**: Looks good. Now let me bump the version for this change and update the changelog, then deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+

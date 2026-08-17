@@ -3158,3 +3158,64 @@ Let me do a quick sanity check on the final state of the key files to make sure 
 
 ---
 
+## 2026-08-16_20-04-31 (session bc6a5bce)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Excluding pre-existing untracked files (design zips, qa/, tests, migration) — those are from prior sessions.
+
+```
+Proposed commits (3):
+
+1. chore(build): bump version to 0.15.0 — class discovery dashboard
+
+   Files: package.json, src/data/changelog.ts
+
+2. feat(ui,gateway): add class discovery dashboard, ribbon, and button wrapping
+
+   Why: Class discovery had no modal (just raw NDJSON in an inline box),
+        no ribbon for navigation survival, and the Discover Classes button
+     ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_12-32-24 (session c6b63ba5)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Let me first spot-check all schools against their real addresses, then fix them all in one migration.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: I can see the problem clearly. The venue `acting-studio-chicago` has address "5955 N Broadway" which is actually a different place — that's in Edgewater. The real Acting Studio Chicago is at **10 W Hubbard St** in River North. The original seed data had the wrong address entirely. Let me also check that iO Theater isn't duplicated (I see both `io-chicago` and `io-theater` with the same address).
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Fixed. Now commit, push, and redeploy (the data fix is server-side so it's already live, but the migration file should be in the repo).
+
+**assistant**: [tool: Bash]
+
+---
+

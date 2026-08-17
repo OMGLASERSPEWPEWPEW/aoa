@@ -113,7 +113,7 @@ Agents organized in `.claude/agents/divisions.json`:
 | Agent | Use For |
 |-------|---------|
 | `frontend-developer` | React components, UI/UX implementation |
-| `backend-architect` | API design, databases, server-side logic |
+| `Frontinus` (backend-architect) | API design, databases, deterministic pipelines, server-side logic |
 | `Sashiko` (code-architect) | Folder structure, bounded contexts, architecture decisions |
 | `devops-engineer` | CI/CD, hosting, infrastructure |
 

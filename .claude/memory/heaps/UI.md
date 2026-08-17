@@ -1839,3 +1839,126 @@ Proposed commits (3):
 
 ---
 
+## 2026-08-16_20-04-31 (session bc6a5bce)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Excluding pre-existing untracked files (design zips, qa/, tests, migration) — those are from prior sessions.
+
+```
+Proposed commits (3):
+
+1. chore(build): bump version to 0.15.0 — class discovery dashboard
+
+   Files: package.json, src/data/changelog.ts
+
+2. feat(ui,gateway): add class discovery dashboard, ribbon, and button wrapping
+
+   Why: Class discovery had no modal (just raw NDJSON in an inline box),
+        no ribbon for navigation survival, and the Discover Classes button
+     ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_21-33-41 (session c6b63ba5)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — deletions are staged. Let me commit.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploying to Vercel.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deployed. Let me verify it's live by testing the map data endpoint.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_08-39-01 (session bc6a5bce)
+
+**assistant**: ## Evolution Recap
+
+**25 agents evolved across 5 batches.** Here are the top insights by division:
+
+**Engineering** — Frontinus: keep StrategyProfile under 5 fields, stress-test with a 3rd domain. Sashiko: the kikko hexagonal stress-distribution principle applies to UI seam components. Frontend-dev: centralize oklch color tokens to prevent shotgun surgery.
+
+**Quality** — Argus: context interface expansions need mock updates or `as Type` casts hide runtime crashes. Debugger: "join poisoning" patt...
+
+**user**: can I get a concise summary like 150 words of each agent please
+
+---
+
+## 2026-08-17_11-44-25 (session c6b63ba5)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the class markers effect — clear and skip when in shows mode, remove ghost logic:
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now delete the ghost CSS file:
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me commit, push, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_13-06-54 (session d98b3cc0)
+
+**assistant**: Now let me build to verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me verify the final state of both files looks correct.
+
+**assistant**: [tool: Read]
+
+**assistant**: Looks good. Now let me bump the version for this change and update the changelog, then deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+

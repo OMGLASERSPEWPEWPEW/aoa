@@ -4014,3 +4014,293 @@ b412fbf fix(scraper): add configurable batch size to play-catalog-backfill
 
 ---
 
+## 2026-08-16_20-04-31 (session bc6a5bce)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Excluding pre-existing untracked files (design zips, qa/, tests, migration) — those are from prior sessions.
+
+```
+Proposed commits (3):
+
+1. chore(build): bump version to 0.15.0 — class discovery dashboard
+
+   Files: package.json, src/data/changelog.ts
+
+2. feat(ui,gateway): add class discovery dashboard, ribbon, and button wrapping
+
+   Why: Class discovery had no modal (just raw NDJSON in an inline box),
+        no ribbon for navigation survival, and the Discover Classes button
+     ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_21-33-41 (session c6b63ba5)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — deletions are staged. Let me commit.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploying to Vercel.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deployed. Let me verify it's live by testing the map data endpoint.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_21-53-03 (session c6b63ba5)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also fix the between-sessions label color.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now fix the date badge — it uses `#0c0a05` for text color on the colored badge.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build, commit, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_22-17-15 (session bc6a5bce)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: ## Phase 2: Select ALL Agents
+
+The user said every agent. Let me check journal line counts.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All well under cap. 25 agents total — that's a lot of subagents. I'll batch them into groups of 5. Let me build the git context summary and launch.
+
+**Git Context Summary for today:**
+- Upgraded class-discovery scraper from v1 two-pass to shared v2 strategy tree (StrategyProfile, CLASS_FIELD_WEIGHTS, configurable completeness)
+- Created ClassDiscoveryDashboard (amber-themed full-screen modal)
+- Added class discovery state to ScrapeContext for navigation survival
+- Added class discovery to AdminS...
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-16_22-19-34 (session bc6a5bce)
+
+**assistant**: Debugger complete. 1 more in Batch 1 (frontend-developer) still running.
+
+**user**: <task-notification>
+<task-id>a6faeaa984371210c</task-id>
+<tool-use-id>toolu_01CqC9dSPH8q2KfHdcM6j1Ep</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a6faeaa984371210c.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve frontend-developer" completed</summary>
+<result>Here is my evolution summary:
+
+Today's entry focuses on three interconnected themes from the class discovery build. First, the NDJSON ...
+
+**assistant**: Batch 1 complete — all 5 agents evolved. Launching Batch 2 (5 more agents).
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-16_22-21-02 (session bc6a5bce)
+
+**assistant**: Dorsaidh complete. 3 more in Batch 2 (test-engineer, security-engineer, devops-engineer) still running.
+
+**user**: <task-notification>
+<task-id>a0b10d6ae58feec70</task-id>
+<tool-use-id>toolu_01YRxMunbCNatpfMEv6u6Bk5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a0b10d6ae58feec70.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve devops-engineer" completed</summary>
+<result>Here is the evolution summary:
+
+The project now runs 11 Edge Functions with 16 shared scraper modules and no CI/CD pipeline -- all deploy...
+
+---
+
+## 2026-08-16_22-24-22 (session bc6a5bce)
+
+**assistant**: UI-designer complete. 1 more in Batch 3 (Theia) still running.
+
+**user**: <task-notification>
+<task-id>ae5817b80c3247dee</task-id>
+<tool-use-id>toolu_01XttowL1tbkrwL84crS7m3W</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/ae5817b80c3247dee.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve Theia" completed</summary>
+<result>Here is my summary.
+
+Art of Art is building what brand architecture calls an "endorsed brand" model inside a single product -- the deep navy shell ...
+
+**assistant**: Batch 3 complete — all 5 agents done. Launching Batch 4 (5 more agents).
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-17_11-44-25 (session c6b63ba5)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the class markers effect — clear and skip when in shows mode, remove ghost logic:
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now delete the ghost CSS file:
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me commit, push, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_12-36-35 (session c6b63ba5)
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: Good — CIS is a real separate school (not old iO). Old Town and Piven are both correct. Now let me check if CIS has moved from 3541 N Clark:
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: Here's my audit summary. Most schools are correct. The issues:
+
+1. **CIS (Chicago Improv Studio)** — 3541 N Clark is the OLD iO address (iO moved to Kingsbury in 2014). CIS website is currently suspended. May be defunct.
+2. **iO vs IO THEATER** — duplicate entries (`io-chicago` and `io-theater`), same school, slightly different coords.
+3. **Second City** — 1616 N Wells is the mainstage; Training Center is technically at 1608 N Wells / Piper's Alley. Close enough, same building complex.
+4. Everyt...
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-17_12-57-34 (session d98b3cc0)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Bumping the version and adding the missing changelog entries.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now adding the missing changelog entries. Let me check the git log for what v0.16.0–0.16.2 contained.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me build to make sure it compiles, then deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build succeeded. Let me deploy.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_13-06-54 (session d98b3cc0)
+
+**assistant**: Now let me build to verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me verify the final state of both files looks correct.
+
+**assistant**: [tool: Read]
+
+**assistant**: Looks good. Now let me bump the version for this change and update the changelog, then deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+

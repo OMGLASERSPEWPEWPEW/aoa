@@ -2481,3 +2481,188 @@ b412fbf fix(scraper): add configurable batch size to play-catalog-backfill
 
 ---
 
+## 2026-08-16_20-04-31 (session bc6a5bce)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Excluding pre-existing untracked files (design zips, qa/, tests, migration) — those are from prior sessions.
+
+```
+Proposed commits (3):
+
+1. chore(build): bump version to 0.15.0 — class discovery dashboard
+
+   Files: package.json, src/data/changelog.ts
+
+2. feat(ui,gateway): add class discovery dashboard, ribbon, and button wrapping
+
+   Why: Class discovery had no modal (just raw NDJSON in an inline box),
+        no ribbon for navigation survival, and the Discover Classes button
+     ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_21-53-03 (session c6b63ba5)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also fix the between-sessions label color.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now fix the date badge — it uses `#0c0a05` for text color on the colored badge.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build, commit, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_22-18-37 (session bc6a5bce)
+
+**assistant**: Sashiko complete. 4 more agents in Batch 1 still running. Waiting for notifications before launching Batch 2.
+
+**user**: <task-notification>
+<task-id>a6a43631192d8e3b7</task-id>
+<tool-use-id>toolu_01HdQUJxojXz2NPK9366zYND</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a6a43631192d8e3b7.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve Argus" completed</summary>
+<result>Journal updated: 69 to 111 lines (42 lines added, well within the 750 cap).
+
+**Evolution Summary**: Today's session studied the optional-params pat...
+
+---
+
+## 2026-08-16_22-20-17 (session bc6a5bce)
+
+**assistant**: Batch 2 launched — 5 agents evolving (Zephyr, test-engineer, security-engineer, Dorsaidh, devops-engineer). 15 more agents remain for Batches 3-5. Waiting for notifications.
+
+**user**: <task-notification>
+<task-id>a18e076b10a8631e9</task-id>
+<tool-use-id>toolu_01Lq9c7GKYsv22bduDF9h4AC</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a18e076b10a8631e9.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve zephyr" completed</summary>
+<result>Here is the summary:
+
+Today's session was the most architecturally consequential day in the project so far -- I pushed for the shared StrategyProf...
+
+**assistant**: Zephyr complete. 4 more in Batch 2 still running.
+
+---
+
+## 2026-08-16_22-27-28 (session bc6a5bce)
+
+**assistant**: UX-researcher complete. 1 more in Batch 4 (analytics-engineer) still running.
+
+**user**: <task-notification>
+<task-id>a17a19a050ad22007</task-id>
+<tool-use-id>toolu_01C2UwADabB2rzzu2XiPbjHA</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a17a19a050ad22007.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve analytics-engineer" completed</summary>
+<result>The project already has unusually rich scraper telemetry -- JSONB strategy traces with per-step token counts, field fills, and complet...
+
+**assistant**: Batch 4 complete — all 5 agents done. Launching Batch 5 — the final 5 agents.
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-17_08-39-01 (session bc6a5bce)
+
+**assistant**: ## Evolution Recap
+
+**25 agents evolved across 5 batches.** Here are the top insights by division:
+
+**Engineering** — Frontinus: keep StrategyProfile under 5 fields, stress-test with a 3rd domain. Sashiko: the kikko hexagonal stress-distribution principle applies to UI seam components. Frontend-dev: centralize oklch color tokens to prevent shotgun surgery.
+
+**Quality** — Argus: context interface expansions need mock updates or `as Type` casts hide runtime crashes. Debugger: "join poisoning" patt...
+
+**user**: can I get a concise summary like 150 words of each agent please
+
+---
+
+## 2026-08-17_13-09-54 (session d98b3cc0)
+
+**assistant**: **v0.16.4** — deployed.
+
+Here's what changed:
+
+- **Time pills restored** — TODAY / THIS WEEK / THIS MONTH appear below the SHOWS/CLASSES toggle when in shows mode. Default is THIS WEEK (same as before). These control which venues actually appear on the map, not just dimming.
+- **Show count fixed** — The number next to SHOWS now reflects the time-filtered count, not all 93.
+- **Attribute filters still work** — TONIGHT, UNDER $20, NEVER BEEN dim within the time-filtered set.
+- **Key moved** — THE ...
+
+**user**: <command-message>cap</command-message>
+<command-name>/cap</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: Running the /cap flow. Let me snapshot the current state.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

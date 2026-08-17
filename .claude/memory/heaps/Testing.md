@@ -3905,3 +3905,270 @@ The scraper will re-process all 8 schoo...
 
 ---
 
+## 2026-08-16_20-04-31 (session bc6a5bce)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Excluding pre-existing untracked files (design zips, qa/, tests, migration) — those are from prior sessions.
+
+```
+Proposed commits (3):
+
+1. chore(build): bump version to 0.15.0 — class discovery dashboard
+
+   Files: package.json, src/data/changelog.ts
+
+2. feat(ui,gateway): add class discovery dashboard, ribbon, and button wrapping
+
+   Why: Class discovery had no modal (just raw NDJSON in an inline box),
+        no ribbon for navigation survival, and the Discover Classes button
+     ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_21-33-41 (session c6b63ba5)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — deletions are staged. Let me commit.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploying to Vercel.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deployed. Let me verify it's live by testing the map data endpoint.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_22-20-17 (session bc6a5bce)
+
+**assistant**: Batch 2 launched — 5 agents evolving (Zephyr, test-engineer, security-engineer, Dorsaidh, devops-engineer). 15 more agents remain for Batches 3-5. Waiting for notifications.
+
+**user**: <task-notification>
+<task-id>a18e076b10a8631e9</task-id>
+<tool-use-id>toolu_01Lq9c7GKYsv22bduDF9h4AC</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a18e076b10a8631e9.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve zephyr" completed</summary>
+<result>Here is the summary:
+
+Today's session was the most architecturally consequential day in the project so far -- I pushed for the shared StrategyProf...
+
+**assistant**: Zephyr complete. 4 more in Batch 2 still running.
+
+---
+
+## 2026-08-16_22-21-02 (session bc6a5bce)
+
+**assistant**: Dorsaidh complete. 3 more in Batch 2 (test-engineer, security-engineer, devops-engineer) still running.
+
+**user**: <task-notification>
+<task-id>a0b10d6ae58feec70</task-id>
+<tool-use-id>toolu_01YRxMunbCNatpfMEv6u6Bk5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a0b10d6ae58feec70.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve devops-engineer" completed</summary>
+<result>Here is the evolution summary:
+
+The project now runs 11 Edge Functions with 16 shared scraper modules and no CI/CD pipeline -- all deploy...
+
+---
+
+## 2026-08-16_22-21-09 (session bc6a5bce)
+
+**assistant**: Devops-engineer complete. 2 more in Batch 2 (test-engineer, security-engineer) still running.
+
+**user**: <task-notification>
+<task-id>a41b3e299dedd303c</task-id>
+<tool-use-id>toolu_01QAT6jmmz9buDFAZUAjumAY</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a41b3e299dedd303c.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve security-engineer" completed</summary>
+<result>Here is the summary:
+
+The NDJSON streaming endpoints and server-side key management are architecturally sound -- API keys (SERPAPI_KEY,...
+
+---
+
+## 2026-08-16_22-21-51 (session bc6a5bce)
+
+**assistant**: Security-engineer complete. 1 more in Batch 2 (test-engineer) still running.
+
+**user**: <task-notification>
+<task-id>af9db295f189c1764</task-id>
+<tool-use-id>toolu_01NonqZ58Lsfs6WQhb7XpVYv</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/af9db295f189c1764.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve test-engineer" completed</summary>
+<result>Here is my summary:
+
+I audited the test landscape against the art-classes feature changes and identified three distinct gaps: (1) four stal...
+
+**assistant**: Batch 2 complete — all 5 agents done. Launching Batch 3 (5 more agents).
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-16_22-22-24 (session bc6a5bce)
+
+**assistant**: Batch 3 launched — 5 agents evolving (Hestia, Theia, prd-specialist, performance-engineer, ui-designer). 10 agents remain for Batches 4-5. Waiting for notifications.
+
+**user**: <task-notification>
+<task-id>a44ea86c440f39204</task-id>
+<tool-use-id>toolu_01PasaybvnHoKFSDG2dkqy4R</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a44ea86c440f39204.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve prd-specialist" completed</summary>
+<result>The first journal entry is written at `/Users/dericortiz/Development/aoa/.claude/agents/prd-specialist/journal.md`.
+
+**Summary:** Two majo...
+
+---
+
+## 2026-08-16_22-23-18 (session bc6a5bce)
+
+**assistant**: PRD-specialist complete. 4 more in Batch 3 still running.
+
+**user**: <task-notification>
+<task-id>af663294df0c40ae0</task-id>
+<tool-use-id>toolu_01VVY1T5FMik5jLs7R5yKgJd</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/af663294df0c40ae0.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve Hestia" completed</summary>
+<result>Let me use a shell approach to append to the file. But I don't have a shell tool. Let me check what tools I have -- I have Read, Grep, and Glob. I...
+
+**assistant**: Hestia complete — powerful insights, but she couldn't write to her journal (read-only tools). Let me write it for her.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-16_22-25-24 (session bc6a5bce)
+
+**assistant**: Batch 4 launched — 5 agents evolving (sensitivity-reader, accessibility-specialist, ux-researcher, analytics-engineer, marketing). 5 final agents remain for Batch 5. Waiting for notifications.
+
+**user**: <task-notification>
+<task-id>a59d7763838f3e79d</task-id>
+<tool-use-id>toolu_01PWMhNo5ZHj32juGMuErFUg</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a59d7763838f3e79d.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve accessibility-specialist" completed</summary>
+<result>Here is my summary:
+
+The art classes feature has two critical accessibility barriers: the ClassDiscoveryDashboard full-screen ov...
+
+---
+
+## 2026-08-16_22-26-03 (session bc6a5bce)
+
+**assistant**: Accessibility-specialist complete. 4 more in Batch 4 still running.
+
+**user**: <task-notification>
+<task-id>a2cee3c480c08bbbf</task-id>
+<tool-use-id>toolu_01HGQWQMg3tUGTnfAMy5eib5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a2cee3c480c08bbbf.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve sensitivity-reader" completed</summary>
+<result>Good. I have all the information I need. Let me look at one more thing -- the `WHERE IT STARTS` section label and how it contextualize...
+
+**assistant**: Sensitivity-reader complete — excellent findings that align with Hestia's. Let me check if they wrote to their journal.
+
+**assistant**: [tool: Bash]
+
+**assistant**: They couldn't write (read-only tools). Let me write it for them.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-16_22-28-31 (session bc6a5bce)
+
+**assistant**: Git-manager complete. 4 more in Batch 5 still running.
+
+**user**: <task-notification>
+<task-id>af6f755e00e634330</task-id>
+<tool-use-id>toolu_0189Sqq6MM3eLMeaaY8AGoPM</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/af6f755e00e634330.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve technical-writer" completed</summary>
+<result>**Summary:** The AOA documentation system has matured into a reliable triangle pattern — graph engineering specs, ADRs, and QA checklist...
+
+---
+
+## 2026-08-17_08-39-01 (session bc6a5bce)
+
+**assistant**: ## Evolution Recap
+
+**25 agents evolved across 5 batches.** Here are the top insights by division:
+
+**Engineering** — Frontinus: keep StrategyProfile under 5 fields, stress-test with a 3rd domain. Sashiko: the kikko hexagonal stress-distribution principle applies to UI seam components. Frontend-dev: centralize oklch color tokens to prevent shotgun surgery.
+
+**Quality** — Argus: context interface expansions need mock updates or `as Type` casts hide runtime crashes. Debugger: "join poisoning" patt...
+
+**user**: can I get a concise summary like 150 words of each agent please
+
+---
+
+## 2026-08-17_12-57-34 (session d98b3cc0)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Bumping the version and adding the missing changelog entries.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now adding the missing changelog entries. Let me check the git log for what v0.16.0–0.16.2 contained.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me build to make sure it compiles, then deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build succeeded. Let me deploy.
+
+**assistant**: [tool: Bash]
+
+---
+

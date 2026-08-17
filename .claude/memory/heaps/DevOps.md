@@ -5028,3 +5028,483 @@ Everything's live — frontend + all 3 Edge Functions. **v0.14.1** complete.
 
 ---
 
+## 2026-08-16_20-04-31 (session bc6a5bce)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Excluding pre-existing untracked files (design zips, qa/, tests, migration) — those are from prior sessions.
+
+```
+Proposed commits (3):
+
+1. chore(build): bump version to 0.15.0 — class discovery dashboard
+
+   Files: package.json, src/data/changelog.ts
+
+2. feat(ui,gateway): add class discovery dashboard, ribbon, and button wrapping
+
+   Why: Class discovery had no modal (just raw NDJSON in an inline box),
+        no ribbon for navigation survival, and the Discover Classes button
+     ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: All pushed. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_21-33-41 (session c6b63ba5)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — deletions are staged. Let me commit.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploying to Vercel.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deployed. Let me verify it's live by testing the map data endpoint.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_21-53-03 (session c6b63ba5)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Also fix the between-sessions label color.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now fix the date badge — it uses `#0c0a05` for text color on the colored badge.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now build, commit, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_22-17-15 (session bc6a5bce)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: ## Phase 2: Select ALL Agents
+
+The user said every agent. Let me check journal line counts.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All well under cap. 25 agents total — that's a lot of subagents. I'll batch them into groups of 5. Let me build the git context summary and launch.
+
+**Git Context Summary for today:**
+- Upgraded class-discovery scraper from v1 two-pass to shared v2 strategy tree (StrategyProfile, CLASS_FIELD_WEIGHTS, configurable completeness)
+- Created ClassDiscoveryDashboard (amber-themed full-screen modal)
+- Added class discovery state to ScrapeContext for navigation survival
+- Added class discovery to AdminS...
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-16_22-20-23 (session bc6a5bce)
+
+**user**: <task-notification>
+<task-id>ac91d87de7d71cd3f</task-id>
+<tool-use-id>toolu_01GVzvy124aPW58on23K9wdH</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/ac91d87de7d71cd3f.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve Dorsaidh" completed</summary>
+<result>The journal entry has been appended to `/Users/dericortiz/Development/aoa/.claude/agents/Dorsaidh/journal.md`.
+
+**Summary:**
+
+Today's work intro...
+
+---
+
+## 2026-08-16_22-21-02 (session bc6a5bce)
+
+**assistant**: Dorsaidh complete. 3 more in Batch 2 (test-engineer, security-engineer, devops-engineer) still running.
+
+**user**: <task-notification>
+<task-id>a0b10d6ae58feec70</task-id>
+<tool-use-id>toolu_01YRxMunbCNatpfMEv6u6Bk5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a0b10d6ae58feec70.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve devops-engineer" completed</summary>
+<result>Here is the evolution summary:
+
+The project now runs 11 Edge Functions with 16 shared scraper modules and no CI/CD pipeline -- all deploy...
+
+---
+
+## 2026-08-16_22-22-24 (session bc6a5bce)
+
+**assistant**: Batch 3 launched — 5 agents evolving (Hestia, Theia, prd-specialist, performance-engineer, ui-designer). 10 agents remain for Batches 4-5. Waiting for notifications.
+
+**user**: <task-notification>
+<task-id>a44ea86c440f39204</task-id>
+<tool-use-id>toolu_01PasaybvnHoKFSDG2dkqy4R</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a44ea86c440f39204.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve prd-specialist" completed</summary>
+<result>The first journal entry is written at `/Users/dericortiz/Development/aoa/.claude/agents/prd-specialist/journal.md`.
+
+**Summary:** Two majo...
+
+---
+
+## 2026-08-16_22-23-18 (session bc6a5bce)
+
+**assistant**: PRD-specialist complete. 4 more in Batch 3 still running.
+
+**user**: <task-notification>
+<task-id>af663294df0c40ae0</task-id>
+<tool-use-id>toolu_01VVY1T5FMik5jLs7R5yKgJd</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/af663294df0c40ae0.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve Hestia" completed</summary>
+<result>Let me use a shell approach to append to the file. But I don't have a shell tool. Let me check what tools I have -- I have Read, Grep, and Glob. I...
+
+**assistant**: Hestia complete — powerful insights, but she couldn't write to her journal (read-only tools). Let me write it for her.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-16_22-23-23 (session bc6a5bce)
+
+**assistant**: Hestia's journal written. 3 more in Batch 3 (Theia, performance-engineer, ui-designer) still running.
+
+**user**: <task-notification>
+<task-id>a8600099e2cdee3cc</task-id>
+<tool-use-id>toolu_01QogdBGYeunYxbGo2eiDSNb</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a8600099e2cdee3cc.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve performance-engineer" completed</summary>
+<result>Here is the summary:
+
+The two-layer DOM marker architecture is currently at the performance boundary (~110 combined markers producin...
+
+---
+
+## 2026-08-16_22-25-24 (session bc6a5bce)
+
+**assistant**: Batch 4 launched — 5 agents evolving (sensitivity-reader, accessibility-specialist, ux-researcher, analytics-engineer, marketing). 5 final agents remain for Batch 5. Waiting for notifications.
+
+**user**: <task-notification>
+<task-id>a59d7763838f3e79d</task-id>
+<tool-use-id>toolu_01PWMhNo5ZHj32juGMuErFUg</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a59d7763838f3e79d.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve accessibility-specialist" completed</summary>
+<result>Here is my summary:
+
+The art classes feature has two critical accessibility barriers: the ClassDiscoveryDashboard full-screen ov...
+
+---
+
+## 2026-08-16_22-26-03 (session bc6a5bce)
+
+**assistant**: Accessibility-specialist complete. 4 more in Batch 4 still running.
+
+**user**: <task-notification>
+<task-id>a2cee3c480c08bbbf</task-id>
+<tool-use-id>toolu_01HGQWQMg3tUGTnfAMy5eib5</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a2cee3c480c08bbbf.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve sensitivity-reader" completed</summary>
+<result>Good. I have all the information I need. Let me look at one more thing -- the `WHERE IT STARTS` section label and how it contextualize...
+
+**assistant**: Sensitivity-reader complete — excellent findings that align with Hestia's. Let me check if they wrote to their journal.
+
+**assistant**: [tool: Bash]
+
+**assistant**: They couldn't write (read-only tools). Let me write it for them.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-16_22-26-10 (session bc6a5bce)
+
+**assistant**: Marketing complete too. 2 more in Batch 4 (ux-researcher, analytics-engineer) still running.
+
+**user**: <task-notification>
+<task-id>a03c177e977dff0a1</task-id>
+<tool-use-id>toolu_011Cvek7XdEFADUvjeWfoiQ6</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a03c177e977dff0a1.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve ux-researcher" completed</summary>
+<result>**Summary:**
+
+Research on how newcomers choose their first art class reveals that beginner anxiety -- not information scarcity -- is the pr...
+
+---
+
+## 2026-08-16_22-27-59 (session bc6a5bce)
+
+**assistant**: Final batch launched — 5 agents evolving (git-manager, technical-writer, public-relations, legal-advisor, montessori-guide). Once they finish I'll commit all 25 journal updates.
+
+**user**: <task-notification>
+<task-id>a5327f8262db33318</task-id>
+<tool-use-id>toolu_015ijkWLAehMHNVMBxmaRnvf</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a5327f8262db33318.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve git-manager" completed</summary>
+<result>Here is the summary:
+
+Today's ten commits across four version bumps (0.14.0 through 0.16.1) demonstrated strong versioning discipline — semve...
+
+---
+
+## 2026-08-16_22-29-46 (session bc6a5bce)
+
+**assistant**: Montessori-guide complete. 1 more in Batch 5 (legal-advisor) still running.
+
+**user**: <task-notification>
+<task-id>a61d96c51d58b3535</task-id>
+<tool-use-id>toolu_01KNWPegSCVkLwypYrfhkaJj</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a61d96c51d58b3535.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve legal-advisor" completed</summary>
+<result>**Summary:** The Art of Art's scraping pipelines are on reasonable legal footing for CFAA purposes -- they target only public data and self...
+
+**assistant**: All 25 agents evolved across 5 batches. Let me commit everything.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_08-39-01 (session bc6a5bce)
+
+**assistant**: ## Evolution Recap
+
+**25 agents evolved across 5 batches.** Here are the top insights by division:
+
+**Engineering** — Frontinus: keep StrategyProfile under 5 fields, stress-test with a 3rd domain. Sashiko: the kikko hexagonal stress-distribution principle applies to UI seam components. Frontend-dev: centralize oklch color tokens to prevent shotgun surgery.
+
+**Quality** — Argus: context interface expansions need mock updates or `as Type` casts hide runtime crashes. Debugger: "join poisoning" patt...
+
+**user**: can I get a concise summary like 150 words of each agent please
+
+---
+
+## 2026-08-17_11-44-25 (session c6b63ba5)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the class markers effect — clear and skip when in shows mode, remove ghost logic:
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now delete the ghost CSS file:
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me commit, push, and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_12-32-24 (session c6b63ba5)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Let me first spot-check all schools against their real addresses, then fix them all in one migration.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: I can see the problem clearly. The venue `acting-studio-chicago` has address "5955 N Broadway" which is actually a different place — that's in Edgewater. The real Acting Studio Chicago is at **10 W Hubbard St** in River North. The original seed data had the wrong address entirely. Let me also check that iO Theater isn't duplicated (I see both `io-chicago` and `io-theater` with the same address).
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Fixed. Now commit, push, and redeploy (the data fix is server-side so it's already live, but the migration file should be in the repo).
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_12-36-35 (session c6b63ba5)
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: Good — CIS is a real separate school (not old iO). Old Town and Piven are both correct. Now let me check if CIS has moved from 3541 N Clark:
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: Here's my audit summary. Most schools are correct. The issues:
+
+1. **CIS (Chicago Improv Studio)** — 3541 N Clark is the OLD iO address (iO moved to Kingsbury in 2014). CIS website is currently suspended. May be defunct.
+2. **iO vs IO THEATER** — duplicate entries (`io-chicago` and `io-theater`), same school, slightly different coords.
+3. **Second City** — 1616 N Wells is the mainstage; Training Center is technically at 1608 N Wells / Piper's Alley. Close enough, same building complex.
+4. Everyt...
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-17_12-57-34 (session d98b3cc0)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Bumping the version and adding the missing changelog entries.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now adding the missing changelog entries. Let me check the git log for what v0.16.0–0.16.2 contained.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me build to make sure it compiles, then deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build succeeded. Let me deploy.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_13-06-54 (session d98b3cc0)
+
+**assistant**: Now let me build to verify.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me verify the final state of both files looks correct.
+
+**assistant**: [tool: Read]
+
+**assistant**: Looks good. Now let me bump the version for this change and update the changelog, then deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build clean. Deploying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_13-09-54 (session d98b3cc0)
+
+**assistant**: **v0.16.4** — deployed.
+
+Here's what changed:
+
+- **Time pills restored** — TODAY / THIS WEEK / THIS MONTH appear below the SHOWS/CLASSES toggle when in shows mode. Default is THIS WEEK (same as before). These control which venues actually appear on the map, not just dimming.
+- **Show count fixed** — The number next to SHOWS now reflects the time-filtered count, not all 93.
+- **Attribute filters still work** — TONIGHT, UNDER $20, NEVER BEEN dim within the time-filtered set.
+- **Key moved** — THE ...
+
+**user**: <command-message>cap</command-message>
+<command-name>/cap</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: Running the /cap flow. Let me snapshot the current state.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

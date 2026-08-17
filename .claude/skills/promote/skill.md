@@ -49,10 +49,9 @@ A **name** is earned. It means:
 <!-- === NAMED AGENTS START === -->
 ### Named Agents
 
-*No agents have been named yet. This table grows as promotions occur.*
-
 | Date | Old Title | New Name | Epithet | Reason |
 |------|-----------|----------|---------|--------|
+| 2026-08-16 | backend-architect | Frontinus | the Ledger of Flowing Things | Built every major data pipeline (event scraper, class discovery, play catalog, venue discovery) with a consistent philosophy: deterministic control, AI confined to extraction, self-annotating gaps |
 
 <!-- === NAMED AGENTS END === -->
 
@@ -267,10 +266,9 @@ but how you built it."
 <!-- === PROMOTION HISTORY START === -->
 ### Promotion History
 
-*Add new promotions to this table after each ceremony.*
-
 | Date | Old Title | New Name | Epithet | Reason |
 |------|-----------|----------|---------|--------|
+| 2026-08-16 | backend-architect | Frontinus | the Ledger of Flowing Things | Deterministic pipeline architecture, configurable strategy tree, self-annotating systems |
 
 <!-- === PROMOTION HISTORY END === -->
 

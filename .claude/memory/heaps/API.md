@@ -2698,3 +2698,141 @@ What we CAN do right now:
 
 ---
 
+## 2026-08-16_21-33-41 (session c6b63ba5)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good — deletions are staged. Let me commit.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now deploying to Vercel.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Deployed. Let me verify it's live by testing the map data endpoint.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-16_22-17-15 (session bc6a5bce)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: ## Phase 2: Select ALL Agents
+
+The user said every agent. Let me check journal line counts.
+
+**assistant**: [tool: Bash]
+
+**assistant**: All well under cap. 25 agents total — that's a lot of subagents. I'll batch them into groups of 5. Let me build the git context summary and launch.
+
+**Git Context Summary for today:**
+- Upgraded class-discovery scraper from v1 two-pass to shared v2 strategy tree (StrategyProfile, CLASS_FIELD_WEIGHTS, configurable completeness)
+- Created ClassDiscoveryDashboard (amber-themed full-screen modal)
+- Added class discovery state to ScrapeContext for navigation survival
+- Added class discovery to AdminS...
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+---
+
+## 2026-08-16_22-21-09 (session bc6a5bce)
+
+**assistant**: Devops-engineer complete. 2 more in Batch 2 (test-engineer, security-engineer) still running.
+
+**user**: <task-notification>
+<task-id>a41b3e299dedd303c</task-id>
+<tool-use-id>toolu_01QAT6jmmz9buDFAZUAjumAY</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a41b3e299dedd303c.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve security-engineer" completed</summary>
+<result>Here is the summary:
+
+The NDJSON streaming endpoints and server-side key management are architecturally sound -- API keys (SERPAPI_KEY,...
+
+---
+
+## 2026-08-16_22-29-46 (session bc6a5bce)
+
+**assistant**: Montessori-guide complete. 1 more in Batch 5 (legal-advisor) still running.
+
+**user**: <task-notification>
+<task-id>a61d96c51d58b3535</task-id>
+<tool-use-id>toolu_01KNWPegSCVkLwypYrfhkaJj</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-dericortiz-Development-aoa/bc6a5bce-979c-4abc-b60e-40879a16fdfc/tasks/a61d96c51d58b3535.output</output-file>
+<status>completed</status>
+<summary>Agent "Evolve legal-advisor" completed</summary>
+<result>**Summary:** The Art of Art's scraping pipelines are on reasonable legal footing for CFAA purposes -- they target only public data and self...
+
+**assistant**: All 25 agents evolved across 5 batches. Let me commit everything.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_12-32-24 (session c6b63ba5)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Let me first spot-check all schools against their real addresses, then fix them all in one migration.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: I can see the problem clearly. The venue `acting-studio-chicago` has address "5955 N Broadway" which is actually a different place — that's in Edgewater. The real Acting Studio Chicago is at **10 W Hubbard St** in River North. The original seed data had the wrong address entirely. Let me also check that iO Theater isn't duplicated (I see both `io-chicago` and `io-theater` with the same address).
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Fixed. Now commit, push, and redeploy (the data fix is server-side so it's already live, but the migration file should be in the repo).
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_12-57-34 (session d98b3cc0)
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Bumping the version and adding the missing changelog entries.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now adding the missing changelog entries. Let me check the git log for what v0.16.0–0.16.2 contained.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me build to make sure it compiles, then deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build succeeded. Let me deploy.
+
+**assistant**: [tool: Bash]
+
+---
+
