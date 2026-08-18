@@ -2,14 +2,13 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { processVenue, processClassSessions } from "../_shared/scraper/process-venue.ts";
 import { CLASS_FIELD_WEIGHTS } from "../_shared/scraper/completeness-evaluator.ts";
-import type { VenueTarget, ScrapeResult, StrategyProfile } from "../_shared/scraper/types.ts";
-
-// --- Config ---
+import type { VenueTarget, StrategyProfile } from "../_shared/scraper/types.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SERPAPI_KEY = Deno.env.get("SERPAPI_KEY") ?? null;
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY") ?? null;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -24,7 +23,30 @@ const ALLOWED_ORIGINS = [
   "https://aoa-nine.vercel.app",
 ];
 
-// --- CORS ---
+// FR-2: Aggregator domain blocklist
+const AGGREGATOR_DOMAINS = new Set([
+  "yelp.com",
+  "classpass.com",
+  "coursehorse.com",
+  "facebook.com",
+  "eventbrite.com",
+  "goldstar.com",
+  "groupon.com",
+  "timeout.com",
+  "choosechicago.com",
+  "dochub.com",
+  "meetup.com",
+  "thumbtack.com",
+  "bark.com",
+  "lessons.com",
+  "takelessons.com",
+]);
+
+const DISCOVERY_PROMPTS = [
+  "List every improv and comedy training center in Chicago that offers adult classes. For each, provide the school name and the URL of their classes or training page. Include smaller studios, not just Second City and iO.",
+  "List every acting studio in Chicago that offers adult classes in Meisner, scene study, on-camera, voiceover, or audition technique. For each, provide the school name and website URL. Include independent studios and conservatories, not just university programs.",
+  "List every musical theater, physical theater, sketch comedy, and comedy writing school in Chicago that offers adult classes or workshops. For each, provide the school name and website URL.",
+];
 
 function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("Origin") ?? "";
@@ -36,8 +58,6 @@ function getCorsHeaders(req: Request): Record<string, string> {
     "Vary": "Origin",
   };
 }
-
-// --- Helpers ---
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,9 +71,35 @@ function extractDomain(url: string): string {
   }
 }
 
+function isAggregatorDomain(domain: string): boolean {
+  return [...AGGREGATOR_DOMAINS].some(agg =>
+    domain === agg || domain.endsWith(`.${agg}`)
+  );
+}
+
+// --- FR-4: Discovery observability logging ---
+
+interface DiscoveryLogEntry {
+  run_id: string;
+  query: string;
+  raw_url: string;
+  raw_title: string;
+  domain: string;
+  disposition: "queued" | "blocked_aggregator" | "already_known_venue" | "already_in_queue" | "insert_error";
+  reason?: string;
+}
+
+async function logDiscoveryResult(entry: DiscoveryLogEntry): Promise<void> {
+  try {
+    await supabase.from("discovery_logs").insert(entry);
+  } catch {
+    console.warn("[class-discovery] Failed to write discovery_log entry for", entry.raw_url);
+  }
+}
+
 // --- SerpAPI school discovery ---
 
-interface SerpSearchResult {
+interface DiscoveryResult {
   query: string;
   link: string;
   title: string;
@@ -61,71 +107,97 @@ interface SerpSearchResult {
   domain: string;
 }
 
-const CLASS_SEARCH_QUERIES = [
-  "chicago improv classes 2026",
-  "chicago acting classes adults 2026",
-  "chicago theater workshops beginners 2026",
-  "chicago sketch comedy classes 2026",
-  "chicago musical theater classes adults 2026",
-];
+async function searchForSchools(): Promise<{ results: DiscoveryResult[]; queriesRun: number }> {
+  if (!PERPLEXITY_API_KEY) return { results: [], queriesRun: 0 };
 
-async function searchForSchools(): Promise<SerpSearchResult[]> {
-  if (!SERPAPI_KEY) return [];
-
-  const allResults: SerpSearchResult[] = [];
+  const allResults: DiscoveryResult[] = [];
   const seenDomains = new Set<string>();
+  let queriesRun = 0;
 
-  for (const query of CLASS_SEARCH_QUERIES) {
+  for (const prompt of DISCOVERY_PROMPTS) {
     try {
-      const params = new URLSearchParams({
-        q: query,
-        location: "Chicago, Illinois, United States",
-        hl: "en",
-        gl: "us",
-        num: "10",
-        api_key: SERPAPI_KEY,
-        engine: "google",
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30_000);
+      let res: Response;
+      try {
+        res = await fetch("https://api.perplexity.ai/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${PERPLEXITY_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-sonar-small-128k-online",
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 2000,
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
-      const res = await fetch(`https://serpapi.com/search.json?${params.toString()}`);
       if (!res.ok) {
-        console.warn(`[class-discovery] SerpAPI error for "${query}": HTTP ${res.status}`);
+        console.warn(`[class-discovery] Perplexity returned ${res.status} for prompt: ${prompt.slice(0, 50)}...`);
         continue;
       }
 
+      queriesRun++;
       const data = await res.json();
-      const organicResults = data.organic_results ?? [];
+      const text: string = data.choices?.[0]?.message?.content ?? "";
 
-      for (const r of organicResults) {
-        const link = r.link as string;
-        if (!link) continue;
+      const urlMatches = text.matchAll(/https?:\/\/[^\s"'<>)\]]+/g);
+      for (const m of urlMatches) {
+        const link = m[0].replace(/[.,;:!?)]+$/, "");
         const domain = extractDomain(link);
-        if (seenDomains.has(domain)) continue;
+        if (!domain || seenDomains.has(domain)) continue;
         seenDomains.add(domain);
 
+        const nameMatch = text.substring(Math.max(0, m.index! - 120), m.index!).match(/(?:\*\*|^|\n)([A-Z][A-Za-z\s&''.\-]+?)(?:\*\*|:|\s*[-–—]\s*|\s*\()/);
+        const title = nameMatch ? nameMatch[1].trim() : domain;
+
         allResults.push({
-          query,
+          query: prompt.slice(0, 60),
           link,
-          title: r.title ?? "",
-          snippet: r.snippet ?? "",
+          title,
+          snippet: text.substring(Math.max(0, m.index! - 50), Math.min(text.length, m.index! + link.length + 80)).trim(),
           domain,
         });
       }
 
       await delay(500);
     } catch (err) {
-      console.warn(`[class-discovery] SerpAPI fetch failed for "${query}":`, err);
+      console.warn(`[class-discovery] Perplexity search failed:`, err);
     }
   }
 
-  return allResults;
+  return { results: allResults, queriesRun };
 }
 
 async function deduplicateAndQueue(
   results: SerpSearchResult[],
   runId: string,
-): Promise<Array<{ query: string; link: string; queued: boolean; reason?: string }>> {
-  const output: Array<{ query: string; link: string; queued: boolean; reason?: string }> = [];
+): Promise<{ queued: number; known: number; blocked: number }> {
+  // FR-2: Pre-filter aggregator domains
+  const filtered: SerpSearchResult[] = [];
+  let blocked = 0;
+
+  for (const result of results) {
+    if (isAggregatorDomain(result.domain)) {
+      blocked++;
+      await logDiscoveryResult({
+        run_id: runId,
+        query: result.query,
+        raw_url: result.link,
+        raw_title: result.title,
+        domain: result.domain,
+        disposition: "blocked_aggregator",
+        reason: "Domain matched aggregator blocklist",
+      });
+      continue;
+    }
+    filtered.push(result);
+  }
 
   const { data: existingVenues } = await supabase
     .from("venues")
@@ -141,14 +213,41 @@ async function deduplicateAndQueue(
     .from("venue_discovery_queue")
     .select("raw_website_url, detail_page_url");
 
+  const queuedDomains = new Set<string>();
   for (const q of queuedVenues ?? []) {
-    if (q.raw_website_url) existingDomains.add(extractDomain(q.raw_website_url));
-    if (q.detail_page_url) existingDomains.add(extractDomain(q.detail_page_url));
+    if (q.raw_website_url) queuedDomains.add(extractDomain(q.raw_website_url));
+    if (q.detail_page_url) queuedDomains.add(extractDomain(q.detail_page_url));
   }
 
-  for (const result of results) {
+  let queued = 0;
+  let known = 0;
+
+  for (const result of filtered) {
     if (existingDomains.has(result.domain)) {
-      output.push({ query: result.query, link: result.link, queued: false, reason: "already_known" });
+      known++;
+      await logDiscoveryResult({
+        run_id: runId,
+        query: result.query,
+        raw_url: result.link,
+        raw_title: result.title,
+        domain: result.domain,
+        disposition: "already_known_venue",
+        reason: "Domain matches existing venue",
+      });
+      continue;
+    }
+
+    if (queuedDomains.has(result.domain)) {
+      known++;
+      await logDiscoveryResult({
+        run_id: runId,
+        query: result.query,
+        raw_url: result.link,
+        raw_title: result.title,
+        domain: result.domain,
+        disposition: "already_in_queue",
+        reason: "Domain already in discovery queue",
+      });
       continue;
     }
 
@@ -168,14 +267,76 @@ async function deduplicateAndQueue(
     });
 
     if (error) {
-      output.push({ query: result.query, link: result.link, queued: false, reason: "insert_error" });
+      await logDiscoveryResult({
+        run_id: runId,
+        query: result.query,
+        raw_url: result.link,
+        raw_title: result.title,
+        domain: result.domain,
+        disposition: "insert_error",
+        reason: error.message,
+      });
     } else {
       existingDomains.add(result.domain);
-      output.push({ query: result.query, link: result.link, queued: true });
+      queuedDomains.add(result.domain);
+      queued++;
+      await logDiscoveryResult({
+        run_id: runId,
+        query: result.query,
+        raw_url: result.link,
+        raw_title: result.title,
+        domain: result.domain,
+        disposition: "queued",
+      });
     }
   }
 
-  return output;
+  return { queued, known, blocked };
+}
+
+// --- Get next unprocessed school for this job ---
+
+async function getNextSchool(
+  jobId: string,
+  processedIds: string[],
+): Promise<{ school: VenueTarget | null; totalSchools: number; remaining: number }> {
+  const { data: schools, error } = await supabase
+    .from("venues")
+    .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
+    .eq("venue_type", "school")
+    .not("calendar_url", "is", null);
+
+  if (error || !schools) return { school: null, totalSchools: 0, remaining: 0 };
+
+  const unprocessed = schools.filter((s) => !processedIds.includes(s.id));
+  const next = unprocessed.length > 0 ? unprocessed[0] as VenueTarget : null;
+
+  return {
+    school: next,
+    totalSchools: schools.length,
+    remaining: unprocessed.length,
+  };
+}
+
+// --- FR-1: Standalone discovery action ---
+
+async function runDiscoverAction(runId: string, cors: Record<string, string>): Promise<Response> {
+  if (!PERPLEXITY_API_KEY) {
+    return new Response(
+      JSON.stringify({ action: "discover", run_id: runId, queued: 0, known: 0, blocked: 0, queries_run: 0, warning: "PERPLEXITY_API_KEY not set" }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+    );
+  }
+
+  const { results: serpResults, queriesRun } = await searchForSchools();
+  const { queued, known, blocked } = await deduplicateAndQueue(serpResults, runId);
+
+  console.log(`[class-discovery] Discovery run ${runId}: ${queriesRun} queries, ${serpResults.length} raw results, ${blocked} blocked, ${known} known, ${queued} queued`);
+
+  return new Response(
+    JSON.stringify({ action: "discover", run_id: runId, queued, known, blocked, queries_run: queriesRun }),
+    { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+  );
 }
 
 // --- Main handler ---
@@ -200,147 +361,228 @@ serve(async (req) => {
     });
   }
 
-  const runId = crypto.randomUUID();
-  console.log(`[class-discovery] Starting run ${runId}`);
+  try {
+    let body: Record<string, unknown> = {};
+    try { body = await req.json(); } catch { /* no body is fine */ }
 
-  const { data: schools, error: schoolError } = await supabase
-    .from("venues")
-    .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
-    .eq("venue_type", "school");
+    const jobId = body.job_id as string | undefined;
+    const action = body.action as string | undefined;
+    const processedIds = (body.processed_ids as string[]) ?? [];
 
-  if (schoolError || !schools) {
+    // FR-1: Standalone discovery action — runs SerpAPI immediately, independent of school scraping
+    if (action === "discover") {
+      const runId = crypto.randomUUID();
+      return await runDiscoverAction(runId, cors);
+    }
+
+    // --- Start a new scrape job ---
+    if (action === "start" || (!jobId && !action)) {
+      const { data: existingJob } = await supabase
+        .from("scrape_jobs")
+        .select("id")
+        .eq("job_type", "class")
+        .eq("status", "running")
+        .maybeSingle();
+
+      if (existingJob) {
+        return new Response(
+          JSON.stringify({ error: "A class discovery job is already running", job_id: existingJob.id }),
+          { status: 409, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+
+      const { school, totalSchools } = await getNextSchool("", []);
+
+      if (!school) {
+        return new Response(
+          JSON.stringify({ job_id: null, schools_processed: 0, remaining: 0 }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+
+      const { data: newJob } = await supabase
+        .from("scrape_jobs")
+        .insert({
+          job_type: "class",
+          status: "running",
+          total_venues: totalSchools,
+        })
+        .select("id")
+        .single();
+
+      const newJobId = newJob?.id;
+      const runId = crypto.randomUUID();
+      const result = await processFirstSchool(school, runId, newJobId!, []);
+
+      return new Response(
+        JSON.stringify(result),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    // --- Continue an existing job ---
+    if (!jobId) {
+      return new Response(
+        JSON.stringify({ error: "Missing job_id for continuation" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    const { data: job } = await supabase
+      .from("scrape_jobs")
+      .select("status")
+      .eq("id", jobId)
+      .maybeSingle();
+
+    if (!job || job.status === "cancelled" || job.status === "completed") {
+      return new Response(
+        JSON.stringify({ job_id: jobId, job_status: job?.status ?? "not_found" }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    const { school, remaining } = await getNextSchool(jobId, processedIds);
+
+    if (!school) {
+      // All schools processed — just complete, no SerpAPI (FR-1: discovery is decoupled)
+      await supabase.from("scrape_jobs").update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+      }).eq("id", jobId);
+
+      return new Response(
+        JSON.stringify({ job_id: jobId, job_status: "completed", remaining: 0 }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    const runId = crypto.randomUUID();
+    const result = await processFirstSchool(school, runId, jobId, processedIds);
+
     return new Response(
-      JSON.stringify({ error: "Failed to load school venues", detail: schoolError?.message }),
+      JSON.stringify(result),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[class-discovery] Error:", message);
+    return new Response(
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
-
-  const schoolsWithCalendar = schools.filter((s) => s.calendar_url) as VenueTarget[];
-
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    async start(controller) {
-      // --- Phase 1: Scrape each school using the shared strategy tree ---
-      const scrapeResults: ScrapeResult[] = [];
-
-      for (let i = 0; i < schoolsWithCalendar.length; i++) {
-        const school = schoolsWithCalendar[i];
-        console.log(`[class-discovery] Scraping school ${i + 1}/${schoolsWithCalendar.length}: ${school.name}`);
-
-        const result = await processVenue(school, runId, {
-          profile: CLASS_PROFILE,
-          defaultEventType: "class",
-        });
-        scrapeResults.push(result);
-
-        // Write scraped classes to class_sessions table
-        try {
-          if (result.status === "success" && result.events_found > 0) {
-            const { data: schoolRow, error: schoolErr } = await supabase
-              .from("schools")
-              .select("id")
-              .eq("venue_id", school.id)
-              .maybeSingle();
-
-            if (schoolErr) {
-              console.error(`[class-discovery] School lookup failed for ${school.name}:`, schoolErr.message);
-            } else if (schoolRow) {
-              const { data: eventsForSchool, error: eventsErr } = await supabase
-                .from("events")
-                .select("title, event_type, start_date, price_min, price_max, ticket_url, skill_level, session_count, class_format, instructor_name")
-                .eq("venue_id", school.id)
-                .eq("source", "scraped")
-                .in("event_type", ["class", "workshop"]);
-
-              if (eventsErr) {
-                console.error(`[class-discovery] Events query failed for ${school.name}:`, eventsErr.message);
-              } else if (eventsForSchool && eventsForSchool.length > 0) {
-                const sessionResult = await processClassSessions(
-                  eventsForSchool as any[],
-                  schoolRow.id,
-                  school.calendar_url,
-                );
-                controller.enqueue(
-                  encoder.encode(JSON.stringify({ type: "class_sessions", data: { school: school.name, ...sessionResult } }) + "\n"),
-                );
-              }
-            } else {
-              console.warn(`[class-discovery] No school row found for venue ${school.name} (venue_id: ${school.id})`);
-            }
-          }
-        } catch (e) {
-          console.error(`[class-discovery] class_sessions processing failed for ${school.name}:`, e instanceof Error ? e.message : e);
-        }
-
-        controller.enqueue(
-          encoder.encode(JSON.stringify({ type: "school_scrape", data: result }) + "\n"),
-        );
-
-        if (i < schoolsWithCalendar.length - 1) {
-          await delay(1000);
-        }
-      }
-
-      // --- Phase 2: SerpAPI search for new schools (optional) ---
-      let searchResults: Array<{ query: string; link: string; queued: boolean; reason?: string }> = [];
-      let searchWarning: string | null = null;
-
-      if (SERPAPI_KEY) {
-        try {
-          const serpResults = await searchForSchools();
-          searchResults = await deduplicateAndQueue(serpResults, runId);
-
-          for (const sr of searchResults) {
-            controller.enqueue(
-              encoder.encode(JSON.stringify({ type: "search_result", data: sr }) + "\n"),
-            );
-          }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          searchWarning = `SerpAPI search failed: ${msg}`;
-          console.error(`[class-discovery] ${searchWarning}`);
-        }
-      } else {
-        searchWarning = "SERPAPI_KEY not set — skipping web search for new schools";
-        console.warn(`[class-discovery] ${searchWarning}`);
-      }
-
-      // --- Summary ---
-      const summary: Record<string, unknown> = {
-        run_id: runId,
-        schools_scraped: scrapeResults.length,
-        total_events_found: scrapeResults.reduce((s, r) => s + r.events_found, 0),
-        total_created: scrapeResults.reduce((s, r) => s + r.events_created, 0),
-        total_updated: scrapeResults.reduce((s, r) => s + r.events_updated, 0),
-        scrape_errors: scrapeResults.filter((r) => r.status !== "success").length,
-        ai_input_tokens: scrapeResults.reduce((s, r) => s + r.ai_input_tokens, 0),
-        ai_output_tokens: scrapeResults.reduce((s, r) => s + r.ai_output_tokens, 0),
-        search_results_total: searchResults.length,
-        search_results_queued: searchResults.filter((r) => r.queued).length,
-        search_results_known: searchResults.filter((r) => !r.queued).length,
-      };
-
-      if (searchWarning) {
-        summary.warning = searchWarning;
-      }
-
-      controller.enqueue(
-        encoder.encode(JSON.stringify({ type: "summary", data: summary }) + "\n"),
-      );
-
-      console.log(
-        `[class-discovery] Run ${runId} complete: ${summary.schools_scraped} schools scraped, ` +
-        `${summary.total_events_found} events found, ${summary.total_created} created, ` +
-        `${summary.total_updated} updated, ${summary.scrape_errors} errors, ` +
-        `${summary.search_results_queued} new schools queued`,
-      );
-
-      controller.close();
-    },
-  });
-
-  return new Response(stream, {
-    status: 200,
-    headers: { ...cors, "Content-Type": "application/x-ndjson" },
-  });
 });
+
+async function processFirstSchool(
+  school: VenueTarget,
+  runId: string,
+  jobId: string,
+  previousProcessedIds: string[],
+): Promise<Record<string, unknown>> {
+  console.log(`[class-discovery] Processing school: ${school.name}`);
+
+  const result = await processVenue(school, runId, {
+    profile: CLASS_PROFILE,
+    defaultEventType: "class",
+  });
+
+  try {
+    if (result.status === "success" && result.events_found > 0) {
+      const { data: schoolRow } = await supabase
+        .from("schools")
+        .select("id")
+        .eq("venue_id", school.id)
+        .maybeSingle();
+
+      if (schoolRow) {
+        const { data: eventsForSchool } = await supabase
+          .from("events")
+          .select("title, event_type, start_date, price_min, price_max, ticket_url, skill_level, session_count, class_format, instructor_name")
+          .eq("venue_id", school.id)
+          .eq("source", "scraped")
+          .in("event_type", ["class", "workshop"]);
+
+        if (eventsForSchool && eventsForSchool.length > 0) {
+          await processClassSessions(
+            eventsForSchool as any[],
+            schoolRow.id,
+            school.calendar_url,
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.error(`[class-discovery] class_sessions processing failed for ${school.name}:`, e instanceof Error ? e.message : e);
+  }
+
+  const { data: currentJob } = await supabase
+    .from("scrape_jobs")
+    .select("schools_processed, events_found, events_created, events_updated, errors_count, recent_schools")
+    .eq("id", jobId)
+    .single();
+
+  const newProcessed = (currentJob?.schools_processed ?? 0) + 1;
+  const newEventsFound = (currentJob?.events_found ?? 0) + result.events_found;
+  const newEventsCreated = (currentJob?.events_created ?? 0) + result.events_created;
+  const newEventsUpdated = (currentJob?.events_updated ?? 0) + result.events_updated;
+  const newErrors = (currentJob?.errors_count ?? 0) + (result.status !== "success" ? 1 : 0);
+
+  const recentSchools = (currentJob?.recent_schools as Array<Record<string, unknown>> ?? []);
+  recentSchools.unshift({
+    name: school.name,
+    status: result.status,
+    eventsFound: result.events_found,
+    eventsCreated: result.events_created,
+  });
+  if (recentSchools.length > 20) recentSchools.length = 20;
+
+  await supabase.from("scrape_jobs").update({
+    schools_processed: newProcessed,
+    events_found: newEventsFound,
+    events_created: newEventsCreated,
+    events_updated: newEventsUpdated,
+    errors_count: newErrors,
+    current_venue: school.name,
+    recent_schools: recentSchools,
+  }).eq("id", jobId);
+
+  const allProcessedIds = [...previousProcessedIds, school.id];
+  const { remaining } = await getNextSchool(jobId, allProcessedIds);
+
+  if (remaining > 0) {
+    const selfUrl = `${SUPABASE_URL}/functions/v1/class-discovery`;
+    const chainController = new AbortController();
+    setTimeout(() => chainController.abort(), 8000);
+    try {
+      await fetch(selfUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "x-scraper-key": SCRAPER_SECRET,
+        },
+        body: JSON.stringify({
+          job_id: jobId,
+          processed_ids: allProcessedIds,
+        }),
+        signal: chainController.signal,
+      });
+    } catch {
+      // Timeout or abort is expected — the next invocation runs independently
+    }
+  } else {
+    // FR-1: No runSerpSearch here — discovery is decoupled
+    await supabase.from("scrape_jobs").update({
+      status: "completed",
+      completed_at: new Date().toISOString(),
+    }).eq("id", jobId);
+  }
+
+  return {
+    job_id: jobId,
+    school: school.name,
+    events_found: result.events_found,
+    events_created: result.events_created,
+    remaining,
+  };
+}
