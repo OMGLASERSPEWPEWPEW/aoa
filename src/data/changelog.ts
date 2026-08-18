@@ -4,6 +4,18 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.19.2',
+    date: '2026-08-18',
+    title: 'Admin buttons — 4 clear pipelines',
+    summary: 'Coverage tab now has 4 distinct buttons: Find Venues, Scrape Shows, Find Schools, Scrape Classes. Each does one thing.',
+    details: [
+      'Rename: Run Discovery → Find Venues',
+      'Rename: Run Scraper → Scrape Shows',
+      'New: Find Schools button (green) — runs Perplexity discovery for new schools',
+      'Rename: Discover Classes → Scrape Classes — only scrapes known schools, no longer fires discovery',
+    ],
+  },
+  {
     version: '0.19.1',
     date: '2026-08-18',
     title: '4-model parallel extraction — DeepSeek, Gemini, OpenAI, Haiku race on every scrape',
