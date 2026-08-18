@@ -4,6 +4,17 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.19.4',
+    date: '2026-08-18',
+    title: 'Fix Perplexity model name + discovery diagnostics',
+    summary: 'Perplexity deprecated llama-3.1-sonar-small-128k-online — every discovery call was silently failing with HTTP 400. Fixed to use "sonar" model. API failures now logged to discovery_logs instead of disappearing.',
+    details: [
+      'Fix: Perplexity model name llama-3.1-sonar-small-128k-online → sonar (deprecated model caused silent 400 errors)',
+      'Fix: API failures now write to discovery_logs with disposition insert_error instead of only console.warn',
+      'Fix: url-resolver.ts also updated to use sonar model',
+    ],
+  },
+  {
     version: '0.19.3',
     date: '2026-08-18',
     title: 'Find Schools loading state + 4 admin buttons',

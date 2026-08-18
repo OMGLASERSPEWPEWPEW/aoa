@@ -127,7 +127,7 @@ async function searchForSchools(): Promise<{ results: DiscoveryResult[]; queries
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "llama-3.1-sonar-small-128k-online",
+            model: "sonar",
             messages: [{ role: "user", content: prompt }],
             max_tokens: 2000,
           }),
@@ -138,7 +138,17 @@ async function searchForSchools(): Promise<{ results: DiscoveryResult[]; queries
       }
 
       if (!res.ok) {
-        console.warn(`[class-discovery] Perplexity returned ${res.status} for prompt: ${prompt.slice(0, 50)}...`);
+        const errBody = await res.text().catch(() => "");
+        console.error(`[class-discovery] Perplexity ${res.status}: ${errBody.slice(0, 200)}`);
+        await logDiscoveryResult({
+          run_id: "api-error",
+          query: prompt.slice(0, 60),
+          raw_url: "https://api.perplexity.ai",
+          raw_title: `Perplexity API error ${res.status}`,
+          domain: "perplexity.ai",
+          disposition: "insert_error",
+          reason: `HTTP ${res.status}: ${errBody.slice(0, 200)}`,
+        });
         continue;
       }
 
