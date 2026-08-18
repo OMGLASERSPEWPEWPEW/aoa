@@ -29,11 +29,21 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
   let strategyTrace = null;
 
   try {
-    const { mergedEvents, trace, totalInputTokens, totalOutputTokens } = await executeStrategyTree(venue, runId, options?.profile);
+    const { mergedEvents, trace, totalInputTokens, totalOutputTokens, recoveredUrl } = await executeStrategyTree(venue, runId, options?.profile);
     strategyTrace = trace;
     result.ai_input_tokens = totalInputTokens;
     result.ai_output_tokens = totalOutputTokens;
     result.events_found = mergedEvents.length;
+
+    // Self-healing: update calendar_url if recovery found a working URL (FR-33)
+    if (recoveredUrl && recoveredUrl !== venue.calendar_url) {
+      try {
+        await supabase.from("venues").update({ calendar_url: recoveredUrl }).eq("id", venue.id);
+        console.log(`[process-venue] Self-healed calendar_url for ${venue.name}: ${recoveredUrl}`);
+      } catch (e) {
+        console.warn(`[process-venue] Failed to self-heal URL for ${venue.name}:`, e);
+      }
+    }
     result.strategy_links_followed = trace.linksFollowed.length;
     result.strategy_fields_filled = trace.steps.flatMap(s => s.fieldsFilledIn);
     result.strategy_stop_reason = trace.stopReason;
@@ -95,7 +105,7 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
         ticket_url: event.ticket_url || venue.calendar_url, hottix_available: false,
         show_times: event.show_times ?? null, photo_url: event.photo_url || null,
         cast_members: event.cast_members ?? null, source: "scraped" as const,
-        scraped_at: new Date().toISOString(), source_url: venue.calendar_url,
+        scraped_at: new Date().toISOString(), source_url: (event as any).source_url ?? venue.calendar_url,
         extraction_confidence: event.confidence,
         extraction_status: event.extraction_status,
         missing_fields: event.missing_fields,
@@ -135,6 +145,14 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
     console.error(`[event-scraper] ${venue.name}: ${msg}`);
   }
 
+  // FR-34: never report "success" with 0 events
+  if (result.status === "success" && result.events_found === 0) {
+    result.status = (result.strategy_stop_reason === "recovery_exhausted" ? "fetch_error" : "parse_error") as any;
+    result.error_message = result.strategy_stop_reason === "recovery_exhausted"
+      ? "All URL recovery strategies exhausted — 0 events found"
+      : "Extraction returned 0 events from valid page";
+  }
+
   result.duration_ms = Date.now() - start;
   await supabase.from("scrape_logs").insert({
     run_id: runId, venue_id: venue.id, venue_name: venue.name,
@@ -146,4 +164,82 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
   });
 
   return result;
+}
+
+interface MergedClassEvent {
+  title: string;
+  event_type: string;
+  start_date: string | null;
+  price_min: number | null;
+  price_max: number | null;
+  ticket_url: string | null;
+  skill_level?: string | null;
+  session_count?: number | null;
+  class_format?: string | null;
+  schedule?: string | null;
+  no_experience?: boolean | null;
+  drop_in_class?: boolean | null;
+  audition_required?: boolean | null;
+  prerequisite?: string | null;
+  instructor_name?: string | null;
+}
+
+const SKILL_LEVEL_MAP: Record<string, number> = {
+  "beginner": 1,
+  "drop-in": 1,
+  "all-levels": 2,
+  "intermediate": 2,
+  "advanced": 3,
+};
+
+export async function processClassSessions(
+  events: MergedClassEvent[],
+  schoolId: string,
+  sourceUrl: string,
+): Promise<{ created: number; updated: number }> {
+  let created = 0;
+  let updated = 0;
+
+  for (const event of events) {
+    if (event.event_type !== "class" && event.event_type !== "workshop") continue;
+
+    const level = SKILL_LEVEL_MAP[event.skill_level ?? ""] ?? 2;
+    const price = event.price_min ?? event.price_max ?? null;
+
+    const row: Record<string, unknown> = {
+      school_id: schoolId,
+      title: event.title,
+      level,
+      starts_on: event.start_date,
+      schedule: event.schedule ?? null,
+      weeks: typeof event.session_count === "number" ? event.session_count : null,
+      price,
+      drop_in: event.drop_in_class === true || event.skill_level === "drop-in" || event.class_format === "drop-in",
+      no_experience: event.no_experience === true || event.skill_level === "beginner" || event.skill_level === "drop-in",
+      audition_required: event.audition_required === true,
+      prerequisite: event.prerequisite ?? null,
+      signup_url: event.ticket_url,
+      scraped_at: new Date().toISOString(),
+      source_url: sourceUrl,
+    };
+
+    const { data: existing } = await supabase
+      .from("class_sessions")
+      .select("id")
+      .eq("school_id", schoolId)
+      .eq("title", event.title)
+      .maybeSingle();
+
+    if (existing) {
+      const { error } = await supabase.from("class_sessions").update(row).eq("id", existing.id);
+      if (error) console.error(`[class-sessions] Update failed for "${event.title}":`, error.message);
+      else updated++;
+    } else {
+      const { error } = await supabase.from("class_sessions").insert(row);
+      if (error) console.error(`[class-sessions] Insert failed for "${event.title}":`, error.message);
+      else created++;
+    }
+  }
+
+  return { created, updated };
 }

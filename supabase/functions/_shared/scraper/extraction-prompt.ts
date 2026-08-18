@@ -16,6 +16,7 @@ Return valid JSON with this exact structure:
       "price_min": 25,
       "price_max": 65,
       "ticket_url": "https://...",
+      "photo_url": "https://... direct image URL from [img: ...] token, or null",
       "show_times": {
         "thu": ["19:30"],
         "fri": ["19:30", "22:00"],
@@ -25,6 +26,12 @@ Return valid JSON with this exact structure:
     }
   ]
 }
+
+PHOTO EXTRACTION:
+- Look for [img: https://...] tokens in the text — these are images from the page
+- Match each image to the event it appears near (by proximity in the text)
+- Only use direct image URLs (https://...), not data: URIs or relative paths
+- If no image is found near an event, set photo_url to null
 
 PRICE RULES (READ CAREFULLY):
 - price_min and price_max must be numbers or null
@@ -59,6 +66,11 @@ CLASS-SPECIFIC FIELDS (for event_type "class" or "workshop" ONLY — null for sh
 - skill_level: One of "beginner", "intermediate", "advanced", "all-levels", "drop-in". Null if not stated.
 - session_count: Integer number of sessions in the course (e.g., 8 for an 8-week class). Null for single sessions.
 - class_format: One of "ongoing" (rolling enrollment, no fixed end), "workshop" (one or two days), "intensive" (3-5 day immersive), "drop-in" (no commitment), "series" (fixed number of sessions with defined start/end). Null if unclear.
+- schedule: Day and time pattern exactly as shown (e.g., "Mon 7–10pm", "Tue/Thu 6–8pm", "Saturdays 10am–1pm"). String or null.
+- no_experience: Boolean. True if the page says "no experience needed", "beginners welcome", "open to all levels", or similar. False if prerequisites are mentioned. Null if unclear.
+- drop_in_class: Boolean. True if students can attend individual sessions without enrolling in the full course. Null if unclear.
+- audition_required: Boolean. True if an audition, interview, or application is required for admission. Null if unclear.
+- prerequisite: Name of the prerequisite class if one is required (e.g., "Core Acting I"). String or null.
 
 For show events, omit these keys entirely (do not include them as null).`;
 }

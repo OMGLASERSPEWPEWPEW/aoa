@@ -26,6 +26,11 @@ export interface ScrapedEvent {
   skill_level: string | null;
   session_count: number | null;
   class_format: string | null;
+  schedule: string | null;
+  no_experience: boolean | null;
+  drop_in_class: boolean | null;
+  audition_required: boolean | null;
+  prerequisite: string | null;
 }
 
 export interface ScrapeResult {
@@ -95,10 +100,17 @@ export interface Pass1Event {
   price_max: number | null;
   ticket_url: string | null;
   show_times: Record<string, string[]> | null;
+  photo_url?: string | null;
+  source_url?: string | null;
   instructor_name?: string | null;
   skill_level?: string | null;
   session_count?: number | null;
   class_format?: string | null;
+  schedule?: string | null;
+  no_experience?: boolean | null;
+  drop_in_class?: boolean | null;
+  audition_required?: boolean | null;
+  prerequisite?: string | null;
 }
 
 export interface Pass2Verification {
@@ -153,7 +165,7 @@ export interface CandidateLink {
 }
 
 export interface StrategyStep {
-  step: "initial_extract" | "link_follow" | "website_fallback" | "verify" | "aggregator_crossref" | "aggregator_detail";
+  step: "initial_extract" | "link_follow" | "website_fallback" | "verify" | "aggregator_crossref" | "aggregator_detail" | "jina_fallback" | "json_ld";
   url: string;
   aiCalls: number;
   inputTokens: number;
@@ -193,6 +205,11 @@ export interface TargetedEnrichment {
   skill_level?: string | null;
   session_count?: number | null;
   class_format?: string | null;
+  schedule?: string | null;
+  no_experience?: boolean | null;
+  drop_in_class?: boolean | null;
+  audition_required?: boolean | null;
+  prerequisite?: string | null;
 }
 
 // --- TheatreInChicago.com types ---

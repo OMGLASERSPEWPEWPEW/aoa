@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { processVenue } from "../_shared/scraper/process-venue.ts";
+import { processVenue, processClassSessions } from "../_shared/scraper/process-venue.ts";
 import { CLASS_FIELD_WEIGHTS } from "../_shared/scraper/completeness-evaluator.ts";
 import type { VenueTarget, ScrapeResult, StrategyProfile } from "../_shared/scraper/types.ts";
 
@@ -232,6 +232,45 @@ serve(async (req) => {
           defaultEventType: "class",
         });
         scrapeResults.push(result);
+
+        // Write scraped classes to class_sessions table
+        try {
+          if (result.status === "success" && result.events_found > 0) {
+            const { data: schoolRow, error: schoolErr } = await supabase
+              .from("schools")
+              .select("id")
+              .eq("venue_id", school.id)
+              .maybeSingle();
+
+            if (schoolErr) {
+              console.error(`[class-discovery] School lookup failed for ${school.name}:`, schoolErr.message);
+            } else if (schoolRow) {
+              const { data: eventsForSchool, error: eventsErr } = await supabase
+                .from("events")
+                .select("title, event_type, start_date, price_min, price_max, ticket_url, skill_level, session_count, class_format, instructor_name")
+                .eq("venue_id", school.id)
+                .eq("source", "scraped")
+                .in("event_type", ["class", "workshop"]);
+
+              if (eventsErr) {
+                console.error(`[class-discovery] Events query failed for ${school.name}:`, eventsErr.message);
+              } else if (eventsForSchool && eventsForSchool.length > 0) {
+                const sessionResult = await processClassSessions(
+                  eventsForSchool as any[],
+                  schoolRow.id,
+                  school.calendar_url,
+                );
+                controller.enqueue(
+                  encoder.encode(JSON.stringify({ type: "class_sessions", data: { school: school.name, ...sessionResult } }) + "\n"),
+                );
+              }
+            } else {
+              console.warn(`[class-discovery] No school row found for venue ${school.name} (venue_id: ${school.id})`);
+            }
+          }
+        } catch (e) {
+          console.error(`[class-discovery] class_sessions processing failed for ${school.name}:`, e instanceof Error ? e.message : e);
+        }
 
         controller.enqueue(
           encoder.encode(JSON.stringify({ type: "school_scrape", data: result }) + "\n"),

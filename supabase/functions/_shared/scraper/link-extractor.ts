@@ -3,7 +3,7 @@ import type { CandidateLink, EventCompleteness } from "./types.ts";
 const EXCLUDED_PATHS = [
   "/about", "/contact", "/donate", "/careers", "/privacy", "/terms",
   "/login", "/cart", "/press", "/accessibility", "/faq", "/board",
-  "/staff", "/support", "/membership", "/education", "/volunteer",
+  "/staff", "/support", "/membership", "/volunteer",
 ];
 
 const EXCLUDED_DOMAINS = [
@@ -11,9 +11,16 @@ const EXCLUDED_DOMAINS = [
   "tiktok.com", "linkedin.com", "pinterest.com", "x.com",
 ];
 
-const SHOW_KEYWORDS = [
+const THEATER_KEYWORDS = [
   "show", "production", "event", "ticket", "performance",
   "season", "play", "musical", "program", "whats-on",
+];
+
+const CLASS_KEYWORDS = [
+  "class", "classes", "course", "courses", "workshop",
+  "level", "beginner", "intermediate", "advanced",
+  "enroll", "register", "training", "curriculum", "adult",
+  "instructor", "schedule", "program",
 ];
 
 const ASSET_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".svg", ".pdf", ".css", ".js", ".ico"];
@@ -22,6 +29,7 @@ export function extractCandidateLinks(
   rawHtml: string,
   baseUrl: string,
   eventTitles: string[],
+  domain: "theater" | "class" = "theater",
 ): CandidateLink[] {
   const linkPattern = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   const candidates: CandidateLink[] = [];
@@ -91,8 +99,9 @@ export function extractCandidateLinks(
       }
     }
 
-    for (const keyword of SHOW_KEYWORDS) {
-      if (lowerHref.includes(keyword)) { score += 5; break; }
+    const keywords = domain === "class" ? CLASS_KEYWORDS : THEATER_KEYWORDS;
+    for (const keyword of keywords) {
+      if (lowerHref.includes(keyword) || lowerText.includes(keyword)) { score += 5; }
     }
 
     if (/202[4-9]|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i.test(lowerHref)) {

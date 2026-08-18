@@ -1,3 +1,40 @@
+export interface JsonLdEvent {
+  name: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  price: number | null;
+  url: string | null;
+  image: string | null;
+}
+
+export function extractJsonLd(raw: string): JsonLdEvent[] {
+  const results: JsonLdEvent[] = [];
+  const pattern = /<script\s+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(raw)) !== null) {
+    try {
+      const data = JSON.parse(match[1]);
+      const items = Array.isArray(data) ? data : data["@graph"] ? data["@graph"] : [data];
+      for (const item of items) {
+        const type = item["@type"];
+        if (!type || !["Event", "Course", "EducationEvent", "TheaterEvent", "MusicEvent"].includes(type)) continue;
+
+        const offers = Array.isArray(item.offers) ? item.offers[0] : item.offers;
+        results.push({
+          name: item.name ?? null,
+          startDate: item.startDate ? item.startDate.slice(0, 10) : null,
+          endDate: item.endDate ? item.endDate.slice(0, 10) : null,
+          price: offers?.price ? Number(offers.price) : null,
+          url: offers?.url ?? item.url ?? null,
+          image: typeof item.image === "string" ? item.image : item.image?.url ?? null,
+        });
+      }
+    } catch { /* malformed JSON-LD — skip */ }
+  }
+  return results;
+}
+
 export function cleanHtml(raw: string, maxChars = 30_000): string {
   let html = raw;
 

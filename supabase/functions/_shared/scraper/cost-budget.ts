@@ -9,10 +9,10 @@ interface BudgetOpts {
 }
 
 const DEFAULTS: BudgetOpts = {
-  maxAiCalls: 6,
-  maxFetches: 5,
-  maxUsd: 0.012,
-  wallClockMs: 120_000,
+  maxAiCalls: 20,
+  maxFetches: 30,
+  maxUsd: 0.10,
+  wallClockMs: 60_000,
 };
 
 export class CostBudget {

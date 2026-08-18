@@ -1,4 +1,4 @@
-import { cleanHtml } from "./html-cleaner.ts";
+import { cleanHtml, extractJsonLd, type JsonLdEvent } from "./html-cleaner.ts";
 import { buildExtractionPrompt } from "./extraction-prompt.ts";
 import { buildVerificationPrompt } from "./verification-prompt.ts";
 import { buildTargetedExtractionPrompt } from "./targeted-prompt.ts";
@@ -6,6 +6,7 @@ import { extractCandidateLinks, prioritizeLinks } from "./link-extractor.ts";
 import { DEFAULT_FIELD_WEIGHTS, shouldFollowLinks, mergeTargetedExtraction, averageCompleteness, evaluateCompleteness } from "./completeness-evaluator.ts";
 import { CostBudget } from "./cost-budget.ts";
 import { lookupVenueOnTic, ticShowsToEnrichments, enrichFromTicDetail } from "./tic-lookup.ts";
+import { resolveVenueUrl } from "./url-resolver.ts";
 import type {
   VenueTarget,
   Pass1Event,
@@ -157,7 +158,7 @@ export async function executeStrategyTree(
   venue: VenueTarget,
   runId: string,
   profile?: StrategyProfile,
-): Promise<{ mergedEvents: MergedEvent[]; trace: StrategyTrace; totalInputTokens: number; totalOutputTokens: number }> {
+): Promise<{ mergedEvents: MergedEvent[]; trace: StrategyTrace; totalInputTokens: number; totalOutputTokens: number; recoveredUrl?: string }> {
   const effectiveProfile: StrategyProfile = profile ?? {
     domain: "theater",
     fieldWeights: DEFAULT_FIELD_WEIGHTS,
@@ -176,22 +177,86 @@ export async function executeStrategyTree(
   let rawHtml = "";
   const foundByMap = new Map<string, Set<string>>();
 
-  // STEP 1: Parallel fetch — venue calendar + TIC lookup (TIC skipped for classes)
+  // STEP 1: Non-fatal seed fetch with URL recovery (FR-28, FR-29)
   const step1Start = Date.now();
+  let seedUrl = venue.calendar_url;
+  let recoveredUrl: string | undefined;
+
   const ticPromise = isClassDomain
     ? Promise.resolve({ shows: [] as import("./types.ts").TicShow[], source: null as string | null })
     : lookupVenueOnTic(venue.name).catch(() => ({ shows: [] as import("./types.ts").TicShow[], source: null as string | null }));
-  const [venueHtml, ticResult] = await Promise.all([
-    fetchHtml(venue.calendar_url),
-    ticPromise,
-  ]);
-  rawHtml = venueHtml;
-  visitedUrls.add(venue.calendar_url);
-  budget.recordFetch();
+
+  // Try seed URL — non-fatal
+  let seedFailed = false;
+  try {
+    rawHtml = await fetchHtml(venue.calendar_url);
+    visitedUrls.add(venue.calendar_url);
+    budget.recordFetch();
+  } catch (seedErr) {
+    console.warn(`[scraper-v3.1] Dead calendar_url for ${venue.name}: ${venue.calendar_url}`, seedErr instanceof Error ? seedErr.message : seedErr);
+    seedFailed = true;
+  }
+
+  // URL recovery: if seed failed OR content is too thin
+  if (seedFailed || cleanHtml(rawHtml).length < 300) {
+    console.log(`[scraper-v3.1] ${venue.name}: entering URL recovery (seedFailed=${seedFailed}, contentLen=${cleanHtml(rawHtml).length})`);
+
+    const recovery = await resolveVenueUrl(venue, (html) => {
+      return cleanHtml(html).length;
+    });
+
+    if (recovery.status === "resolved") {
+      seedUrl = recovery.url;
+      rawHtml = recovery.html;
+      recoveredUrl = recovery.url;
+      visitedUrls.add(recovery.url);
+      console.log(`[scraper-v3.1] ${venue.name}: recovered URL via ${recovery.strategy}: ${recovery.url}`);
+      steps.push({
+        step: "jina_fallback" as any, url: recovery.url, aiCalls: 0, inputTokens: 0, outputTokens: 0,
+        eventsAffected: 0, fieldsFilledIn: [`url_recovery:${recovery.strategy}`], durationMs: Date.now() - step1Start,
+      });
+    } else {
+      console.warn(`[scraper-v3.1] ${venue.name}: all recovery strategies exhausted (${recovery.attempts.length} attempts)`);
+      budget.setStopReason("recovery_exhausted");
+
+      const ticResult = await ticPromise;
+      return {
+        mergedEvents: [],
+        trace: buildTrace(steps, budget, [...visitedUrls], 0, 0),
+        totalInputTokens, totalOutputTokens,
+        recoveredUrl: undefined,
+      };
+    }
+  }
+
+  const ticResult = await ticPromise;
   budget.recordFetch();
 
+  // Extract JSON-LD structured data before cleaning
+  const ldJsonEvents = extractJsonLd(rawHtml);
+  if (ldJsonEvents.length > 0) {
+    console.log(`[scraper-v3] ${venue.name}: found ${ldJsonEvents.length} JSON-LD events`);
+    steps.push({ step: "json_ld", url: venue.calendar_url, aiCalls: 0, inputTokens: 0, outputTokens: 0, eventsAffected: ldJsonEvents.length, fieldsFilledIn: [], durationMs: 0 });
+  }
+
   // Extract events from venue calendar
-  const cleaned = cleanHtml(rawHtml);
+  let cleaned = cleanHtml(rawHtml);
+
+  // Jina Reader fallback for JS-rendered sites
+  if (cleaned.length < 300 && budget.canAffordFetch()) {
+    console.log(`[scraper-v3] ${venue.name}: thin HTML (${cleaned.length} chars), trying Jina Reader`);
+    try {
+      const jinaRes = await fetchHtml(`https://r.jina.ai/${venue.calendar_url}`);
+      budget.recordFetch();
+      if (jinaRes.length > cleaned.length) {
+        cleaned = jinaRes;
+        steps.push({ step: "jina_fallback", url: venue.calendar_url, aiCalls: 0, inputTokens: 0, outputTokens: 0, eventsAffected: 0, fieldsFilledIn: [], durationMs: 0 });
+      }
+    } catch (e) {
+      console.warn(`[scraper-v3] Jina fallback failed for ${venue.name}:`, e);
+    }
+  }
+
   if (cleaned.length >= 100 && budget.canAffordAiCall()) {
     const result = await callDeepSeek(buildExtractionPrompt(venue.name), cleaned);
     budget.recordAiCall(result.inputTokens, result.outputTokens);
@@ -205,7 +270,24 @@ export async function executeStrategyTree(
       } catch { /* parse error */ }
     }
 
-    for (const e of events) foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
+    // Set source_url for seed page events
+    for (const e of events) {
+      e.source_url = venue.calendar_url;
+      foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
+    }
+
+    // Merge JSON-LD data (JSON-LD wins for dates, prices, URLs)
+    for (const ld of ldJsonEvents) {
+      if (!ld.name) continue;
+      const match = events.find(e => e.title.toLowerCase() === ld.name!.toLowerCase());
+      if (match) {
+        if (ld.startDate && !match.start_date) match.start_date = ld.startDate;
+        if (ld.endDate && !match.end_date) match.end_date = ld.endDate;
+        if (ld.price != null && match.price_min == null) { match.price_min = ld.price; match.price_max = ld.price; }
+        if (ld.url && !match.ticket_url) match.ticket_url = ld.url;
+        if (ld.image && !match.photo_url) match.photo_url = ld.image;
+      }
+    }
 
     steps.push({
       step: "initial_extract", url: venue.calendar_url, aiCalls: 1,
@@ -359,143 +441,179 @@ export async function executeStrategyTree(
     return {
       mergedEvents: [],
       trace: buildTrace(steps, budget, [], 0, 0),
-      totalInputTokens, totalOutputTokens,
+      totalInputTokens, totalOutputTokens, recoveredUrl,
     };
   }
 
-  // STEP 2: Completeness check
+  // STEP 2: BFS Frontier — crawl until no relevant links remain or ceiling hit
   const completenessBeforeFollows = averageCompleteness(events, weights);
-  const candidateLinks = extractCandidateLinks(rawHtml, venue.calendar_url, events.map(e => e.title));
-  const { shouldFollow, incompleteEvents } = shouldFollowLinks(events, candidateLinks, weights);
+  const domain = effectiveProfile.domain;
 
-  // STEP 3: Link following
-  if (shouldFollow) {
-    const linksToFollow = prioritizeLinks(candidateLinks, incompleteEvents, visitedUrls, 3);
-    let noProgressCount = 0;
+  // Initialize BFS frontier from seed page links
+  const frontier: import("./types.ts").CandidateLink[] = [];
+  const seedLinks = extractCandidateLinks(rawHtml, venue.calendar_url, events.map(e => e.title), domain);
+  for (const link of seedLinks) {
+    const norm = link.url.split("?")[0].split("#")[0].replace(/\/$/, "");
+    if (!visitedUrls.has(norm)) frontier.push(link);
+  }
+  frontier.sort((a, b) => b.score - a.score);
 
-    for (const link of linksToFollow) {
-      if (budget.isExhausted()) break;
-      if (!budget.canAffordFetch() || !budget.canAffordAiCall()) break;
-      if (noProgressCount >= 2) { budget.setStopReason("no_progress"); break; }
+  // BFS crawl loop — no arbitrary link cap
+  while (frontier.length > 0) {
+    if (budget.isExhausted()) break;
+    if (!budget.canAffordFetch() || !budget.canAffordAiCall()) break;
 
-      const lfStart = Date.now();
-      try {
-        const linkHtml = await fetchHtml(link.url);
-        visitedUrls.add(link.url);
-        budget.recordFetch();
+    const link = frontier.shift()!;
+    const norm = link.url.split("?")[0].split("#")[0].replace(/\/$/, "");
+    if (visitedUrls.has(norm)) continue;
 
-        const linkCleaned = cleanHtml(linkHtml);
-        if (linkCleaned.length < 100) continue;
+    const lfStart = Date.now();
+    try {
+      let linkHtml = await fetchHtml(link.url);
+      visitedUrls.add(norm);
+      budget.recordFetch();
 
-        const incomplete = events
-          .map((e, i) => evaluateCompleteness(e, i, weights))
-          .filter(c => c.needsFollow)
-          .map(c => ({ title: c.title, missingFields: c.missingFields }));
+      // JSON-LD from subpage
+      const subpageLd = extractJsonLd(linkHtml);
 
-        if (incomplete.length === 0) break;
+      let linkCleaned = cleanHtml(linkHtml);
 
-        const targetedResult = await callDeepSeek(
-          buildTargetedExtractionPrompt(venue.name, incomplete, isClassDomain),
-          linkCleaned,
-          4096,
-        );
-        budget.recordAiCall(targetedResult.inputTokens, targetedResult.outputTokens);
-        totalInputTokens += targetedResult.inputTokens;
-        totalOutputTokens += targetedResult.outputTokens;
-
-        let fieldsFilledIn: string[] = [];
-        if (targetedResult.content) {
-          try {
-            const parsed = JSON.parse(targetedResult.content);
-            const enrichments: TargetedEnrichment[] = parsed.enrichments ?? [];
-            const merged = mergeTargetedExtraction(events, enrichments);
-            events = merged.events;
-            fieldsFilledIn = merged.fieldsFilledIn;
-          } catch { /* parse error */ }
-        }
-
-        steps.push({
-          step: "link_follow", url: link.url, aiCalls: 1,
-          inputTokens: targetedResult.inputTokens, outputTokens: targetedResult.outputTokens,
-          eventsAffected: fieldsFilledIn.length, fieldsFilledIn, durationMs: Date.now() - lfStart,
-        });
-
-        if (fieldsFilledIn.length === 0) noProgressCount++;
-        else noProgressCount = 0;
-
-      } catch (e) {
-        console.warn(`[scraper-v2] Link follow failed for ${link.url}:`, e);
-        continue;
+      // Jina fallback for thin subpages
+      if (linkCleaned.length < 300 && budget.canAffordFetch()) {
+        try {
+          const jinaRes = await fetchHtml(`https://r.jina.ai/${link.url}`);
+          budget.recordFetch();
+          if (jinaRes.length > linkCleaned.length) linkCleaned = jinaRes;
+        } catch { /* Jina failed, use raw */ }
       }
+
+      if (linkCleaned.length < 100) continue;
+
+      // Discovery mode: use full extraction prompt to find NEW events
+      const extractResult = await callDeepSeek(buildExtractionPrompt(venue.name), linkCleaned);
+      budget.recordAiCall(extractResult.inputTokens, extractResult.outputTokens);
+      totalInputTokens += extractResult.inputTokens;
+      totalOutputTokens += extractResult.outputTokens;
+
+      let newEventsFound = 0;
+      let fieldsFilledIn: string[] = [];
+
+      if (extractResult.content) {
+        try {
+          const parsed = JSON.parse(extractResult.content);
+          const pageEvents: Pass1Event[] = parsed.events ?? [];
+
+          for (const pe of pageEvents) {
+            pe.source_url = link.url;
+            const key = pe.title.toLowerCase();
+            const existingIdx = events.findIndex(e => e.title.toLowerCase() === key);
+
+            if (existingIdx >= 0) {
+              // Enrich existing event with any new fields
+              const existing = events[existingIdx];
+              if (!existing.start_date && pe.start_date) { existing.start_date = pe.start_date; fieldsFilledIn.push("start_date"); }
+              if (!existing.end_date && pe.end_date) { existing.end_date = pe.end_date; fieldsFilledIn.push("end_date"); }
+              if (existing.price_min == null && pe.price_min != null) { existing.price_min = pe.price_min; fieldsFilledIn.push("price_min"); }
+              if (existing.price_max == null && pe.price_max != null) { existing.price_max = pe.price_max; fieldsFilledIn.push("price_max"); }
+              if (!existing.ticket_url && pe.ticket_url) { existing.ticket_url = pe.ticket_url; fieldsFilledIn.push("ticket_url"); }
+              if (!existing.show_times && pe.show_times) { existing.show_times = pe.show_times; fieldsFilledIn.push("show_times"); }
+              if (!existing.photo_url && pe.photo_url) { existing.photo_url = pe.photo_url; fieldsFilledIn.push("photo_url"); }
+              if (!existing.instructor_name && pe.instructor_name) { existing.instructor_name = pe.instructor_name; fieldsFilledIn.push("instructor_name"); }
+              if (!existing.skill_level && pe.skill_level) { existing.skill_level = pe.skill_level; fieldsFilledIn.push("skill_level"); }
+              if (existing.session_count == null && pe.session_count != null) { existing.session_count = pe.session_count; fieldsFilledIn.push("session_count"); }
+              if (!existing.class_format && pe.class_format) { existing.class_format = pe.class_format; fieldsFilledIn.push("class_format"); }
+              if (!existing.schedule && pe.schedule) { existing.schedule = pe.schedule; fieldsFilledIn.push("schedule"); }
+              const sources = foundByMap.get(key);
+              if (sources) sources.add(`subpage:${link.url}`);
+            } else {
+              // New event discovered on subpage
+              events.push(pe);
+              foundByMap.set(key, new Set([`subpage:${link.url}`]));
+              newEventsFound++;
+            }
+          }
+
+          // Merge JSON-LD from subpage
+          for (const ld of subpageLd) {
+            if (!ld.name) continue;
+            const match = events.find(e => e.title.toLowerCase() === ld.name!.toLowerCase());
+            if (match) {
+              if (ld.startDate && !match.start_date) match.start_date = ld.startDate;
+              if (ld.endDate && !match.end_date) match.end_date = ld.endDate;
+              if (ld.price != null && match.price_min == null) { match.price_min = ld.price; match.price_max = ld.price; }
+              if (ld.url && !match.ticket_url) match.ticket_url = ld.url;
+              if (ld.image && !match.photo_url) match.photo_url = ld.image;
+            }
+          }
+        } catch { /* parse error */ }
+      }
+
+      // Extract links from THIS subpage and add to frontier (BFS)
+      const subpageLinks = extractCandidateLinks(linkHtml, link.url, events.map(e => e.title), domain);
+      for (const sl of subpageLinks) {
+        const slNorm = sl.url.split("?")[0].split("#")[0].replace(/\/$/, "");
+        if (!visitedUrls.has(slNorm) && !frontier.some(f => f.url.split("?")[0].split("#")[0].replace(/\/$/, "") === slNorm)) {
+          frontier.push(sl);
+        }
+      }
+      frontier.sort((a, b) => b.score - a.score);
+
+      steps.push({
+        step: "link_follow", url: link.url, aiCalls: 1,
+        inputTokens: extractResult.inputTokens, outputTokens: extractResult.outputTokens,
+        eventsAffected: newEventsFound + fieldsFilledIn.length, fieldsFilledIn, durationMs: Date.now() - lfStart,
+      });
+
+      console.log(`[scraper-v3] ${venue.name}: ${link.url} → ${newEventsFound} new, ${fieldsFilledIn.length} enriched (frontier: ${frontier.length})`);
+
+    } catch (e) {
+      console.warn(`[scraper-v3] Link follow failed for ${link.url}:`, e);
+      continue;
     }
   }
 
+  if (frontier.length === 0 && !budget.stopReason) budget.setStopReason("frontier_exhausted");
   const completenessAfterFollows = averageCompleteness(events, weights);
 
   // STEP 4: Conditional verification
   let mergedEvents: MergedEvent[];
 
-  if (budget.canAffordAiCall()) {
+  // STEP 3: Verify ALL events (no dateless filter — FR-08)
+  if (events.length > 0 && budget.canAffordAiCall()) {
     const vStart = Date.now();
     try {
-      const eventsForVerify = events.filter(e => e.start_date != null);
-      const eventsSkipVerify = events.filter(e => e.start_date == null);
+      const pass2Result = await callDeepSeek(
+        buildVerificationPrompt(venue.name, events),
+        "Verify and enrich these events.",
+      );
+      budget.recordAiCall(pass2Result.inputTokens, pass2Result.outputTokens);
+      totalInputTokens += pass2Result.inputTokens;
+      totalOutputTokens += pass2Result.outputTokens;
 
-      if (eventsForVerify.length > 0) {
-        const pass2Result = await callDeepSeek(
-          buildVerificationPrompt(venue.name, eventsForVerify),
-          "Verify and enrich these events.",
-        );
-        budget.recordAiCall(pass2Result.inputTokens, pass2Result.outputTokens);
-        totalInputTokens += pass2Result.inputTokens;
-        totalOutputTokens += pass2Result.outputTokens;
-
-        let pass2Events: Pass2Verification[] = [];
-        if (pass2Result.content) {
-          try {
-            const parsed = JSON.parse(pass2Result.content);
-            pass2Events = parsed.events ?? [];
-          } catch { /* parse error */ }
-        }
-
-        const verifiedMerged = mergeExtractionResults(eventsForVerify, pass2Events, weights);
-        const unverifiedMerged = eventsSkipVerify.map((p1, i) => {
-          const comp = evaluateCompleteness(p1, i, weights);
-          return {
-            ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
-            description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
-            confidence: 0.4, extraction_status: "no_dates_on_site", missing_fields: comp.missingFields, found_by: [],
-            instructor_name: p1.instructor_name ?? null, skill_level: p1.skill_level ?? null,
-            session_count: p1.session_count ?? null, class_format: p1.class_format ?? null,
-          } as MergedEvent;
-        });
-        mergedEvents = [...verifiedMerged, ...unverifiedMerged];
-
-        steps.push({
-          step: "verify", url: "", aiCalls: 1,
-          inputTokens: pass2Result.inputTokens, outputTokens: pass2Result.outputTokens,
-          eventsAffected: verifiedMerged.length, fieldsFilledIn: ["description", "genre_tags"], durationMs: Date.now() - vStart,
-        });
-      } else {
-        mergedEvents = events.map((p1, i) => {
-          const comp = evaluateCompleteness(p1, i, weights);
-          return {
-            ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
-            description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
-            confidence: 0.4, extraction_status: "no_dates_on_site", missing_fields: comp.missingFields, found_by: [],
-            instructor_name: p1.instructor_name ?? null, skill_level: p1.skill_level ?? null,
-            session_count: p1.session_count ?? null, class_format: p1.class_format ?? null,
-          } as MergedEvent;
-        });
+      let pass2Events: Pass2Verification[] = [];
+      if (pass2Result.content) {
+        try {
+          const parsed = JSON.parse(pass2Result.content);
+          pass2Events = parsed.events ?? [];
+        } catch { /* parse error */ }
       }
+
+      mergedEvents = mergeExtractionResults(events, pass2Events, weights);
+
+      steps.push({
+        step: "verify", url: "", aiCalls: 1,
+        inputTokens: pass2Result.inputTokens, outputTokens: pass2Result.outputTokens,
+        eventsAffected: mergedEvents.length, fieldsFilledIn: ["description", "genre_tags"], durationMs: Date.now() - vStart,
+      });
     } catch (pass2Error) {
-      console.error(`[scraper-v2] Verify failed for ${venue.name}:`, pass2Error);
+      console.error(`[scraper-v3] Verify failed for ${venue.name}:`, pass2Error);
       mergedEvents = events.map((p1, i) => {
         const comp = evaluateCompleteness(p1, i, weights);
         return {
           ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
-          description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
+          description: null, genre_tags: [] as string[], cast_members: null, photo_url: p1.photo_url ?? null,
           confidence: 0.5, extraction_status: comp.needsFollow ? "partial" : "complete", missing_fields: comp.missingFields, found_by: [],
+          source_url: p1.source_url ?? venue.calendar_url,
           instructor_name: p1.instructor_name ?? null, skill_level: p1.skill_level ?? null,
           session_count: p1.session_count ?? null, class_format: p1.class_format ?? null,
         } as MergedEvent;
@@ -506,10 +624,11 @@ export async function executeStrategyTree(
       const comp = evaluateCompleteness(p1, i, weights);
       return {
         ...p1, start_date: p1.start_date ?? null, end_date: p1.end_date ?? null,
-        description: null, genre_tags: [] as string[], cast_members: null, photo_url: null,
+        description: null, genre_tags: [] as string[], cast_members: null, photo_url: p1.photo_url ?? null,
         confidence: 0.4,
         extraction_status: comp.needsFollow ? "budget_exhausted" : "complete",
         missing_fields: comp.missingFields, found_by: [],
+        source_url: p1.source_url ?? venue.calendar_url,
         instructor_name: p1.instructor_name ?? null, skill_level: p1.skill_level ?? null,
         session_count: p1.session_count ?? null, class_format: p1.class_format ?? null,
       } as MergedEvent;
@@ -529,6 +648,7 @@ export async function executeStrategyTree(
     trace: buildTrace(steps, budget, [...visitedUrls], completenessBeforeFollows, completenessAfterFollows),
     totalInputTokens,
     totalOutputTokens,
+    recoveredUrl,
   };
 }
 
@@ -544,7 +664,7 @@ function buildTrace(
     totalAiCalls: budget.aiCallsMade,
     totalFetches: budget.fetchesMade,
     budgetUsed: budget.spent,
-    budgetLimit: 0.012,
+    budgetLimit: 0.10,
     linksFollowed: linksFollowed.slice(1),
     completenessBeforeFollows: before,
     completenessAfterFollows: after,
