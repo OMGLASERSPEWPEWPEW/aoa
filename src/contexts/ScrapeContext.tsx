@@ -46,11 +46,27 @@ export interface ScraperProgress {
   error?: string
 }
 
+export interface ModelResult {
+  model: string
+  events_found: number
+  duration_ms: number
+  status: string
+}
+
 export interface RecentSchoolEntry {
   name: string
   status: string
   eventsFound: number
   eventsCreated: number
+  durationMs?: number
+  errorMessage?: string | null
+  trace?: {
+    stopReason: string | null
+    aiCalls: number | null
+    fetches: number | null
+    durationMs: number
+    modelResults: ModelResult[] | null
+  } | null
 }
 
 export interface ClassDiscoveryProgress {

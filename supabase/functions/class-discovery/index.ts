@@ -537,12 +537,42 @@ async function processFirstSchool(
   const newEventsUpdated = (currentJob?.events_updated ?? 0) + result.events_updated;
   const newErrors = (currentJob?.errors_count ?? 0) + (result.status !== "success" ? 1 : 0);
 
+  const trace = result.strategy_links_followed !== undefined ? {
+    stopReason: result.strategy_stop_reason ?? null,
+    aiCalls: (result as any).ai_input_tokens !== undefined ? Math.round(((result as any).ai_input_tokens + (result as any).ai_output_tokens) / 1000) : null,
+    fetches: result.strategy_links_followed ?? 0,
+    durationMs: result.duration_ms,
+    modelResults: null as unknown,
+  } : null;
+
+  // Pull model results from scrape_logs (written by processVenue)
+  if (trace) {
+    const { data: logRow } = await supabase
+      .from("scrape_logs")
+      .select("strategy_trace")
+      .eq("venue_id", school.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (logRow?.strategy_trace) {
+      const steps = (logRow.strategy_trace as any).steps ?? [];
+      const initialStep = steps.find((s: any) => s.step === "initial_extract");
+      trace.modelResults = initialStep?.modelResults ?? null;
+      trace.aiCalls = (logRow.strategy_trace as any).totalAiCalls ?? trace.aiCalls;
+      trace.fetches = (logRow.strategy_trace as any).totalFetches ?? trace.fetches;
+      trace.stopReason = (logRow.strategy_trace as any).stopReason ?? trace.stopReason;
+    }
+  }
+
   const recentSchools = (currentJob?.recent_schools as Array<Record<string, unknown>> ?? []);
   recentSchools.unshift({
     name: school.name,
     status: result.status,
     eventsFound: result.events_found,
     eventsCreated: result.events_created,
+    durationMs: result.duration_ms,
+    errorMessage: result.error_message,
+    trace,
   });
   if (recentSchools.length > 20) recentSchools.length = 20;
 

@@ -4,6 +4,17 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.19.5',
+    date: '2026-08-18',
+    title: 'Model-level detail in class scrape dashboard',
+    summary: 'Each school row now shows which AI model won, how many events each found, duration, pages crawled, and stop reason.',
+    details: [
+      'New: model race results per school — DS/Gem/GPT/Haiku with events found, duration, timeout/error indicators',
+      'New: AI calls, pages crawled, duration, stop reason per school',
+      'New: error messages shown inline for failed schools',
+    ],
+  },
+  {
     version: '0.19.4',
     date: '2026-08-18',
     title: 'Fix Perplexity model name + discovery diagnostics',

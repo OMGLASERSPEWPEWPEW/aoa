@@ -1,4 +1,4 @@
-import { useScrape, type RecentSchoolEntry } from '../contexts/ScrapeContext'
+import { useScrape, type RecentSchoolEntry, type ModelResult } from '../contexts/ScrapeContext'
 
 const serif = { fontFamily: "'Newsreader', Georgia, serif" } as const
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
@@ -6,8 +6,6 @@ const mono = { fontFamily: "'Courier Prime', monospace" } as const
 const AMBER = '#D4A017'
 const AMBER_DIM = '#8a6a10'
 const AMBER_BG = '#1a1005'
-
-const PIPELINE_STEPS = ['FETCH', 'EXTRACT', 'FOLLOW', 'VERIFY', 'SEARCH'] as const
 
 function ProgressArc({ processed, total }: { processed: number; total: number }) {
   const pct = total > 0 ? Math.min(processed / total, 1) : 0
@@ -49,71 +47,73 @@ function ProgressArc({ processed, total }: { processed: number; total: number })
   )
 }
 
-function PipelineDots({ stage }: { stage: number }) {
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`
+  if (ms < 60000) return `${(ms / 1000).toFixed(0)}s`
+  return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`
+}
+
+function ModelResultsRow({ results }: { results: ModelResult[] }) {
+  const sorted = [...results].sort((a, b) => b.events_found - a.events_found)
+  const winner = sorted[0]
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, padding: '16px 20px' }}>
-      {PIPELINE_STEPS.map((step, i) => {
-        const completed = i < stage
-        const active = i === stage
-        const future = i > stage
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 3 }}>
+      {sorted.map((r) => {
+        const isWinner = r === winner && r.events_found > 0
+        const color = r.status === 'ok' ? (isWinner ? AMBER : 'var(--ink-faint)')
+          : r.status === 'timeout' ? '#ef4444'
+          : 'var(--ink-whisper)'
+        const label = r.model.replace('deepseek-v4-flash', 'DS').replace('gemini-3.5-flash', 'Gem').replace('gpt-5.6-luna', 'GPT').replace('claude-haiku-4-5', 'Haiku')
         return (
-          <div key={step} style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 48 }}>
-              <div style={{
-                width: 12, height: 12, borderRadius: '50%',
-                background: completed ? AMBER : active ? AMBER : 'var(--rule)',
-                boxShadow: active ? `0 0 8px ${AMBER}` : 'none',
-                transition: 'all 0.5s ease',
-                animation: active ? 'class-pipeline-pulse 2s ease-in-out infinite' : undefined,
-              }} />
-              <div style={{
-                ...mono, fontSize: 7, letterSpacing: '0.12em',
-                color: completed ? AMBER : future ? 'var(--ink-whisper)' : 'var(--ink-faint)',
-                marginTop: 6, transition: 'color 0.5s ease',
-              }}>
-                {step}
-              </div>
-            </div>
-            {i < PIPELINE_STEPS.length - 1 && (
-              <div style={{
-                width: 20, height: 1,
-                background: completed ? AMBER : 'var(--rule)',
-                marginBottom: 16, transition: 'background 0.5s ease',
-              }} />
-            )}
-          </div>
+          <span key={r.model} style={{
+            ...mono, fontSize: 8, color,
+            border: isWinner ? `1px solid ${AMBER}` : '1px solid var(--rule)',
+            borderRadius: 2, padding: '1px 4px',
+            background: isWinner ? '#2a1a05' : 'transparent',
+          }}>
+            {label} {r.events_found} · {formatDuration(r.duration_ms)}
+            {r.status === 'timeout' && ' ⏱'}
+            {r.status === 'error' && ' ✗'}
+          </span>
         )
       })}
     </div>
   )
 }
 
-function ActivityLog({ schools }: { schools: RecentSchoolEntry[] }) {
-  if (schools.length === 0) return null
+function SchoolRow({ s }: { s: RecentSchoolEntry }) {
+  const isError = s.status !== 'success'
+  const statusColor = isError ? '#ef4444' : AMBER
+
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
-      <div style={{ ...mono, fontSize: 8, letterSpacing: '0.12em', color: 'var(--ink-faint)', marginBottom: 8 }}>
-        RECENT SCHOOLS
-      </div>
-      {schools.map((s, i) => (
-        <div key={i} style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '6px 0', borderBottom: '1px solid var(--rule)',
-        }}>
-          <div style={{ ...mono, fontSize: 10, color: 'var(--ink)' }}>{s.name}</div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {s.eventsFound > 0 && (
-              <span style={{ ...mono, fontSize: 9, color: AMBER }}>{s.eventsCreated} new</span>
-            )}
-            <span style={{
-              ...mono, fontSize: 8, letterSpacing: '0.08em',
-              color: s.status === 'success' ? 'var(--ink-faint)' : '#ef4444',
-            }}>
-              {s.status === 'success' ? `${s.eventsFound} found` : s.status.toUpperCase()}
-            </span>
-          </div>
+    <div style={{
+      padding: '8px 0', borderBottom: '1px solid var(--rule)',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <div style={{ ...mono, fontSize: 11, color: 'var(--ink)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {s.name}
         </div>
-      ))}
+        <div style={{ ...mono, fontSize: 9, color: statusColor, marginLeft: 8, flexShrink: 0 }}>
+          {isError
+            ? s.status.toUpperCase().replace('_', ' ')
+            : `${s.eventsCreated} new ${s.eventsFound} found`}
+        </div>
+      </div>
+
+      {s.trace && (
+        <div style={{ ...mono, fontSize: 8, color: 'var(--ink-faint)', marginTop: 2 }}>
+          {s.trace.aiCalls} AI calls · {s.trace.fetches} pages · {formatDuration(s.trace.durationMs)} · {s.trace.stopReason ?? ''}
+        </div>
+      )}
+
+      {s.trace?.modelResults && <ModelResultsRow results={s.trace.modelResults} />}
+
+      {s.errorMessage && (
+        <div style={{ ...mono, fontSize: 8, color: '#ef4444', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {s.errorMessage}
+        </div>
+      )}
     </div>
   )
 }
@@ -146,8 +146,6 @@ export function ClassDiscoveryDashboard({ onMinimize }: { onMinimize: () => void
   const isDone = cd.phase === 'done'
   const isError = cd.phase === 'error'
 
-  const pipelineStage = isDone ? 5 : cd.newSchoolsQueued > 0 ? 4 : cd.schoolsScraped > 0 ? 3 : 1
-
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 200,
@@ -158,7 +156,7 @@ export function ClassDiscoveryDashboard({ onMinimize }: { onMinimize: () => void
         padding: '12px 16px', borderBottom: `1px solid ${AMBER_DIM}`, background: AMBER_BG,
       }}>
         <div style={{ ...mono, fontSize: 9, letterSpacing: '0.12em', color: AMBER }}>
-          {isDone ? 'DISCOVERY COMPLETE' : isError ? 'DISCOVERY ERROR' : 'DISCOVERING CLASSES'}
+          {isDone ? 'SCRAPE COMPLETE' : isError ? 'SCRAPE ERROR' : 'SCRAPING CLASSES'}
         </div>
         <button onClick={onMinimize} style={{
           ...mono, fontSize: 9, letterSpacing: '0.08em', color: AMBER_DIM,
@@ -205,11 +203,16 @@ export function ClassDiscoveryDashboard({ onMinimize }: { onMinimize: () => void
           </div>
         )}
 
-        {cd.phase === 'scraping' && <PipelineDots stage={pipelineStage} />}
-
         <div style={{ height: 12 }} />
 
-        <ActivityLog schools={cd.recentSchools} />
+        {cd.recentSchools.length > 0 && (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
+            <div style={{ ...mono, fontSize: 8, letterSpacing: '0.12em', color: 'var(--ink-faint)', marginBottom: 8 }}>
+              RECENT SCHOOLS
+            </div>
+            {cd.recentSchools.map((s, i) => <SchoolRow key={i} s={s} />)}
+          </div>
+        )}
       </div>
 
       <div style={{ borderTop: `1px solid ${AMBER_DIM}`, background: AMBER_BG }}>
@@ -224,7 +227,6 @@ export function ClassDiscoveryDashboard({ onMinimize }: { onMinimize: () => void
 
       <style>{`
         @keyframes class-shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
-        @keyframes class-pipeline-pulse { 0%, 100% { opacity: 1; transform: scale(1) } 50% { opacity: 0.6; transform: scale(1.3) } }
       `}</style>
     </div>
   )
