@@ -121,11 +121,12 @@ If `CODE_CHANGED` is non-empty:
 
 1. Read current version from `package.json`
 2. Read the first entry in `src/data/changelog.ts` — check if its `version` matches `package.json` and its `date` is today
-3. If EITHER check fails (version mismatch or stale date):
+3. **Check if this version is already deployed:** run `git log origin/main --oneline -1 -- package.json` and compare. If the remote already has a commit with this version (i.e., the version in `package.json` matches what's on `origin/main`), then code changes since that push need a new bump — even if `package.json` and `changelog.ts` agree locally.
+4. If ANY check fails (version mismatch, stale date, OR version already pushed to remote):
    - **Auto-determine bump type:**
      - New files created in `src/` or `supabase/functions/` → **minor** bump (0.X.0 → 0.X+1.0)
      - Only modifications to existing files → **patch** bump (0.x.Y → 0.x.Y+1)
-   - **Prompt the author:** "Code changes detected but version not bumped. Bump to 0.X.Y? [yes / skip]"
+   - **Prompt the author:** "Code changes detected but version not bumped (already deployed as X.Y.Z). Bump to 0.X.Y? [yes / skip]"
    - If yes: bump `package.json`, prepend changelog entry to `src/data/changelog.ts`, include as the FIRST commit in the proposal (`chore(build): bump version to X.Y.Z`)
    - If skip: proceed without bump (author's choice, but warn)
 
