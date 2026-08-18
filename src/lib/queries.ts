@@ -38,11 +38,15 @@ export async function fetchPlays(): Promise<Play[]> {
 }
 
 export async function fetchPlayById(id: string): Promise<Play | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('plays')
     .select('*')
     .eq('id', id)
-    .single()
+    .maybeSingle()
+  if (error) {
+    console.error('[queries] fetchPlayById:', error.message)
+    return null
+  }
   return (data as Play | null) ?? null
 }
 
@@ -53,10 +57,21 @@ export async function fetchPlayById(id: string): Promise<Play | null> {
 export async function fetchEventsWithJoins(): Promise<Event[]> {
   const { data, error } = await supabase
     .from('events')
-    .select('*, venue:venues(*), play:plays(*)')
+    .select('*, venue:venues(*)')
     .order('start_date', { ascending: true })
   if (error) console.error('[queries] fetchEventsWithJoins:', error.message)
-  return (data ?? []) as Event[]
+  if (!data) return []
+
+  const playIds = [...new Set(data.filter(e => e.play_id).map(e => e.play_id))]
+  let playsMap: Record<string, Play> = {}
+  if (playIds.length > 0) {
+    const { data: plays } = await supabase.from('plays').select('*').in('id', playIds)
+    if (plays) {
+      for (const p of plays) playsMap[p.id] = p as Play
+    }
+  }
+
+  return data.map(e => ({ ...e, play: e.play_id ? playsMap[e.play_id] ?? null : null })) as Event[]
 }
 
 export async function fetchEventsForMap(): Promise<Event[]> {
@@ -69,12 +84,27 @@ export async function fetchEventsForMap(): Promise<Event[]> {
 }
 
 export async function fetchEventById(id: string): Promise<Event | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('events')
-    .select('*, venue:venues(*), play:plays(*)')
+    .select('*, venue:venues(*)')
     .eq('id', id)
-    .single()
-  return (data as Event | null) ?? null
+    .maybeSingle()
+  if (error) {
+    console.error('[queries] fetchEventById:', error.message)
+    return null
+  }
+  if (!data) return null
+
+  let play = null
+  if (data.play_id) {
+    const { data: p } = await supabase
+      .from('plays')
+      .select('*')
+      .eq('id', data.play_id)
+      .maybeSingle()
+    play = p ?? null
+  }
+  return { ...data, play } as Event
 }
 
 export async function fetchEventsByPlayId(playId: string): Promise<Event[]> {

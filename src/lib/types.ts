@@ -82,6 +82,7 @@ export interface Event {
   skill_level: 'beginner' | 'intermediate' | 'advanced' | 'all-levels' | 'drop-in' | null
   session_count: number | null
   class_format: 'ongoing' | 'workshop' | 'intensive' | 'drop-in' | 'series' | null
+  source_url: string | null
   created_at: string
   venue?: Venue
   play?: Play

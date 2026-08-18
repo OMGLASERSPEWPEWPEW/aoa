@@ -11,7 +11,7 @@ import { ReviewsSection } from '../components/production/ReviewsSection'
 export function ProductionDetail() {
   const { eventId } = useParams<{ eventId: string }>()
   const navigate = useNavigate()
-  const { data, isLoading: loading } = useProductionDetail(eventId)
+  const { data, isLoading: loading, isError } = useProductionDetail(eventId)
   const { reviews, loading: reviewsLoading } = useReviews(eventId ?? '')
   const { addToWatchlist, getStatus } = useWatchlist()
 
@@ -19,6 +19,14 @@ export function ProductionDetail() {
     return (
       <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
         Loading...
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full" style={{ color: 'var(--ink-faint)' }}>
+        Unable to load this show. Please try again.
       </div>
     )
   }
@@ -54,8 +62,44 @@ export function ProductionDetail() {
           ? `$${event.price_min}`
           : `$${event.price_min ?? 0}–$${event.price_max}`
 
+  const eventUrl = event.ticket_url && /^https?:\/\//i.test(event.ticket_url) && !event.ticket_url.includes('theatreinchicago')
+    ? event.ticket_url
+    : event.source_url && /^https?:\/\//i.test(event.source_url)
+      ? event.source_url
+      : venue?.website_url && /^https?:\/\//i.test(venue.website_url)
+        ? venue.website_url
+        : null
+
   return (
     <div className="flex flex-col h-full overflow-y-auto">
+      {/* Back button */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '10px 16px',
+          background: 'color-mix(in srgb, var(--bg) 85%, transparent)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          border: 'none',
+          borderBottom: '1px solid var(--rule)',
+          cursor: 'pointer',
+          fontFamily: "'Courier Prime', monospace",
+          fontSize: 10,
+          letterSpacing: '0.08em',
+          color: 'var(--ink-dim)',
+          width: '100%',
+          textAlign: 'left',
+        }}
+      >
+        ← BACK
+      </button>
+
       <HeroImage photoUrl={event.photo_url} venuePhotoUrl={venue?.photo_url} />
 
       <TitleBlock
@@ -66,6 +110,7 @@ export function ProductionDetail() {
         priceStr={priceStr}
         hasPWYC={hasPWYC}
         watchlistStatus={status}
+        eventUrl={eventUrl}
         onWantToSee={() => addToWatchlist(event.id)}
         onLogSeen={() => navigate(`/app/log/${event.id}`)}
         onTickets={() => {

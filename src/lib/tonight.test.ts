@@ -11,7 +11,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     ticket_url: null, hottix_available: false, photo_url: null, cast_members: null,
     play_id: null, extraction_confidence: null,
     instructor_name: null, skill_level: null, session_count: null, class_format: null,
-    created_at: '',
+    source_url: null, created_at: '',
     ...overrides,
   }
 }
