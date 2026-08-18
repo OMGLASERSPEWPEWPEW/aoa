@@ -4,6 +4,21 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.19.1',
+    date: '2026-08-18',
+    title: '4-model parallel extraction — DeepSeek, Gemini, OpenAI, Haiku race on every scrape',
+    summary: 'Every extraction now fires 4 flash models in parallel and picks the winner. Removes timeouts that were killing class scrapes. BFS crawls subpages even with 0 initial events.',
+    details: [
+      'New: 4 flash models race in parallel on every extraction (DeepSeek V4 Flash, Gemini 3.5 Flash, GPT-5.6 Luna, Claude Haiku 4.5)',
+      'New: model results logged in strategy trace for reliability ranking over time',
+      'Fix: fetch timeout raised from 15s to 45s (was killing large school pages)',
+      'Fix: AI call timeout raised from 30s to 55s (was aborting before extraction finished)',
+      'Fix: Jina Reader threshold raised to 2000 chars for class domain (catches JS-rendered SPAs like Second City)',
+      'Fix: BFS crawls subpages even when seed page returns 0 events (class index pages link to detail pages)',
+      'Fix: budget wall clock raised from 60s to 180s, max cost from $0.10 to $0.50',
+    ],
+  },
+  {
     version: '0.19.0',
     date: '2026-08-18',
     title: 'Class discovery pipeline fix — find new schools automatically',
