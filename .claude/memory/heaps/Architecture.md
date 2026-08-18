@@ -4304,3 +4304,123 @@ Art of Art is building what brand architecture calls an "endorsed brand" model i
 
 ---
 
+## 2026-08-17_15-55-36 (session d98b3cc0)
+
+**assistant**: Build passes. Now let me create the migration for the Acting Studio Chicago data fix and bump the version.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now bump version and changelog.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now push the migration to the database and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_16-24-34 (session d98b3cc0)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Test file needs the new field. Let me fix it.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Let me bump the version and deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_16-38-10 (session d98b3cc0)
+
+**assistant**: [tool: Read]
+
+**assistant**: I can see a likely issue — the Annoyance Theatre URL redirects to a completely different path (`/classes/` → `/training`) and iO redirects from `/chicago/classes/` to just `/classes/`. These should follow automatically via Deno `fetch()`, but some of the redirect chains might be causing issues. Also, the function might have a runtime error in my new `processClassSessions` wiring code that's crashing the whole stream.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now harden the class-discovery function's error handling.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now push migration and redeploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_17-21-50 (session d98b3cc0)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me verify the build compiles (frontend — Edge Functions are Deno and deploy separately).
+
+**assistant**: [tool: Bash]
+
+**assistant**: Frontend builds clean. Now deploy the Edge Functions.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Both Edge Functions deployed. Now bump version and deploy frontend.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_21-15-34 (session d98b3cc0)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good. Now build frontend to verify, bump version, deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Now deploy the Edge Functions with the new url-resolver.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now bump version and deploy frontend.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+

@@ -1427,3 +1427,135 @@ Today's evolution is my first journal entry, written after observing rather than
 
 ---
 
+## 2026-08-17_13-10-34 (session d98b3cc0)
+
+**assistant**: Version bump is already at 0.16.4 with a matching changelog entry — no bump needed.
+
+**Untracked files to flag:**
+- `docs/design/*.zip`, `docs/design/aoa - design two/`, `docs/design/v3/`, `docs/design/v4/`, `docs/design/prototypes/pitch-deck.html` — design assets, possibly large
+- `qa/` — QA directory
+- `src/lib/genre.test.ts`, `src/lib/settingsStorage.test.ts` — test files
+- `supabase/migrations/20260811000001_reset_scraped_at.sql` — migration from Aug 11
+
+These all look like leftovers from pr...
+
+**user**: yes
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_15-55-36 (session d98b3cc0)
+
+**assistant**: Build passes. Now let me create the migration for the Acting Studio Chicago data fix and bump the version.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now bump version and changelog.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now push the migration to the database and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_15-59-44 (session d98b3cc0)
+
+**assistant**: Version already bumped to 0.16.5 with matching changelog. Untracked files from prior sessions excluded (same set as last commit).
+
+**Proposed commits (3):**
+
+**1.** `fix(gateway): decouple play join from event detail query (v0.16.5)`
+
+> Why: The play:plays(*) embed in fetchEventById caused every show detail page to return "Show not found." All 3 external models identified the plays join as the culprit — decoupling it makes the event fetch immune to play table issues.
+> Files: queries.ts, Product...
+
+**user**: so how does this work, will things work or do things need to be re-scraped? Is this because our scrapping was wrong or a way we were getting info from db to frontend
+
+---
+
+## 2026-08-17_17-09-51 (session d98b3cc0)
+
+**assistant**: [tool: Bash]
+
+**assistant**: All three docs created. Now the QA doc and roadmap update.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me do the handoff review — verify the documentation package is complete.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_20-55-41 (session d98b3cc0)
+
+**user**: Base directory for this skill: /Users/dericortiz/.claude/skills/new-feature
+
+# New Feature Documentation Workflow
+
+You are executing the **new feature documentation workflow**. This skill produces complete, implementation-ready documentation — NOT code. The output is a package of specs so detailed and unambiguous that a separate agent (or human) can implement the feature correctly without needing to ask questions, take shortcuts, or invent requirements.
+
+**This skill does NOT implement features....
+
+**assistant**: This is a **Medium** update to an existing Large feature — updating the scraper v3 docs with the missing URL resolution capability. Let me work through the phases.
+
+**Phase 1: Strategy** — This directly addresses the #1 blocker on the scraper. 47 commits, 18 days, still can't reliably scrape. The roadmap has scraper v3 as P0 In Progress. This completes it.
+
+Let me explore the existing code and docs to understand what needs updating.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Good exploration. Now let me produce the updated documentation. I'll update the PRD, graph, QA, and ADR in parallel.
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: All documentation updated. Let me verify the complete package and update the roadmap.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Edit]
+
+**assistant**: ## Documentation Package Complete
+
+| Document | Path | Lines | Status |
+|----------|------|-------|--------|
+| **PRD v1.1** | `.claude/docs/prd/scraper-v3.md` | 925 | Updated — 8 new FRs (FR-28 through FR-35), section 7.9, 3 new risks |
+| **Graph v3.1** | `docs/graphs/scraper-v3.md` | 1,391 | Updated — 4 new nodes, 2 new loop specs, Phase 1.5 added |
+| **QA** | `docs/qa/scraper-v3.md` | 117 | Updated — 15 new checkboxes for URL resolution |
+| **ADR 0007 v1.1** | `docs/adr/0007-completeness-drive...
+
+---
+

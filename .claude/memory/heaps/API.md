@@ -2836,3 +2836,105 @@ The NDJSON streaming endpoints and server-side key management are architecturall
 
 ---
 
+## 2026-08-17_16-47-07 (session d98b3cc0)
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: ## Diagnosis Panel Results
+
+**Models consulted:** GPT-5.6 Sol (0.98), Gemini 3.5 Flash (0.95), Claude Opus 4.8 (0.78), DeepSeek V4 Pro (failed to parse)
+
+### Consensus (3/3 agree)
+
+The scraper's core flaw is architectural: **it can only enrich events already discovered on the seed page — it cannot discover NEW events from followed links.** If a class only exists on a subpage (like `/adult-acting-classes/core`), the link follower visits it but only looks for fields to fill on events already known...
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: why do we have link limits? Like we want to store every class they have every play they have etc? Why limits?
+
+---
+
+## 2026-08-17_21-15-34 (session d98b3cc0)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Good. Now build frontend to verify, bump version, deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Now deploy the Edge Functions with the new url-resolver.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now bump version and deploy frontend.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-18_11-39-48 (session d98b3cc0)
+
+**assistant**: **v0.18.1** — deployed. Now try "Discover Classes" from the admin UI. Here's what the scraper will do differently for each failing school:
+
+| School | Old behavior | New behavior |
+|--------|-------------|-------------|
+| Second City (404) | Crash, 0 events | Try homepage → `/classes` → Perplexity → SerpAPI |
+| Steppenwolf (404) | Crash, 0 events | Try homepage → `/education` → Perplexity → SerpAPI |
+| Piven (404) | Crash, 0 events | Try homepage → Perplexity finds `/acting-classes/theatre-class...
+
+**user**: did we push this with /cap
+
+**assistant**: No, we didn't `/cap` yet. Let me run it now.
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+

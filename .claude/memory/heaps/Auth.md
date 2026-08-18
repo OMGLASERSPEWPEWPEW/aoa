@@ -2666,3 +2666,190 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
+## 2026-08-17_15-58-27 (session d98b3cc0)
+
+**assistant**: **v0.16.5** — deployed. Migration pushed.
+
+Here's what the panel found and what we fixed:
+
+**Root cause:** `fetchEventById` was the only query that joined `play:plays(*)` alongside `.single()`. When that join failed (all 3 models independently identified this), it returned `null` for the entire event — and the code silently swallowed the error. The map and Tonight queries worked because they only join venues, never plays.
+
+**What changed:**
+- **Decoupled play fetch** — event detail now fetches t...
+
+**user**: <command-message>cap</command-message>
+<command-name>/cap</command-name>
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_15-59-44 (session d98b3cc0)
+
+**assistant**: Version already bumped to 0.16.5 with matching changelog. Untracked files from prior sessions excluded (same set as last commit).
+
+**Proposed commits (3):**
+
+**1.** `fix(gateway): decouple play join from event detail query (v0.16.5)`
+
+> Why: The play:plays(*) embed in fetchEventById caused every show detail page to return "Show not found." All 3 external models identified the plays join as the culprit — decoupling it makes the event fetch immune to play table issues.
+> Files: queries.ts, Product...
+
+**user**: so how does this work, will things work or do things need to be re-scraped? Is this because our scrapping was wrong or a way we were getting info from db to frontend
+
+---
+
+## 2026-08-17_16-16-08 (session d98b3cc0)
+
+**assistant**: The function requires JWT verification. I need to use the anon key with an actual user token. Let me use the Supabase anon key properly.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The SCRAPER_SECRET was set via `supabase secrets set` and isn't stored locally. Let me deploy and verify on the app side first, then you can trigger the scraper from the admin UI. Let me deploy the frontend.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_16-38-10 (session d98b3cc0)
+
+**assistant**: [tool: Read]
+
+**assistant**: I can see a likely issue — the Annoyance Theatre URL redirects to a completely different path (`/classes/` → `/training`) and iO redirects from `/chicago/classes/` to just `/classes/`. These should follow automatically via Deno `fetch()`, but some of the redirect chains might be causing issues. Also, the function might have a runtime error in my new `processClassSessions` wiring code that's crashing the whole stream.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now harden the class-discovery function's error handling.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now push migration and redeploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-17_16-47-07 (session d98b3cc0)
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Bash]
+
+**assistant**: ## Diagnosis Panel Results
+
+**Models consulted:** GPT-5.6 Sol (0.98), Gemini 3.5 Flash (0.95), Claude Opus 4.8 (0.78), DeepSeek V4 Pro (failed to parse)
+
+### Consensus (3/3 agree)
+
+The scraper's core flaw is architectural: **it can only enrich events already discovered on the seed page — it cannot discover NEW events from followed links.** If a class only exists on a subpage (like `/adult-acting-classes/core`), the link follower visits it but only looks for fields to fill on events already known...
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: why do we have link limits? Like we want to store every class they have every play they have etc? Why limits?
+
+---
+
+## 2026-08-18_11-39-48 (session d98b3cc0)
+
+**assistant**: **v0.18.1** — deployed. Now try "Discover Classes" from the admin UI. Here's what the scraper will do differently for each failing school:
+
+| School | Old behavior | New behavior |
+|--------|-------------|-------------|
+| Second City (404) | Crash, 0 events | Try homepage → `/classes` → Perplexity → SerpAPI |
+| Steppenwolf (404) | Crash, 0 events | Try homepage → `/education` → Perplexity → SerpAPI |
+| Piven (404) | Crash, 0 events | Try homepage → Perplexity finds `/acting-classes/theatre-class...
+
+**user**: did we push this with /cap
+
+**assistant**: No, we didn't `/cap` yet. Let me run it now.
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
