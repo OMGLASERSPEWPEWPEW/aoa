@@ -45,7 +45,8 @@ npm run preview      # Preview production build
 supabase db push     # Push migrations to remote DB
 supabase functions serve  # Local edge functions
 supabase functions deploy <name>  # Deploy edge function
-vercel deploy --prod # Deploy to Vercel
+# Vercel auto-deploys on git push to main — do NOT run vercel deploy --prod manually
+# Use /cap to commit + push. The push IS the deploy.
 ```
 
 ## Database

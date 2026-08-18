@@ -535,9 +535,9 @@ function CoverageTab() {
             whiteSpace: 'nowrap',
           }}
         >
-          {progress.phase === 'discovering' && 'Discovering...'}
+          {progress.phase === 'discovering' && 'Finding...'}
           {progress.phase === 'enriching' && `Adding ${progress.promoted}...`}
-          {(progress.phase === 'idle' || progress.phase === 'done' || progress.phase === 'error') && 'Run Discovery'}
+          {(progress.phase === 'idle' || progress.phase === 'done' || progress.phase === 'error') && 'Find Venues'}
         </button>
         <button
           onClick={scraper.phase === 'scraping' ? () => setDashboardOpen(true) : handleRunScraper}
@@ -554,7 +554,7 @@ function CoverageTab() {
             whiteSpace: 'nowrap',
           }}
         >
-          {scraper.phase === 'scraping' ? `View Progress ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : ''}` : 'Run Scraper'}
+          {scraper.phase === 'scraping' ? `View Progress ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : ''}` : 'Scrape Shows'}
         </button>
         <button
           onClick={handleRunBackfill}
@@ -574,33 +574,53 @@ function CoverageTab() {
           {backfillRunning ? 'Matching...' : `Play Backfill${unlinkedCount !== null ? ` (${unlinkedCount})` : ''}`}
         </button>
         <button
-          onClick={classDiscovery.phase === 'scraping' ? () => setClassDashboardOpen(true) : async () => {
+          onClick={async () => {
             setDiscoveryResult(null)
             const { data: { session } } = await supabase.auth.getSession()
-            if (session) {
-              fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
+            if (!session) return
+            try {
+              const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
                 body: JSON.stringify({ action: 'discover' }),
-              }).then(r => r.json()).then(d => setDiscoveryResult(d)).catch(() => {})
+              })
+              const d = await res.json()
+              setDiscoveryResult(d)
+            } catch (e) {
+              setDiscoveryResult({ queued: 0, known: 0, blocked: 0, queries_run: 0, warning: e instanceof Error ? e.message : 'Failed' })
             }
-            runClassDiscovery()
-            refetchMetrics()
           }}
+          disabled={discoveryResult !== null && !discoveryResult.warning}
+          style={{
+            ...mono,
+            fontSize: 10,
+            padding: '6px 14px',
+            background: '#0a1a05',
+            color: '#22C55E',
+            border: '1px solid #22C55E',
+            borderRadius: 2,
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Find Schools
+        </button>
+        <button
+          onClick={classDiscovery.phase === 'scraping' ? () => setClassDashboardOpen(true) : () => { runClassDiscovery(); refetchMetrics() }}
           disabled={classBusy && classDiscovery.phase !== 'scraping'}
           style={{
             ...mono,
             fontSize: 10,
             padding: '6px 14px',
             background: classDiscovery.phase === 'scraping' ? '#2a1a05' : '#1a1005',
-            color: classDiscovery.phase === 'scraping' ? '#D4A017' : '#D4A017',
+            color: '#D4A017',
             border: '1px solid #D4A017',
             borderRadius: 2,
             cursor: classDiscovery.phase === 'scraping' ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
         >
-          {classDiscovery.phase === 'scraping' ? `View Progress ${classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : ''}` : 'Discover Classes'}
+          {classDiscovery.phase === 'scraping' ? `View Progress ${classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : ''}` : 'Scrape Classes'}
         </button>
       </div>
       {discoveryResult && (
