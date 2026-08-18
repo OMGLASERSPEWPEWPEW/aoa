@@ -84,6 +84,13 @@
 - **Dependencies:** Intelligent Event Scraper v2 (shipped), Art Classes Discovery (in progress)
 - **Summary:** BFS completeness-driven crawling with self-correcting URL resolution. When a venue's calendar_url fails (404, SSL, timeout) or returns 0 events, the scraper recovers by trying common paths, then Perplexity API, then SerpAPI to find the correct URL. Working URLs are written back to the database (self-healing). Also: discovery mode for subpages, JSON-LD extraction, photo_url, Jina Reader fallback, domain-aware scoring. Three external panels consulted (GPT-5.6 Sol, Gemini 3.5 Flash, Claude Opus 4.8). Must scale to NYC/LA without per-site config.
 
+## Class Discovery Pipeline Fix
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** Art Classes Discovery (in progress), class-discovery Edge Function (deployed)
+- **Summary:** Fixes three compounding bugs that prevented the class discovery pipeline from ever finding new schools: SerpAPI search never executes (self-chain abort), aggregator domain poisoning filters all results, queries too narrow. Adds decoupled discovery action, aggregator blocklist, 12+ discipline queries, observability logging, iO duplicate fix, and admin queue promotion flow. Diagnosed by 4-model panel (GPT-5.6 Sol, Gemini 3.5 Flash, DeepSeek V4 Pro, Claude Opus 4.8).
+
 ## Belt Progression System
 - **Status:** Planned
 - **Target:** September 2026
