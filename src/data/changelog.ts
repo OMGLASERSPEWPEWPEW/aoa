@@ -4,6 +4,24 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.19.0',
+    date: '2026-08-18',
+    title: 'Class discovery pipeline fix — find new schools automatically',
+    summary: 'Fixed three compounding bugs that prevented school discovery from ever working. SerpAPI search now runs independently, aggregator domains are blocked, and 12 discipline-specific queries replace the old 5.',
+    details: [
+      'Fix: SerpAPI discovery decoupled from scrape chain — runs as standalone action, no longer aborted by 8s timeout',
+      'Fix: aggregator domain blocklist (Yelp, ClassPass, Facebook, etc.) prevents dedup poisoning',
+      'New: 12 discipline-specific queries (Meisner, voiceover, on-camera, comedy writing, etc.) replace 5 generic ones',
+      'New: discovery_logs table tracks every SerpAPI result with its disposition',
+      'New: "Discover Schools" button in admin Coverage tab',
+      'New: school discovery queue with Promote/Reject flow for admin review',
+      'Fix: iO Theater duplicate merged into iO Chicago',
+      'Fix: show + class scrapers can run in parallel (independent busy flags)',
+      'Fix: class scraper is now fire-and-forget (self-chaining, survives app close)',
+      'Infra: escalate panel upgraded to GPT-5.6 Sol, Gemini 3.5 Flash, DeepSeek V4 Pro, Claude Opus 4.8',
+    ],
+  },
+  {
     version: '0.18.1',
     date: '2026-08-17',
     title: 'Self-correcting URL resolution — scraper finds its own URLs',

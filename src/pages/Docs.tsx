@@ -12,6 +12,10 @@ import { VenueAuditTable } from '../components/admin/VenueAuditTable'
 import { DiscoveryQueueSection } from '../components/admin/DiscoveryQueueSection'
 import { VenuePromoteModal } from '../components/admin/VenuePromoteModal'
 
+function extractDomain(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, '') } catch { return url }
+}
+
 const tabs = ['Design', 'AI Prompts', 'Costs', 'Coverage'] as const
 type Tab = (typeof tabs)[number]
 
@@ -387,9 +391,73 @@ function CoverageTab() {
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
   const audit = useVenueAudit()
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
-  const { discovery: progress, scraper, classDiscovery, busy, setDashboardOpen, setClassDashboardOpen, runDiscovery, runScraper, runClassDiscovery } = useScrape()
+  const { discovery: progress, scraper, classDiscovery, setDashboardOpen, setClassDashboardOpen, runDiscovery, runScraper, runClassDiscovery } = useScrape()
+  const eventBusy = progress.phase === 'discovering' || progress.phase === 'enriching' || scraper.phase === 'scraping'
+  const classBusy = classDiscovery.phase === 'scraping'
   const [backfillRunning, setBackfillRunning] = useState(false)
   const [backfillResult, setBackfillResult] = useState<{ exact_matches: number; fuzzy_matches: number; ai_matches: number; plays_created: number; events_unmatched: number; events_processed: number } | null>(null)
+  const [schoolQueue, setSchoolQueue] = useState<Array<{ id: string; raw_name: string; raw_website_url: string | null; raw_description: string | null; created_at: string }>>([])
+  const [promotingId, setPromotingId] = useState<string | null>(null)
+  const [promoteError, setPromoteError] = useState<string | null>(null)
+  const [discoveryResult, setDiscoveryResult] = useState<{ queued: number; known: number; blocked: number; queries_run: number; warning?: string } | null>(null)
+
+  useEffect(() => {
+    supabase
+      .from('venue_discovery_queue')
+      .select('id, raw_name, raw_website_url, raw_description, created_at')
+      .eq('raw_category', 'school')
+      .eq('promoted', false)
+      .is('rejected_at', null)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => setSchoolQueue(data ?? []))
+  }, [classDiscovery.phase, discoveryResult])
+
+  const handlePromoteSchool = async (entry: typeof schoolQueue[0]) => {
+    setPromotingId(entry.id)
+    setPromoteError(null)
+    try {
+      const slug = entry.raw_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      const { data: newVenue, error: venueError } = await supabase.from('venues').insert({
+        name: entry.raw_name,
+        slug,
+        venue_type: 'school',
+        website_url: entry.raw_website_url,
+        calendar_url: entry.raw_website_url,
+        city: 'chicago',
+        source: 'discovery',
+      }).select('id').single()
+
+      if (venueError) {
+        setPromoteError(`Venue insert failed: ${venueError.message}`)
+        setPromotingId(null)
+        return
+      }
+
+      await supabase.from('schools').insert({
+        name: entry.raw_name,
+        short_name: entry.raw_name.slice(0, 14).toUpperCase(),
+        slug,
+        latitude: 41.8781,
+        longitude: -87.6298,
+        neighborhood: 'Chicago',
+        discipline: 'acting',
+        venue_id: newVenue.id,
+        url: entry.raw_website_url,
+      })
+
+      await supabase.from('venue_discovery_queue').update({ promoted: true }).eq('id', entry.id)
+      setSchoolQueue(prev => prev.filter(q => q.id !== entry.id))
+    } catch (e) {
+      setPromoteError(e instanceof Error ? e.message : 'Promote failed')
+    }
+    setPromotingId(null)
+  }
+
+  const handleRejectSchool = async (id: string) => {
+    await supabase.from('venue_discovery_queue').update({ rejected_at: new Date().toISOString() }).eq('id', id)
+    setSchoolQueue(prev => prev.filter(q => q.id !== id))
+  }
   const [unlinkedCount, setUnlinkedCount] = useState<number | null>(null)
   const [classMetrics, setClassMetrics] = useState<{ class_venue_count: number; class_event_count: number; class_with_instructor: number; class_with_level: number } | null>(null)
 
@@ -454,16 +522,16 @@ function CoverageTab() {
         </div>
         <button
           onClick={handleRunDiscovery}
-          disabled={busy}
+          disabled={eventBusy}
           style={{
             ...mono,
             fontSize: 10,
             padding: '6px 14px',
-            background: busy ? 'var(--bg-chrome)' : 'var(--accent)',
-            color: busy ? 'var(--ink-dim)' : 'var(--accent-on)',
+            background: eventBusy ? 'var(--bg-chrome)' : 'var(--accent)',
+            color: eventBusy ? 'var(--ink-dim)' : 'var(--accent-on)',
             border: 'none',
             borderRadius: 2,
-            cursor: busy ? 'default' : 'pointer',
+            cursor: eventBusy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
         >
@@ -473,7 +541,7 @@ function CoverageTab() {
         </button>
         <button
           onClick={scraper.phase === 'scraping' ? () => setDashboardOpen(true) : handleRunScraper}
-          disabled={busy && scraper.phase !== 'scraping'}
+          disabled={eventBusy && scraper.phase !== 'scraping'}
           style={{
             ...mono,
             fontSize: 10,
@@ -482,7 +550,7 @@ function CoverageTab() {
             color: scraper.phase === 'scraping' ? 'var(--accent-text)' : 'var(--ink)',
             border: scraper.phase === 'scraping' ? '1px solid var(--accent-border)' : '1px solid var(--rule)',
             borderRadius: 2,
-            cursor: scraper.phase === 'scraping' ? 'pointer' : busy ? 'default' : 'pointer',
+            cursor: scraper.phase === 'scraping' ? 'pointer' : eventBusy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
         >
@@ -490,7 +558,7 @@ function CoverageTab() {
         </button>
         <button
           onClick={handleRunBackfill}
-          disabled={backfillRunning || busy}
+          disabled={backfillRunning || eventBusy}
           style={{
             ...mono,
             fontSize: 10,
@@ -499,15 +567,27 @@ function CoverageTab() {
             color: backfillRunning ? 'var(--ink-dim)' : 'var(--ink)',
             border: '1px solid var(--rule)',
             borderRadius: 2,
-            cursor: backfillRunning || busy ? 'default' : 'pointer',
+            cursor: backfillRunning || eventBusy ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
         >
           {backfillRunning ? 'Matching...' : `Play Backfill${unlinkedCount !== null ? ` (${unlinkedCount})` : ''}`}
         </button>
         <button
-          onClick={classDiscovery.phase === 'scraping' ? () => setClassDashboardOpen(true) : () => { runClassDiscovery(); refetchMetrics() }}
-          disabled={busy && classDiscovery.phase !== 'scraping'}
+          onClick={classDiscovery.phase === 'scraping' ? () => setClassDashboardOpen(true) : async () => {
+            setDiscoveryResult(null)
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session) {
+              fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                body: JSON.stringify({ action: 'discover' }),
+              }).then(r => r.json()).then(d => setDiscoveryResult(d)).catch(() => {})
+            }
+            runClassDiscovery()
+            refetchMetrics()
+          }}
+          disabled={classBusy && classDiscovery.phase !== 'scraping'}
           style={{
             ...mono,
             fontSize: 10,
@@ -516,13 +596,20 @@ function CoverageTab() {
             color: classDiscovery.phase === 'scraping' ? '#D4A017' : '#D4A017',
             border: '1px solid #D4A017',
             borderRadius: 2,
-            cursor: classDiscovery.phase === 'scraping' || busy ? 'default' : 'pointer',
+            cursor: classDiscovery.phase === 'scraping' ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
         >
           {classDiscovery.phase === 'scraping' ? `View Progress ${classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : ''}` : 'Discover Classes'}
         </button>
       </div>
+      {discoveryResult && (
+        <div style={{ ...mono, fontSize: 10, color: discoveryResult.warning ? '#ef4444' : '#D4A017', marginBottom: 8 }}>
+          {discoveryResult.warning
+            ? `Discovery: ${discoveryResult.warning}`
+            : `Discovery: ${discoveryResult.queries_run} queries · ${discoveryResult.queued} new schools queued · ${discoveryResult.blocked} blocked · ${discoveryResult.known} known`}
+        </div>
+      )}
       {backfillResult && backfillResult.events_processed >= 0 && (
         <div style={{ ...mono, fontSize: 10, color: 'var(--accent)', marginBottom: 8 }}>
           {backfillResult.exact_matches} exact · {backfillResult.fuzzy_matches} fuzzy · {backfillResult.ai_matches} AI · {backfillResult.plays_created} new plays · {backfillResult.events_unmatched} unmatched
@@ -577,6 +664,62 @@ function CoverageTab() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {schoolQueue.length > 0 && (
+        <div style={{ marginTop: 14, marginBottom: 14 }}>
+          <div style={{ ...mono, fontSize: 9, letterSpacing: '0.1em', color: '#22C55E', marginBottom: 8 }}>
+            SCHOOL DISCOVERY QUEUE ({schoolQueue.length})
+          </div>
+          {promoteError && (
+            <div style={{ ...mono, fontSize: 10, color: '#ef4444', marginBottom: 8 }}>{promoteError}</div>
+          )}
+          {schoolQueue.map(entry => (
+            <div key={entry.id} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '8px 0', borderBottom: '1px solid var(--rule)',
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ ...mono, fontSize: 11, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {entry.raw_name}
+                </div>
+                {entry.raw_website_url && (
+                  <div style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {extractDomain(entry.raw_website_url ?? '')}
+                  </div>
+                )}
+                {entry.raw_description && (
+                  <div style={{ ...mono, fontSize: 9, color: 'var(--ink-dim)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {entry.raw_description.slice(0, 120)}
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 6, marginLeft: 8, flexShrink: 0 }}>
+                <button
+                  onClick={() => handlePromoteSchool(entry)}
+                  disabled={promotingId === entry.id}
+                  style={{
+                    ...mono, fontSize: 9, padding: '3px 8px',
+                    background: '#0a1a05', color: '#22C55E', border: '1px solid #22C55E',
+                    borderRadius: 2, cursor: promotingId === entry.id ? 'default' : 'pointer',
+                  }}
+                >
+                  {promotingId === entry.id ? '...' : 'Promote'}
+                </button>
+                <button
+                  onClick={() => handleRejectSchool(entry.id)}
+                  style={{
+                    ...mono, fontSize: 9, padding: '3px 8px',
+                    background: 'none', color: 'var(--ink-faint)', border: '1px solid var(--rule)',
+                    borderRadius: 2, cursor: 'pointer',
+                  }}
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

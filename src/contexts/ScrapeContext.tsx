@@ -114,20 +114,30 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
   const [classDiscovery, setClassDiscovery] = useState<ClassDiscoveryProgress>({ phase: 'idle', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, recentSchools: [] })
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [classDashboardOpen, setClassDashboardOpen] = useState(false)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const eventPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const classPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const busy = discovery.phase === 'discovering' || discovery.phase === 'enriching' || scraper.phase === 'scraping' || classDiscovery.phase === 'scraping'
+  const eventBusy = discovery.phase === 'discovering' || discovery.phase === 'enriching' || scraper.phase === 'scraping'
+  const classBusy = classDiscovery.phase === 'scraping'
+  const busy = eventBusy || classBusy
 
-  const stopPolling = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current)
-      pollRef.current = null
+  const stopEventPolling = useCallback(() => {
+    if (eventPollRef.current) {
+      clearInterval(eventPollRef.current)
+      eventPollRef.current = null
     }
   }, [])
 
-  const pollJob = useCallback((jobId: string) => {
-    stopPolling()
-    pollRef.current = setInterval(async () => {
+  const stopClassPolling = useCallback(() => {
+    if (classPollRef.current) {
+      clearInterval(classPollRef.current)
+      classPollRef.current = null
+    }
+  }, [])
+
+  const pollEventJob = useCallback((jobId: string) => {
+    stopEventPolling()
+    eventPollRef.current = setInterval(async () => {
       const { data: job } = await supabase
         .from('scrape_jobs')
         .select('*')
@@ -159,40 +169,112 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       })
 
       if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
-        stopPolling()
+        stopEventPolling()
         queryClient.invalidateQueries()
       }
     }, 5000)
-  }, [stopPolling])
+  }, [stopEventPolling])
 
-  // On mount, check for any running job
-  useEffect(() => {
-    async function checkRunningJob() {
-      const { data: runningJob } = await supabase
+  const pollClassJob = useCallback((jobId: string) => {
+    stopClassPolling()
+    classPollRef.current = setInterval(async () => {
+      const { data: job } = await supabase
         .from('scrape_jobs')
         .select('*')
+        .eq('id', jobId)
+        .single()
+
+      if (!job) return
+
+      const recentSchools = (job.recent_schools as RecentSchoolEntry[]) ?? []
+
+      const progress: ClassDiscoveryProgress = {
+        phase: job.status === 'completed' ? 'done' : job.status === 'failed' ? 'error' : 'scraping',
+        schoolsScraped: job.schools_processed ?? 0,
+        totalSchools: job.total_venues ?? 0,
+        currentSchool: job.current_venue ?? null,
+        eventsFound: job.events_found ?? 0,
+        eventsCreated: job.events_created ?? 0,
+        eventsUpdated: job.events_updated ?? 0,
+        errors: job.errors_count ?? 0,
+        newSchoolsQueued: job.new_schools_queued ?? 0,
+        recentSchools,
+        error: job.error ?? undefined,
+      }
+
+      setClassDiscovery(prev => {
+        if (progress.schoolsScraped > prev.schoolsScraped || progress.phase === 'done') {
+          queryClient.invalidateQueries({ queryKey: ['map-data'] })
+          queryClient.invalidateQueries({ queryKey: ['discover'] })
+          queryClient.invalidateQueries({ queryKey: ['class'] })
+        }
+        return progress
+      })
+
+      if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
+        stopClassPolling()
+        queryClient.invalidateQueries()
+      }
+    }, 5000)
+  }, [stopClassPolling])
+
+  // On mount, check for any running jobs (event or class)
+  useEffect(() => {
+    async function checkRunningJobs() {
+      const { data: runningEventJob } = await supabase
+        .from('scrape_jobs')
+        .select('*')
+        .eq('job_type', 'event')
         .eq('status', 'running')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
-      if (runningJob) {
+      if (runningEventJob) {
         setScraper({
           phase: 'scraping',
-          scraped: runningJob.venues_processed ?? 0,
-          events: runningJob.events_found ?? 0,
-          total: runningJob.total_venues ?? 0,
-          currentVenue: runningJob.current_venue ?? undefined,
-          lastStrategy: runningJob.last_strategy ?? undefined,
-          recentVenues: (runningJob.recent_venues as RecentVenueEntry[]) ?? [],
-          startedAt: runningJob.started_at ?? undefined,
+          scraped: runningEventJob.venues_processed ?? 0,
+          events: runningEventJob.events_found ?? 0,
+          total: runningEventJob.total_venues ?? 0,
+          currentVenue: runningEventJob.current_venue ?? undefined,
+          lastStrategy: runningEventJob.last_strategy ?? undefined,
+          recentVenues: (runningEventJob.recent_venues as RecentVenueEntry[]) ?? [],
+          startedAt: runningEventJob.started_at ?? undefined,
         })
-        pollJob(runningJob.id)
+        pollEventJob(runningEventJob.id)
+      }
+
+      const { data: runningClassJob } = await supabase
+        .from('scrape_jobs')
+        .select('*')
+        .eq('job_type', 'class')
+        .eq('status', 'running')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (runningClassJob) {
+        setClassDiscovery({
+          phase: 'scraping',
+          schoolsScraped: runningClassJob.schools_processed ?? 0,
+          totalSchools: runningClassJob.total_venues ?? 0,
+          currentSchool: runningClassJob.current_venue ?? null,
+          eventsFound: runningClassJob.events_found ?? 0,
+          eventsCreated: runningClassJob.events_created ?? 0,
+          eventsUpdated: runningClassJob.events_updated ?? 0,
+          errors: runningClassJob.errors_count ?? 0,
+          newSchoolsQueued: runningClassJob.new_schools_queued ?? 0,
+          recentSchools: (runningClassJob.recent_schools as RecentSchoolEntry[]) ?? [],
+        })
+        pollClassJob(runningClassJob.id)
       }
     }
-    checkRunningJob()
-    return stopPolling
-  }, [pollJob, stopPolling])
+    checkRunningJobs()
+    return () => {
+      stopEventPolling()
+      stopClassPolling()
+    }
+  }, [pollEventJob, pollClassJob, stopEventPolling, stopClassPolling])
 
   const runDiscovery = useCallback(async () => {
     try {
@@ -269,7 +351,7 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.error && data.job_id) {
-        pollJob(data.job_id)
+        pollEventJob(data.job_id)
         return
       }
 
@@ -289,112 +371,56 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
         recentVenues: [],
       })
 
-      pollJob(jobId)
+      pollEventJob(jobId)
     } catch (err) {
       setScraper((prev) => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
     }
-  }, [pollJob])
+  }, [pollEventJob])
 
   const runClassDiscovery = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
       const baseUrl = import.meta.env.VITE_SUPABASE_URL
+      const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
 
       setClassDiscovery({ phase: 'scraping', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, recentSchools: [] })
       setClassDashboardOpen(true)
 
-      const res = await fetch(`${baseUrl}/functions/v1/class-discovery`, {
+      const res = await fetchWithRetry(`${baseUrl}/functions/v1/class-discovery`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        headers,
+        body: JSON.stringify({ action: 'start' }),
       })
+      const data = await res.json()
 
-      const reader = res.body?.getReader()
-      const decoder = new TextDecoder()
-      if (!reader) {
-        setClassDiscovery(prev => ({ ...prev, phase: 'error', error: 'No response stream' }))
+      if (data.error && !data.job_id) {
+        setClassDiscovery(prev => ({ ...prev, phase: 'error', error: data.error }))
         return
       }
 
-      let buffer = ''
-      let schoolsScraped = 0
-      let eventsFound = 0
-      let eventsCreated = 0
-      let eventsUpdated = 0
-      let errors = 0
-      let newSchoolsQueued = 0
-      const recentSchools: RecentSchoolEntry[] = []
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
-
-        for (const line of lines) {
-          if (!line.trim()) continue
-          try {
-            const msg = JSON.parse(line)
-            if (msg.type === 'school_scrape') {
-              schoolsScraped++
-              const d = msg.data
-              eventsFound += d.events_found ?? 0
-              eventsCreated += d.events_created ?? 0
-              eventsUpdated += d.events_updated ?? 0
-              if (d.status !== 'success') errors++
-              recentSchools.unshift({ name: d.venue_name, status: d.status, eventsFound: d.events_found, eventsCreated: d.events_created })
-              if (recentSchools.length > 20) recentSchools.pop()
-              setClassDiscovery(prev => ({
-                ...prev,
-                schoolsScraped,
-                currentSchool: d.venue_name,
-                eventsFound,
-                eventsCreated,
-                eventsUpdated,
-                errors,
-                recentSchools: [...recentSchools],
-              }))
-            } else if (msg.type === 'search_result') {
-              if (msg.data?.queued) {
-                newSchoolsQueued++
-                setClassDiscovery(prev => ({ ...prev, newSchoolsQueued }))
-              }
-            } else if (msg.type === 'summary') {
-              const s = msg.data
-              setClassDiscovery(prev => ({
-                ...prev,
-                phase: 'done',
-                schoolsScraped: s.schools_scraped ?? schoolsScraped,
-                totalSchools: s.schools_scraped ?? schoolsScraped,
-                eventsFound: s.total_events_found ?? eventsFound,
-                eventsCreated: s.total_created ?? eventsCreated,
-                eventsUpdated: s.total_updated ?? eventsUpdated,
-                errors: s.scrape_errors ?? errors,
-                newSchoolsQueued: s.search_results_queued ?? newSchoolsQueued,
-                currentSchool: null,
-              }))
-              queryClient.invalidateQueries()
-            }
-          } catch { /* parse error — skip line */ }
-        }
+      if (data.error && data.job_id) {
+        pollClassJob(data.job_id)
+        return
       }
 
-      if (buffer.trim()) {
-        try {
-          const msg = JSON.parse(buffer)
-          if (msg.type === 'summary') {
-            setClassDiscovery(prev => ({ ...prev, phase: 'done', currentSchool: null }))
-            queryClient.invalidateQueries()
-          }
-        } catch { /* ignore */ }
+      const jobId = data.job_id
+      if (!jobId) {
+        setClassDiscovery(prev => ({ ...prev, phase: 'done' }))
+        return
       }
 
-      setClassDiscovery(prev => prev.phase === 'scraping' ? { ...prev, phase: 'done', currentSchool: null } : prev)
+      setClassDiscovery(prev => ({
+        ...prev,
+        phase: 'scraping',
+        currentSchool: data.school ?? null,
+      }))
+
+      pollClassJob(jobId)
     } catch (err) {
       setClassDiscovery(prev => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
     }
-  }, [])
+  }, [pollClassJob])
 
   return (
     <ScrapeContext.Provider value={{ discovery, scraper, classDiscovery, busy, dashboardOpen, setDashboardOpen, classDashboardOpen, setClassDashboardOpen, runDiscovery, runScraper, runClassDiscovery }}>
