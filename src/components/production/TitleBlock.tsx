@@ -9,6 +9,7 @@ export interface TitleBlockProps {
   priceStr: string
   hasPWYC: boolean
   watchlistStatus: WatchlistStatus | null
+  eventUrl: string | null
   onWantToSee: () => void
   onLogSeen: () => void
   onTickets: () => void
@@ -22,6 +23,7 @@ export function TitleBlock({
   priceStr,
   hasPWYC,
   watchlistStatus,
+  eventUrl,
   onWantToSee,
   onLogSeen,
   onTickets,
@@ -144,6 +146,27 @@ export function TitleBlock({
           {priceStr}
         </button>
       </div>
+
+      {eventUrl && (
+        <a
+          href={eventUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'block',
+            marginTop: 10,
+            fontFamily: "'Courier Prime', monospace",
+            fontSize: 9.5,
+            letterSpacing: '0.08em',
+            color: 'var(--accent-text)',
+            textDecoration: 'none',
+          }}
+        >
+          {event.ticket_url && /^https?:\/\//i.test(event.ticket_url) && !event.ticket_url.includes('theatreinchicago')
+            ? 'TICKETS →'
+            : 'WEBSITE →'}
+        </a>
+      )}
     </div>
   )
 }
