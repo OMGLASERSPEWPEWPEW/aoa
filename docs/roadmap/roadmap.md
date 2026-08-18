@@ -77,6 +77,13 @@
 - **Dependencies:** Event scraper (existing), Venue discovery queue (existing), Mapbox GL JS (existing)
 - **Summary:** Expands the map from show listings to include art education. Seeds 8 canonical Chicago art school venues, extends the event scraper to extract class-specific metadata (instructor, level, session count, format), adds a new class-discovery Edge Function with web-search-based discovery via SerpAPI, and renders class venues as distinct amber diamond markers (38×44px) on the map. Class detail appears in VenueSheet with an ENROLL link.
 
+## Scraper v3.1: Self-Correcting Crawling with URL Recovery
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** Intelligent Event Scraper v2 (shipped), Art Classes Discovery (in progress)
+- **Summary:** BFS completeness-driven crawling with self-correcting URL resolution. When a venue's calendar_url fails (404, SSL, timeout) or returns 0 events, the scraper recovers by trying common paths, then Perplexity API, then SerpAPI to find the correct URL. Working URLs are written back to the database (self-healing). Also: discovery mode for subpages, JSON-LD extraction, photo_url, Jina Reader fallback, domain-aware scoring. Three external panels consulted (GPT-5.6 Sol, Gemini 3.5 Flash, Claude Opus 4.8). Must scale to NYC/LA without per-site config.
+
 ## Belt Progression System
 - **Status:** Planned
 - **Target:** September 2026
