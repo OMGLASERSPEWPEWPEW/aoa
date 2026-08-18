@@ -399,6 +399,7 @@ function CoverageTab() {
   const [schoolQueue, setSchoolQueue] = useState<Array<{ id: string; raw_name: string; raw_website_url: string | null; raw_description: string | null; created_at: string }>>([])
   const [promotingId, setPromotingId] = useState<string | null>(null)
   const [promoteError, setPromoteError] = useState<string | null>(null)
+  const [discoveryRunning, setDiscoveryRunning] = useState(false)
   const [discoveryResult, setDiscoveryResult] = useState<{ queued: number; known: number; blocked: number; queries_run: number; warning?: string } | null>(null)
 
   useEffect(() => {
@@ -575,9 +576,10 @@ function CoverageTab() {
         </button>
         <button
           onClick={async () => {
+            setDiscoveryRunning(true)
             setDiscoveryResult(null)
             const { data: { session } } = await supabase.auth.getSession()
-            if (!session) return
+            if (!session) { setDiscoveryRunning(false); return }
             try {
               const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
                 method: 'POST',
@@ -589,21 +591,22 @@ function CoverageTab() {
             } catch (e) {
               setDiscoveryResult({ queued: 0, known: 0, blocked: 0, queries_run: 0, warning: e instanceof Error ? e.message : 'Failed' })
             }
+            setDiscoveryRunning(false)
           }}
-          disabled={discoveryResult !== null && !discoveryResult.warning}
+          disabled={discoveryRunning}
           style={{
             ...mono,
             fontSize: 10,
             padding: '6px 14px',
-            background: '#0a1a05',
-            color: '#22C55E',
-            border: '1px solid #22C55E',
+            background: discoveryRunning ? '#0a1a05' : '#0a1a05',
+            color: discoveryRunning ? '#166534' : '#22C55E',
+            border: `1px solid ${discoveryRunning ? '#166534' : '#22C55E'}`,
             borderRadius: 2,
-            cursor: 'pointer',
+            cursor: discoveryRunning ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
         >
-          Find Schools
+          {discoveryRunning ? 'Searching...' : 'Find Schools'}
         </button>
         <button
           onClick={classDiscovery.phase === 'scraping' ? () => setClassDashboardOpen(true) : () => { runClassDiscovery(); refetchMetrics() }}

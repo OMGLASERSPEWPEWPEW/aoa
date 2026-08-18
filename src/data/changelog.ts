@@ -4,9 +4,9 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
-    version: '0.19.2',
+    version: '0.19.3',
     date: '2026-08-18',
-    title: 'Admin buttons — 4 clear pipelines',
+    title: 'Find Schools loading state + 4 admin buttons',
     summary: 'Coverage tab now has 4 distinct buttons: Find Venues, Scrape Shows, Find Schools, Scrape Classes. Each does one thing.',
     details: [
       'Rename: Run Discovery → Find Venues',
