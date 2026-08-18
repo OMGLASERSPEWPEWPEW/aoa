@@ -19,10 +19,16 @@ import type {
 } from "./types.ts";
 
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY")!;
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+
+const AI_TIMEOUT = 55_000;
+const FETCH_TIMEOUT = 45_000;
 
 async function fetchHtml(url: string): Promise<string> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; ArtOfArt-EventBot/1.0; +https://aoa-nine.vercel.app)" },
@@ -35,42 +41,168 @@ async function fetchHtml(url: string): Promise<string> {
   }
 }
 
-async function callDeepSeek(
-  systemPrompt: string,
-  userContent: string,
-  maxTokens = 8192,
-): Promise<{ content: string | null; inputTokens: number; outputTokens: number }> {
+interface AiResult {
+  content: string | null;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+async function callDeepSeek(systemPrompt: string, userContent: string, maxTokens = 8192): Promise<AiResult> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000);
+  const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT);
   try {
     const response = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${DEEPSEEK_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "deepseek-v4-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userContent }],
         response_format: { type: "json_object" },
         max_tokens: maxTokens,
         temperature: 0.1,
       }),
       signal: controller.signal,
     });
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`DeepSeek API error (${response.status}): ${errText}`);
-    }
+    if (!response.ok) throw new Error(`DeepSeek API error (${response.status})`);
     const data: DeepSeekResponse = await response.json();
-    return {
-      content: data.choices[0]?.message?.content ?? null,
-      inputTokens: data.usage?.prompt_tokens ?? 0,
-      outputTokens: data.usage?.completion_tokens ?? 0,
-    };
-  } finally {
-    clearTimeout(timeout);
-  }
+    return { content: data.choices[0]?.message?.content ?? null, inputTokens: data.usage?.prompt_tokens ?? 0, outputTokens: data.usage?.completion_tokens ?? 0 };
+  } finally { clearTimeout(timeout); }
+}
+
+async function callGemini(systemPrompt: string, userContent: string, maxTokens = 8192): Promise<AiResult> {
+  if (!GEMINI_API_KEY) return { content: null, inputTokens: 0, outputTokens: 0 };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT);
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: "user", parts: [{ text: userContent }] }],
+        generationConfig: { maxOutputTokens: maxTokens, responseMimeType: "application/json" },
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Gemini API error (${response.status})`);
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? null;
+    const usage = data.usageMetadata ?? {};
+    return { content: text, inputTokens: usage.promptTokenCount ?? 0, outputTokens: usage.candidatesTokenCount ?? 0 };
+  } finally { clearTimeout(timeout); }
+}
+
+async function callOpenAI(systemPrompt: string, userContent: string, maxTokens = 8192): Promise<AiResult> {
+  if (!OPENAI_API_KEY) return { content: null, inputTokens: 0, outputTokens: 0 };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT);
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-5.6-luna",
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userContent }],
+        response_format: { type: "json_object" },
+        max_completion_tokens: maxTokens,
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`OpenAI API error (${response.status})`);
+    const data = await response.json();
+    return { content: data.choices?.[0]?.message?.content ?? null, inputTokens: data.usage?.prompt_tokens ?? 0, outputTokens: data.usage?.completion_tokens ?? 0 };
+  } finally { clearTimeout(timeout); }
+}
+
+async function callHaiku(systemPrompt: string, userContent: string, maxTokens = 8192): Promise<AiResult> {
+  if (!ANTHROPIC_API_KEY) return { content: null, inputTokens: 0, outputTokens: 0 };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT);
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        system: systemPrompt,
+        messages: [{ role: "user", content: userContent }],
+        max_tokens: maxTokens,
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Haiku API error (${response.status})`);
+    const data = await response.json();
+    const text = (data.content ?? []).filter((c: { type?: string }) => c.type === "text").map((c: { text?: string }) => c.text ?? "").join("");
+    return { content: text || null, inputTokens: data.usage?.input_tokens ?? 0, outputTokens: data.usage?.output_tokens ?? 0 };
+  } finally { clearTimeout(timeout); }
+}
+
+interface ModelExtractionResult {
+  model: string;
+  events: Pass1Event[];
+  inputTokens: number;
+  outputTokens: number;
+  durationMs: number;
+  status: "ok" | "error" | "timeout" | "empty";
+  error?: string;
+}
+
+async function extractWithAllModels(
+  systemPrompt: string,
+  content: string,
+): Promise<{ best: ModelExtractionResult; all: ModelExtractionResult[] }> {
+  const models: Array<{ name: string; fn: typeof callDeepSeek }> = [
+    { name: "deepseek-v4-flash", fn: callDeepSeek },
+    { name: "gemini-3.5-flash", fn: callGemini },
+    { name: "gpt-5.6-luna", fn: callOpenAI },
+    { name: "claude-haiku-4-5", fn: callHaiku },
+  ];
+
+  const start = Date.now();
+  const settled = await Promise.allSettled(
+    models.map(async (m) => {
+      const mStart = Date.now();
+      try {
+        const result = await m.fn(systemPrompt, content);
+        let events: Pass1Event[] = [];
+        if (result.content) {
+          try {
+            const parsed = JSON.parse(result.content);
+            events = parsed.events ?? [];
+          } catch { /* parse error */ }
+        }
+        return {
+          model: m.name,
+          events,
+          inputTokens: result.inputTokens,
+          outputTokens: result.outputTokens,
+          durationMs: Date.now() - mStart,
+          status: events.length > 0 ? "ok" : "empty",
+        } as ModelExtractionResult;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          model: m.name,
+          events: [],
+          inputTokens: 0,
+          outputTokens: 0,
+          durationMs: Date.now() - mStart,
+          status: msg.includes("aborted") ? "timeout" : "error",
+          error: msg,
+        } as ModelExtractionResult;
+      }
+    }),
+  );
+
+  const all = settled.map((s) =>
+    s.status === "fulfilled"
+      ? s.value
+      : { model: "unknown", events: [], inputTokens: 0, outputTokens: 0, durationMs: Date.now() - start, status: "error" as const, error: String((s as PromiseRejectedResult).reason) },
+  );
+
+  const sorted = [...all].sort((a, b) => b.events.length - a.events.length);
+  return { best: sorted[0], all };
 }
 
 export interface MergedEvent {
@@ -242,9 +374,10 @@ export async function executeStrategyTree(
   // Extract events from venue calendar
   let cleaned = cleanHtml(rawHtml);
 
-  // Jina Reader fallback for JS-rendered sites
-  if (cleaned.length < 300 && budget.canAffordFetch()) {
-    console.log(`[scraper-v3] ${venue.name}: thin HTML (${cleaned.length} chars), trying Jina Reader`);
+  // Jina Reader fallback for JS-rendered sites (higher threshold for class domain)
+  const jinaThreshold = isClassDomain ? 2000 : 300;
+  if (cleaned.length < jinaThreshold && budget.canAffordFetch()) {
+    console.log(`[scraper-v3] ${venue.name}: thin HTML (${cleaned.length} chars < ${jinaThreshold}), trying Jina Reader`);
     try {
       const jinaRes = await fetchHtml(`https://r.jina.ai/${venue.calendar_url}`);
       budget.recordFetch();
@@ -257,18 +390,16 @@ export async function executeStrategyTree(
     }
   }
 
-  if (cleaned.length >= 100 && budget.canAffordAiCall()) {
-    const result = await callDeepSeek(buildExtractionPrompt(venue.name), cleaned);
-    budget.recordAiCall(result.inputTokens, result.outputTokens);
-    totalInputTokens += result.inputTokens;
-    totalOutputTokens += result.outputTokens;
+  if (cleaned.length >= 100) {
+    const prompt = buildExtractionPrompt(venue.name);
+    const { best, all: modelResults } = await extractWithAllModels(prompt, cleaned);
 
-    if (result.content) {
-      try {
-        const parsed = JSON.parse(result.content);
-        events = parsed.events ?? [];
-      } catch { /* parse error */ }
-    }
+    events = best.events;
+    budget.recordAiCall(best.inputTokens, best.outputTokens);
+    totalInputTokens += best.inputTokens;
+    totalOutputTokens += best.outputTokens;
+
+    console.log(`[scraper-v3] ${venue.name}: 4-model extraction → winner: ${best.model} (${best.events.length} events). Results: ${modelResults.map(r => `${r.model}=${r.events.length}/${r.status}`).join(", ")}`);
 
     // Set source_url for seed page events
     for (const e of events) {
@@ -290,10 +421,12 @@ export async function executeStrategyTree(
     }
 
     steps.push({
-      step: "initial_extract", url: venue.calendar_url, aiCalls: 1,
-      inputTokens: result.inputTokens, outputTokens: result.outputTokens,
-      eventsAffected: events.length, fieldsFilledIn: [], durationMs: Date.now() - step1Start,
-    });
+      step: "initial_extract", url: venue.calendar_url, aiCalls: modelResults.filter(r => r.status !== "empty" || r.durationMs > 0).length,
+      inputTokens: best.inputTokens, outputTokens: best.outputTokens,
+      eventsAffected: events.length, fieldsFilledIn: [],
+      durationMs: Date.now() - step1Start,
+      modelResults: modelResults.map(r => ({ model: r.model, events_found: r.events.length, duration_ms: r.durationMs, status: r.status })),
+    } as StrategyStep & { modelResults: unknown });
   }
 
   // Merge TIC results (ran in parallel, now available)
@@ -411,23 +544,20 @@ export async function executeStrategyTree(
 
       const fbCleaned = cleanHtml(fbHtml);
       if (fbCleaned.length >= 100) {
-        const fbResult = await callDeepSeek(buildExtractionPrompt(venue.name), fbCleaned);
-        budget.recordAiCall(fbResult.inputTokens, fbResult.outputTokens);
-        totalInputTokens += fbResult.inputTokens;
-        totalOutputTokens += fbResult.outputTokens;
+        const { best: fbBest } = await extractWithAllModels(buildExtractionPrompt(venue.name), fbCleaned);
+        budget.recordAiCall(fbBest.inputTokens, fbBest.outputTokens);
+        totalInputTokens += fbBest.inputTokens;
+        totalOutputTokens += fbBest.outputTokens;
 
-        if (fbResult.content) {
-          try {
-            const parsed = JSON.parse(fbResult.content);
-            events = parsed.events ?? [];
-            rawHtml = fbHtml;
-            for (const e of events) foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
-          } catch { /* parse error */ }
+        if (fbBest.events.length > 0) {
+          events = fbBest.events;
+          rawHtml = fbHtml;
+          for (const e of events) foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
         }
 
         steps.push({
-          step: "website_fallback", url: venue.website_url, aiCalls: 1,
-          inputTokens: fbResult.inputTokens, outputTokens: fbResult.outputTokens,
+          step: "website_fallback", url: venue.website_url, aiCalls: 4,
+          inputTokens: fbBest.inputTokens, outputTokens: fbBest.outputTokens,
           eventsAffected: events.length, fieldsFilledIn: [], durationMs: Date.now() - fbStart,
         });
       }
@@ -436,7 +566,7 @@ export async function executeStrategyTree(
     }
   }
 
-  if (events.length === 0) {
+  if (events.length === 0 && !isClassDomain) {
     budget.setStopReason("no_events");
     return {
       mergedEvents: [],
@@ -489,19 +619,17 @@ export async function executeStrategyTree(
 
       if (linkCleaned.length < 100) continue;
 
-      // Discovery mode: use full extraction prompt to find NEW events
-      const extractResult = await callDeepSeek(buildExtractionPrompt(venue.name), linkCleaned);
-      budget.recordAiCall(extractResult.inputTokens, extractResult.outputTokens);
-      totalInputTokens += extractResult.inputTokens;
-      totalOutputTokens += extractResult.outputTokens;
+      // Discovery mode: use all models in parallel to find NEW events
+      const { best: linkBest } = await extractWithAllModels(buildExtractionPrompt(venue.name), linkCleaned);
+      budget.recordAiCall(linkBest.inputTokens, linkBest.outputTokens);
+      totalInputTokens += linkBest.inputTokens;
+      totalOutputTokens += linkBest.outputTokens;
 
       let newEventsFound = 0;
       let fieldsFilledIn: string[] = [];
 
-      if (extractResult.content) {
-        try {
-          const parsed = JSON.parse(extractResult.content);
-          const pageEvents: Pass1Event[] = parsed.events ?? [];
+      {
+          const pageEvents: Pass1Event[] = linkBest.events;
 
           for (const pe of pageEvents) {
             pe.source_url = link.url;
@@ -545,7 +673,6 @@ export async function executeStrategyTree(
               if (ld.image && !match.photo_url) match.photo_url = ld.image;
             }
           }
-        } catch { /* parse error */ }
       }
 
       // Extract links from THIS subpage and add to frontier (BFS)
@@ -559,8 +686,8 @@ export async function executeStrategyTree(
       frontier.sort((a, b) => b.score - a.score);
 
       steps.push({
-        step: "link_follow", url: link.url, aiCalls: 1,
-        inputTokens: extractResult.inputTokens, outputTokens: extractResult.outputTokens,
+        step: "link_follow", url: link.url, aiCalls: 4,
+        inputTokens: linkBest.inputTokens, outputTokens: linkBest.outputTokens,
         eventsAffected: newEventsFound + fieldsFilledIn.length, fieldsFilledIn, durationMs: Date.now() - lfStart,
       });
 
