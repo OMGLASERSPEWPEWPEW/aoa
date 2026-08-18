@@ -4,6 +4,17 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.19.6',
+    date: '2026-08-18',
+    title: '4-model race on initial extraction only — BFS uses single model',
+    summary: 'Fixed: 4 models were firing on every BFS subpage (60 AI calls per school). Now 4-model race only on initial extraction, DeepSeek alone on subpages. 4x faster per school.',
+    details: [
+      'Fix: BFS link-follow uses single DeepSeek call instead of 4-model race (was 4x slower than needed)',
+      'Fix: website fallback uses single DeepSeek call',
+      'Keep: initial extraction still races 4 models for reliability',
+    ],
+  },
+  {
     version: '0.19.5',
     date: '2026-08-18',
     title: 'Model-level detail in class scrape dashboard',

@@ -544,20 +544,23 @@ export async function executeStrategyTree(
 
       const fbCleaned = cleanHtml(fbHtml);
       if (fbCleaned.length >= 100) {
-        const { best: fbBest } = await extractWithAllModels(buildExtractionPrompt(venue.name), fbCleaned);
-        budget.recordAiCall(fbBest.inputTokens, fbBest.outputTokens);
-        totalInputTokens += fbBest.inputTokens;
-        totalOutputTokens += fbBest.outputTokens;
+        const fbResult = await callDeepSeek(buildExtractionPrompt(venue.name), fbCleaned);
+        budget.recordAiCall(fbResult.inputTokens, fbResult.outputTokens);
+        totalInputTokens += fbResult.inputTokens;
+        totalOutputTokens += fbResult.outputTokens;
 
-        if (fbBest.events.length > 0) {
-          events = fbBest.events;
-          rawHtml = fbHtml;
-          for (const e of events) foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
+        if (fbResult.content) {
+          try {
+            const parsed = JSON.parse(fbResult.content);
+            events = parsed.events ?? [];
+            rawHtml = fbHtml;
+            for (const e of events) foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
+          } catch { /* parse error */ }
         }
 
         steps.push({
-          step: "website_fallback", url: venue.website_url, aiCalls: 4,
-          inputTokens: fbBest.inputTokens, outputTokens: fbBest.outputTokens,
+          step: "website_fallback", url: venue.website_url, aiCalls: 1,
+          inputTokens: fbResult.inputTokens, outputTokens: fbResult.outputTokens,
           eventsAffected: events.length, fieldsFilledIn: [], durationMs: Date.now() - fbStart,
         });
       }
@@ -619,17 +622,19 @@ export async function executeStrategyTree(
 
       if (linkCleaned.length < 100) continue;
 
-      // Discovery mode: use all models in parallel to find NEW events
-      const { best: linkBest } = await extractWithAllModels(buildExtractionPrompt(venue.name), linkCleaned);
-      budget.recordAiCall(linkBest.inputTokens, linkBest.outputTokens);
-      totalInputTokens += linkBest.inputTokens;
-      totalOutputTokens += linkBest.outputTokens;
+      // BFS subpages: single model (DeepSeek) — 4-model race only on initial extraction
+      const linkResult = await callDeepSeek(buildExtractionPrompt(venue.name), linkCleaned);
+      budget.recordAiCall(linkResult.inputTokens, linkResult.outputTokens);
+      totalInputTokens += linkResult.inputTokens;
+      totalOutputTokens += linkResult.outputTokens;
 
       let newEventsFound = 0;
       let fieldsFilledIn: string[] = [];
 
-      {
-          const pageEvents: Pass1Event[] = linkBest.events;
+      if (linkResult.content) {
+        try {
+          const parsed = JSON.parse(linkResult.content);
+          const pageEvents: Pass1Event[] = parsed.events ?? [];
 
           for (const pe of pageEvents) {
             pe.source_url = link.url;
@@ -673,6 +678,7 @@ export async function executeStrategyTree(
               if (ld.image && !match.photo_url) match.photo_url = ld.image;
             }
           }
+        } catch { /* parse error */ }
       }
 
       // Extract links from THIS subpage and add to frontier (BFS)
@@ -686,8 +692,8 @@ export async function executeStrategyTree(
       frontier.sort((a, b) => b.score - a.score);
 
       steps.push({
-        step: "link_follow", url: link.url, aiCalls: 4,
-        inputTokens: linkBest.inputTokens, outputTokens: linkBest.outputTokens,
+        step: "link_follow", url: link.url, aiCalls: 1,
+        inputTokens: linkResult.inputTokens, outputTokens: linkResult.outputTokens,
         eventsAffected: newEventsFound + fieldsFilledIn.length, fieldsFilledIn, durationMs: Date.now() - lfStart,
       });
 
