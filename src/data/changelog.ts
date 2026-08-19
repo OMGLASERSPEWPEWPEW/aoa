@@ -4,6 +4,17 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.4',
+    date: '2026-08-19',
+    title: 'Fix class scraping stuck at 0 — platform timeout',
+    summary: 'Class scraping no longer hangs on the first school. Each school now runs in its own edge function invocation.',
+    details: [
+      'Fix: class budget reduced from 600s to 120s — was exceeding edge function platform limits',
+      'Fix: start handler no longer processes first school inline — fires chain immediately so every school gets its own invocation',
+      'Fix: processVenue wrapped in try/catch — crashes now update the job row instead of silently dying',
+    ],
+  },
+  {
     version: '0.20.3',
     date: '2026-08-19',
     title: 'Tappable schools, fast modal, URL visibility in scrape errors',
