@@ -85,26 +85,35 @@ function ModelResultsRow({ results }: { results: ModelResult[] }) {
 
 function SchoolRow({ s }: { s: RecentSchoolEntry }) {
   const [expanded, setExpanded] = useState(false)
-  const isError = s.status !== 'success'
-  const statusColor = isError ? '#ef4444' : AMBER
+  const isPending = s.status === 'pending'
+  const isError = !isPending && s.status !== 'success'
+  const statusColor = isPending ? 'var(--ink-faint)' : isError ? '#ef4444' : AMBER
   const hasDetails = !!(s.calendarUrl || s.websiteUrl || s.errorMessage)
 
   return (
     <div
-      style={{ padding: '8px 0', borderBottom: '1px solid var(--rule)', cursor: hasDetails ? 'pointer' : 'default' }}
-      onClick={() => hasDetails && setExpanded(prev => !prev)}
+      style={{ padding: '8px 0', borderBottom: '1px solid var(--rule)', cursor: 'pointer', opacity: isPending ? 0.5 : 1, transition: 'opacity 0.3s' }}
+      onClick={() => setExpanded(prev => !prev)}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ ...mono, fontSize: 11, color: 'var(--ink)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {hasDetails && <span style={{ fontSize: 8, marginRight: 4, display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>&#9654;</span>}
+          <span style={{ fontSize: 8, marginRight: 4, display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>&#9654;</span>
           {s.name}
         </div>
         <div style={{ ...mono, fontSize: 9, color: statusColor, marginLeft: 8, flexShrink: 0 }}>
-          {isError
-            ? s.status.toUpperCase().replace('_', ' ')
-            : `${s.eventsCreated} new ${s.eventsFound} found`}
+          {isPending
+            ? 'QUEUED'
+            : isError
+              ? s.status.toUpperCase().replace('_', ' ')
+              : `${s.eventsCreated} new ${s.eventsFound} found`}
         </div>
       </div>
+
+      {isPending && !expanded && (
+        <div style={{ ...mono, fontSize: 8, color: 'var(--ink-faint)', marginTop: 2 }}>
+          classes · format · instructor · schedule · skill level
+        </div>
+      )}
 
       {s.trace && (
         <div style={{ ...mono, fontSize: 8, color: 'var(--ink-faint)', marginTop: 2 }}>
@@ -133,6 +142,11 @@ function SchoolRow({ s }: { s: RecentSchoolEntry }) {
               style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', textDecoration: 'underline', wordBreak: 'break-all' }}>
               {s.websiteUrl}
             </a>
+          )}
+          {isPending && (
+            <div style={{ ...mono, fontSize: 8, color: 'var(--ink-faint)' }}>
+              Waiting — will extract: classes, format, instructor, schedule, skill level
+            </div>
           )}
           {s.errorMessage && (
             <div style={{ ...mono, fontSize: 8, color: '#ef4444', wordBreak: 'break-all' }}>

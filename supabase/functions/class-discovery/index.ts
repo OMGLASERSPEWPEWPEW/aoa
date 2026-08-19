@@ -537,7 +537,31 @@ serve(async (req) => {
         .single();
 
       const newJobId = newJob?.id;
-      // Don't process inline — fire the chain so the first school gets its own invocation
+
+      // Pre-populate all schools as "pending" so the UI shows the full queue immediately
+      const { data: allSchools } = await supabase
+        .from("venues")
+        .select("name, calendar_url, website_url")
+        .eq("venue_type", "school")
+        .not("calendar_url", "is", null);
+
+      const pendingSchools = (allSchools ?? []).map((s: { name: string; calendar_url: string; website_url: string | null }) => ({
+        name: s.name,
+        status: "pending",
+        eventsFound: 0,
+        eventsCreated: 0,
+        durationMs: null,
+        errorMessage: null,
+        calendarUrl: s.calendar_url,
+        websiteUrl: s.website_url ?? null,
+        trace: null,
+      }));
+
+      await supabase.from("scrape_jobs").update({
+        recent_schools: pendingSchools,
+      }).eq("id", newJobId);
+
+      // Fire the chain so the first school gets its own invocation
       await fireChain(newJobId!, []);
 
       return new Response(
@@ -724,7 +748,7 @@ async function processSchoolSequential(
   }
 
   const recentSchools = (currentJob?.recent_schools as Array<Record<string, unknown>> ?? []);
-  recentSchools.unshift({
+  const completedEntry = {
     name: school.name,
     status: result.status,
     eventsFound: result.events_found,
@@ -734,8 +758,14 @@ async function processSchoolSequential(
     calendarUrl: school.calendar_url,
     websiteUrl: school.website_url ?? null,
     trace,
-  });
-  if (recentSchools.length > 20) recentSchools.length = 20;
+  };
+  const pendingIdx = recentSchools.findIndex((s: any) => s.name === school.name);
+  if (pendingIdx >= 0) {
+    recentSchools[pendingIdx] = completedEntry;
+  } else {
+    recentSchools.unshift(completedEntry);
+    if (recentSchools.length > 20) recentSchools.length = 20;
+  }
 
   await supabase.from("scrape_jobs").update({
     schools_processed: newProcessed,

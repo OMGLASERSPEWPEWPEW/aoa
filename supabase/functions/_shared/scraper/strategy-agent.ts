@@ -150,7 +150,6 @@ async function callPerplexity(systemPrompt: string, userContent: string, maxToke
       body: JSON.stringify({
         model: "sonar",
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userContent }],
-        response_format: { type: "json_object" },
         max_tokens: maxTokens,
         temperature: 0.1,
       }),
@@ -191,7 +190,8 @@ async function extractWithAllModels(
         let events: Pass1Event[] = [];
         if (result.content) {
           try {
-            const parsed = JSON.parse(result.content);
+            const cleaned = result.content.replace(/^[\s\S]*?```(?:json)?\s*\n?/i, "").replace(/\n?\s*```[\s\S]*$/, "").trim();
+            const parsed = JSON.parse(cleaned || result.content);
             events = parsed.events ?? [];
           } catch { /* parse error */ }
         }
