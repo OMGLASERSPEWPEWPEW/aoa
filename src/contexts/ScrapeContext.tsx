@@ -105,7 +105,7 @@ export function useScrape() {
   return ctx
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 45_000): Promise<Response> {
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 55_000): Promise<Response> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -115,12 +115,12 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 45_0
   }
 }
 
-async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+async function fetchWithRetry(url: string, init: RequestInit, timeoutMs = 55_000): Promise<Response> {
   try {
-    return await fetchWithTimeout(url, init)
+    return await fetchWithTimeout(url, init, timeoutMs)
   } catch {
     await new Promise((r) => setTimeout(r, 3000))
-    return await fetchWithTimeout(url, init)
+    return await fetchWithTimeout(url, init, timeoutMs)
   }
 }
 
@@ -403,38 +403,78 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       setClassDiscovery({ phase: 'scraping', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, recentSchools: [] })
       setClassDashboardOpen(true)
 
-      const res = await fetchWithRetry(`${baseUrl}/functions/v1/class-discovery`, {
+      // Fire the start request (don't await — it processes the first school and takes 60-90s)
+      const startPromise = fetchWithRetry(`${baseUrl}/functions/v1/class-discovery`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ action: 'start' }),
-      })
-      const data = await res.json()
+      }, 120_000)
 
-      if (data.error && !data.job_id) {
-        setClassDiscovery(prev => ({ ...prev, phase: 'error', error: data.error }))
-        return
+      // Poll for the job row immediately — it's created before the first school is processed
+      await new Promise((r) => setTimeout(r, 3000))
+      const { data: earlyJob } = await supabase
+        .from('scrape_jobs')
+        .select('id, total_venues')
+        .eq('job_type', 'class')
+        .eq('status', 'running')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (earlyJob) {
+        setClassDiscovery(prev => ({ ...prev, totalSchools: earlyJob.total_venues ?? 0 }))
+        pollClassJob(earlyJob.id)
       }
 
-      if (data.error && data.job_id) {
-        pollClassJob(data.job_id)
-        return
+      // Still await the start response to handle errors / edge cases
+      try {
+        const res = await startPromise
+        const data = await res.json()
+
+        if (data.error && !data.job_id) {
+          if (!earlyJob) {
+            setClassDiscovery(prev => ({ ...prev, phase: 'error', error: data.error }))
+          }
+          return
+        }
+
+        if (data.error && data.job_id) {
+          if (!earlyJob) pollClassJob(data.job_id)
+          return
+        }
+
+        const jobId = data.job_id
+        if (!jobId && !earlyJob) {
+          setClassDiscovery(prev => ({ ...prev, phase: 'done' }))
+          return
+        }
+
+        if (jobId && !earlyJob) {
+          const totalFromResponse = (data.remaining ?? 0) + 1
+          setClassDiscovery(prev => ({
+            ...prev,
+            phase: 'scraping',
+            currentSchool: data.school ?? null,
+            totalSchools: totalFromResponse,
+            schoolsScraped: 1,
+            eventsFound: data.events_found ?? 0,
+            eventsCreated: data.events_created ?? 0,
+          }))
+          pollClassJob(jobId)
+        }
+      } catch (fetchErr) {
+        // Start request timed out, but polling is already running if earlyJob was found
+        if (!earlyJob) {
+          const msg = fetchErr instanceof Error ? fetchErr.message : 'Unknown error'
+          const userMsg = msg === 'Failed to fetch' || msg.includes('load failed') || msg.includes('aborted')
+            ? 'Network error — the server took too long. The scrape may still be running; try refreshing.'
+            : msg
+          setClassDiscovery(prev => ({ ...prev, phase: 'error', error: userMsg }))
+        }
       }
-
-      const jobId = data.job_id
-      if (!jobId) {
-        setClassDiscovery(prev => ({ ...prev, phase: 'done' }))
-        return
-      }
-
-      setClassDiscovery(prev => ({
-        ...prev,
-        phase: 'scraping',
-        currentSchool: data.school ?? null,
-      }))
-
-      pollClassJob(jobId)
     } catch (err) {
-      setClassDiscovery(prev => ({ ...prev, phase: 'error', error: err instanceof Error ? err.message : 'Unknown error' }))
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      setClassDiscovery(prev => ({ ...prev, phase: 'error', error: msg }))
     }
   }, [pollClassJob])
 

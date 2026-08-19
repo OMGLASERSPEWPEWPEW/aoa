@@ -77,6 +77,32 @@ function isAggregatorDomain(domain: string): boolean {
   );
 }
 
+function humanizeDomain(domain: string): string {
+  const base = domain.replace(/\.(com|org|net|edu|co|io)$/i, "");
+  return base
+    .split(/[-.]/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function extractSchoolName(text: string, urlIndex: number, domain: string): string {
+  const window = text.substring(Math.max(0, urlIndex - 250), urlIndex);
+
+  const bold = window.match(/\*\*([^*]{3,60})\*\*[^*]*$/);
+  if (bold) return bold[1].trim();
+
+  const numbered = window.match(/\d+\.\s+\*?\*?([A-Z][A-Za-z0-9\s&'''.,\-/]+?)\*?\*?\s*[-–—:(]\s*[^]*$/);
+  if (numbered) return numbered[1].trim();
+
+  const bulleted = window.match(/[-•]\s+\*?\*?([A-Z][A-Za-z0-9\s&'''.,\-/]+?)\*?\*?\s*[-–—:(]\s*[^]*$/);
+  if (bulleted) return bulleted[1].trim();
+
+  const loose = window.match(/(?:^|\n)\s*([A-Z][A-Za-z0-9\s&'''.,\-/]{2,55}?)(?:\s*[-–—:(]|\s*https?:)/);
+  if (loose) return loose[1].trim();
+
+  return humanizeDomain(domain);
+}
+
 // --- FR-4: Discovery observability logging ---
 
 interface DiscoveryLogEntry {
@@ -156,15 +182,14 @@ async function searchForSchools(): Promise<{ results: DiscoveryResult[]; queries
       const data = await res.json();
       const text: string = data.choices?.[0]?.message?.content ?? "";
 
-      const urlMatches = text.matchAll(/https?:\/\/[^\s"'<>)\]]+/g);
+      const urlMatches = text.matchAll(/https?:\/\/[^\s"'<>)\[\]]+/g);
       for (const m of urlMatches) {
-        const link = m[0].replace(/[.,;:!?)]+$/, "");
+        const link = m[0].replace(/[.,;:!?)]+$/, "").replace(/\[\d*$/, "");
         const domain = extractDomain(link);
         if (!domain || seenDomains.has(domain)) continue;
         seenDomains.add(domain);
 
-        const nameMatch = text.substring(Math.max(0, m.index! - 120), m.index!).match(/(?:\*\*|^|\n)([A-Z][A-Za-z\s&''.\-]+?)(?:\*\*|:|\s*[-–—]\s*|\s*\()/);
-        const title = nameMatch ? nameMatch[1].trim() : domain;
+        const title = extractSchoolName(text, m.index!, domain);
 
         allResults.push({
           query: prompt.slice(0, 60),
