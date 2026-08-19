@@ -149,8 +149,8 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
   if (result.status === "success" && result.events_found === 0) {
     result.status = (result.strategy_stop_reason === "recovery_exhausted" ? "fetch_error" : "parse_error") as any;
     result.error_message = result.strategy_stop_reason === "recovery_exhausted"
-      ? "All URL recovery strategies exhausted — 0 events found"
-      : "Extraction returned 0 events from valid page";
+      ? `All URL recovery strategies exhausted — 0 events found: ${venue.calendar_url}`
+      : `Extraction returned 0 events from valid page: ${venue.calendar_url}`;
   }
 
   result.duration_ms = Date.now() - start;

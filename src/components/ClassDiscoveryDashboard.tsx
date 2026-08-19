@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useScrape, type RecentSchoolEntry, type ModelResult } from '../contexts/ScrapeContext'
 
 const serif = { fontFamily: "'Newsreader', Georgia, serif" } as const
@@ -83,15 +84,19 @@ function ModelResultsRow({ results }: { results: ModelResult[] }) {
 }
 
 function SchoolRow({ s }: { s: RecentSchoolEntry }) {
+  const [expanded, setExpanded] = useState(false)
   const isError = s.status !== 'success'
   const statusColor = isError ? '#ef4444' : AMBER
+  const hasDetails = !!(s.calendarUrl || s.websiteUrl || s.errorMessage)
 
   return (
-    <div style={{
-      padding: '8px 0', borderBottom: '1px solid var(--rule)',
-    }}>
+    <div
+      style={{ padding: '8px 0', borderBottom: '1px solid var(--rule)', cursor: hasDetails ? 'pointer' : 'default' }}
+      onClick={() => hasDetails && setExpanded(prev => !prev)}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ ...mono, fontSize: 11, color: 'var(--ink)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {hasDetails && <span style={{ fontSize: 8, marginRight: 4, display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>&#9654;</span>}
           {s.name}
         </div>
         <div style={{ ...mono, fontSize: 9, color: statusColor, marginLeft: 8, flexShrink: 0 }}>
@@ -109,9 +114,31 @@ function SchoolRow({ s }: { s: RecentSchoolEntry }) {
 
       {s.trace?.modelResults && <ModelResultsRow results={s.trace.modelResults} />}
 
-      {s.errorMessage && (
+      {!expanded && s.errorMessage && (
         <div style={{ ...mono, fontSize: 8, color: '#ef4444', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {s.errorMessage}
+        </div>
+      )}
+
+      {expanded && (
+        <div style={{ marginTop: 6, paddingLeft: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {s.calendarUrl && (
+            <a href={s.calendarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+              style={{ ...mono, fontSize: 9, color: AMBER, textDecoration: 'underline', wordBreak: 'break-all' }}>
+              {s.calendarUrl}
+            </a>
+          )}
+          {s.websiteUrl && s.websiteUrl !== s.calendarUrl && (
+            <a href={s.websiteUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+              style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', textDecoration: 'underline', wordBreak: 'break-all' }}>
+              {s.websiteUrl}
+            </a>
+          )}
+          {s.errorMessage && (
+            <div style={{ ...mono, fontSize: 8, color: '#ef4444', wordBreak: 'break-all' }}>
+              {s.errorMessage}
+            </div>
+          )}
         </div>
       )}
     </div>

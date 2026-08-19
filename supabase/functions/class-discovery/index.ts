@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { processVenue, processClassSessions } from "../_shared/scraper/process-venue.ts";
 import { CLASS_FIELD_WEIGHTS } from "../_shared/scraper/completeness-evaluator.ts";
 import type { VenueTarget, StrategyProfile } from "../_shared/scraper/types.ts";
+import { geocode } from "../_shared/geocoder.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -75,6 +76,54 @@ function isAggregatorDomain(domain: string): boolean {
   return [...AGGREGATOR_DOMAINS].some(agg =>
     domain === agg || domain.endsWith(`.${agg}`)
   );
+}
+
+async function extractAddressFromUrl(url: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const res = await fetch(url, {
+      headers: { "User-Agent": "ArtOfArt-EventBot/1.0" },
+      signal: controller.signal,
+      redirect: "follow",
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    const patterns = [
+      /(\d{1,5}\s+[NSEW]\.?\s+[\w\s.]+(?:Ave|Avenue|St|Street|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Ct|Court)\.?(?:\s*,?\s*(?:Suite|Ste|Unit|Apt|#)\s*[\w-]+)?)\s*,?\s*Chicago/i,
+      /(\d{1,5}\s+[\w\s.]+(?:Ave|Avenue|St|Street|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Ct|Court)\.?(?:\s*,?\s*(?:Suite|Ste|Unit|Apt|#)\s*[\w-]+)?)\s*,?\s*Chicago/i,
+    ];
+
+    for (const pat of patterns) {
+      const m = html.match(pat);
+      if (m) return `${m[1]}, Chicago, IL`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function geocodeSchool(name: string, websiteUrl: string): Promise<{ lat: number; lng: number }> {
+  const address = await extractAddressFromUrl(websiteUrl);
+  if (address) {
+    const geo = await geocode(address);
+    if (geo) {
+      console.log(`[class-discovery] Geocoded ${name} via address: ${address} → ${geo.lat}, ${geo.lng}`);
+      return { lat: geo.lat, lng: geo.lng };
+    }
+  }
+
+  const geo = await geocode(`${name}, Chicago, IL`);
+  if (geo) {
+    console.log(`[class-discovery] Geocoded ${name} via name → ${geo.lat}, ${geo.lng}`);
+    return { lat: geo.lat, lng: geo.lng };
+  }
+
+  console.log(`[class-discovery] Could not geocode ${name}, using Chicago center`);
+  return { lat: 41.8781, lng: -87.6298 };
 }
 
 function humanizeDomain(domain: string): string {
@@ -278,6 +327,9 @@ async function deduplicateAndInsert(
 
     const slug = await resolveUniqueSlug(generateSlug(result.title));
 
+    const { lat, lng } = await geocodeSchool(result.title, result.link);
+    await delay(1100);
+
     const { data: newVenue, error: venueError } = await supabase.from("venues").insert({
       name: result.title,
       slug,
@@ -286,6 +338,8 @@ async function deduplicateAndInsert(
       calendar_url: result.link,
       city: "chicago",
       source: "discovery",
+      latitude: lat,
+      longitude: lng,
     }).select("id").single();
 
     if (venueError) {
@@ -305,8 +359,8 @@ async function deduplicateAndInsert(
       name: result.title,
       short_name: result.title.slice(0, 14).toUpperCase(),
       slug,
-      latitude: 41.8781,
-      longitude: -87.6298,
+      latitude: lat,
+      longitude: lng,
       neighborhood: "Chicago",
       discipline: "acting",
       venue_id: newVenue.id,
@@ -411,6 +465,31 @@ serve(async (req) => {
     if (action === "discover") {
       const runId = crypto.randomUUID();
       return await runDiscoverAction(runId, cors);
+    }
+
+    // Geocode backfill — fix existing schools stuck at Chicago center
+    if (action === "geocode-backfill") {
+      const { data: stuckSchools } = await supabase
+        .from("schools")
+        .select("id, name, url, venue_id, latitude, longitude")
+        .eq("latitude", 41.8781)
+        .eq("longitude", -87.6298);
+
+      let updated = 0;
+      for (const school of stuckSchools ?? []) {
+        const { lat, lng } = await geocodeSchool(school.name, school.url ?? "");
+        if (lat !== 41.8781 || lng !== -87.6298) {
+          await supabase.from("schools").update({ latitude: lat, longitude: lng }).eq("id", school.id);
+          await supabase.from("venues").update({ latitude: lat, longitude: lng }).eq("id", school.venue_id);
+          updated++;
+        }
+        await delay(1100);
+      }
+
+      return new Response(
+        JSON.stringify({ action: "geocode-backfill", total: stuckSchools?.length ?? 0, updated }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
     }
 
     // --- Start a new scrape job ---
@@ -636,6 +715,8 @@ async function processSchoolWithEarlyChain(
     eventsCreated: result.events_created,
     durationMs: result.duration_ms,
     errorMessage: result.error_message,
+    calendarUrl: school.calendar_url,
+    websiteUrl: school.website_url ?? null,
     trace,
   });
   if (recentSchools.length > 20) recentSchools.length = 20;

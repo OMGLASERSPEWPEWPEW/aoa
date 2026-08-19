@@ -60,6 +60,8 @@ export interface RecentSchoolEntry {
   eventsCreated: number
   durationMs?: number
   errorMessage?: string | null
+  calendarUrl?: string
+  websiteUrl?: string | null
   trace?: {
     stopReason: string | null
     aiCalls: number | null
@@ -410,19 +412,23 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ action: 'start' }),
       }, 120_000)
 
-      // Poll for the job row immediately — it's created before the first school is processed
-      await new Promise((r) => setTimeout(r, 3000))
-      const { data: earlyJob } = await supabase
-        .from('scrape_jobs')
-        .select('id, total_venues')
-        .eq('job_type', 'class')
-        .eq('status', 'running')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      // Fast-poll for the job row — it's created before the first school is processed
+      let earlyJob: { id: string; total_venues: number | null } | null = null
+      for (let i = 0; i < 6; i++) {
+        await new Promise((r) => setTimeout(r, 500))
+        const { data } = await supabase
+          .from('scrape_jobs')
+          .select('id, total_venues')
+          .eq('job_type', 'class')
+          .eq('status', 'running')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (data) { earlyJob = data; break }
+      }
 
       if (earlyJob) {
-        setClassDiscovery(prev => ({ ...prev, totalSchools: earlyJob.total_venues ?? 0 }))
+        setClassDiscovery(prev => ({ ...prev, totalSchools: earlyJob!.total_venues ?? 0 }))
         pollClassJob(earlyJob.id)
       }
 
