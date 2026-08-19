@@ -4,6 +4,17 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.1',
+    date: '2026-08-19',
+    title: 'Auto-insert discovered schools — no more promotion queue',
+    summary: 'Schools found by Perplexity now go directly into the database. The manual Promote/Reject queue is removed.',
+    details: [
+      'Change: Perplexity-discovered schools insert directly into venues + schools tables (no staging queue)',
+      'Remove: School Discovery Queue UI with Promote/Reject buttons from Coverage tab',
+      'Add: slug collision handling in Edge Function (appends -2, -3... if needed)',
+    ],
+  },
+  {
     version: '0.20.0',
     date: '2026-08-19',
     title: 'Discovery-only school pipeline — no more seed data',
