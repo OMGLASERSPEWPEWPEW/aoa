@@ -22,6 +22,7 @@ const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+const PERPLEXITY_API_KEY = Deno.env.get("PERPLEXITY_API_KEY") ?? "";
 
 const AI_TIMEOUT = 55_000;
 const FETCH_TIMEOUT = 45_000;
@@ -138,6 +139,29 @@ async function callHaiku(systemPrompt: string, userContent: string, maxTokens = 
   } finally { clearTimeout(timeout); }
 }
 
+async function callPerplexity(systemPrompt: string, userContent: string, maxTokens = 8192): Promise<AiResult> {
+  if (!PERPLEXITY_API_KEY) return { content: null, inputTokens: 0, outputTokens: 0 };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT);
+  try {
+    const response = await fetch("https://api.perplexity.ai/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${PERPLEXITY_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "sonar",
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userContent }],
+        response_format: { type: "json_object" },
+        max_tokens: maxTokens,
+        temperature: 0.1,
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Perplexity API error (${response.status})`);
+    const data: DeepSeekResponse = await response.json();
+    return { content: data.choices[0]?.message?.content ?? null, inputTokens: data.usage?.prompt_tokens ?? 0, outputTokens: data.usage?.completion_tokens ?? 0 };
+  } finally { clearTimeout(timeout); }
+}
+
 interface ModelExtractionResult {
   model: string;
   events: Pass1Event[];
@@ -153,10 +177,9 @@ async function extractWithAllModels(
   content: string,
 ): Promise<{ best: ModelExtractionResult; all: ModelExtractionResult[] }> {
   const models: Array<{ name: string; fn: typeof callDeepSeek }> = [
-    { name: "deepseek-v4-flash", fn: callDeepSeek },
     { name: "gemini-3.5-flash", fn: callGemini },
     { name: "gpt-5.6-luna", fn: callOpenAI },
-    { name: "claude-haiku-4-5", fn: callHaiku },
+    { name: "sonar", fn: callPerplexity },
   ];
 
   const start = Date.now();
@@ -299,7 +322,11 @@ export async function executeStrategyTree(
   const weights = effectiveProfile.fieldWeights;
   const isClassDomain = effectiveProfile.domain === "class";
 
-  const budget = new CostBudget();
+  const budget = new CostBudget(
+    isClassDomain
+      ? { maxAiCalls: 200, maxFetches: 100, maxUsd: 5.00, wallClockMs: 600_000 }
+      : undefined,
+  );
   const visitedUrls = new Set<string>();
   const steps: StrategyStep[] = [];
   let totalInputTokens = 0;
@@ -399,7 +426,7 @@ export async function executeStrategyTree(
     totalInputTokens += best.inputTokens;
     totalOutputTokens += best.outputTokens;
 
-    console.log(`[scraper-v3] ${venue.name}: 4-model extraction → winner: ${best.model} (${best.events.length} events). Results: ${modelResults.map(r => `${r.model}=${r.events.length}/${r.status}`).join(", ")}`);
+    console.log(`[scraper-v3] ${venue.name}: 3-model extraction → winner: ${best.model} (${best.events.length} events). Results: ${modelResults.map(r => `${r.model}=${r.events.length}/${r.status}`).join(", ")}`);
 
     // Set source_url for seed page events
     for (const e of events) {
