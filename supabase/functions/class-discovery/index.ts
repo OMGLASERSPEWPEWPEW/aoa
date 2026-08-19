@@ -537,11 +537,11 @@ serve(async (req) => {
         .single();
 
       const newJobId = newJob?.id;
-      const runId = crypto.randomUUID();
-      const result = await processSchoolWithEarlyChain(school, runId, newJobId!, []);
+      // Don't process inline — fire the chain so the first school gets its own invocation
+      await fireChain(newJobId!, []);
 
       return new Response(
-        JSON.stringify(result),
+        JSON.stringify({ job_id: newJobId, school: school.name, remaining: totalSchools, total_venues: totalSchools }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
@@ -582,7 +582,7 @@ serve(async (req) => {
     }
 
     const runId = crypto.randomUUID();
-    const result = await processSchoolWithEarlyChain(school, runId, jobId, processedIds);
+    const result = await processSchoolSequential(school, runId, jobId, processedIds);
 
     return new Response(
       JSON.stringify(result),
@@ -598,28 +598,39 @@ serve(async (req) => {
   }
 });
 
-// Fire chain BEFORE processing so the next invocation starts independently,
-// even if the current school takes longer than the Deno isolate timeout.
-function fireChain(jobId: string, processedIds: string[]): void {
+async function fireChain(jobId: string, processedIds: string[]): Promise<boolean> {
   const selfUrl = `${SUPABASE_URL}/functions/v1/class-discovery`;
-  const controller = new AbortController();
-  setTimeout(() => controller.abort(), 8000);
-  fetch(selfUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-      "x-scraper-key": SCRAPER_SECRET,
-    },
-    body: JSON.stringify({ job_id: jobId, processed_ids: processedIds }),
-    signal: controller.signal,
-  }).then(
-    (r) => console.log(`[class-discovery] Chain fired: ${r.status}`),
-    () => console.log("[class-discovery] Chain aborted (expected)"),
-  );
+  const MAX_ATTEMPTS = 3;
+  const RETRY_DELAY_MS = 2000;
+  const TIMEOUT_MS = 15_000;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      const res = await fetch(selfUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "x-scraper-key": SCRAPER_SECRET,
+        },
+        body: JSON.stringify({ job_id: jobId, processed_ids: processedIds }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      console.log(`[class-discovery] Chain fired (attempt ${attempt}): ${res.status}`);
+      return true;
+    } catch (err) {
+      console.warn(`[class-discovery] Chain attempt ${attempt}/${MAX_ATTEMPTS} failed:`, err instanceof Error ? err.message : err);
+      if (attempt < MAX_ATTEMPTS) await delay(RETRY_DELAY_MS);
+    }
+  }
+  console.error(`[class-discovery] Chain failed after ${MAX_ATTEMPTS} attempts`);
+  return false;
 }
 
-async function processSchoolWithEarlyChain(
+async function processSchoolSequential(
   school: VenueTarget,
   runId: string,
   jobId: string,
@@ -627,18 +638,23 @@ async function processSchoolWithEarlyChain(
 ): Promise<Record<string, unknown>> {
   const allProcessedIds = [...previousProcessedIds, school.id];
 
-  // Check remaining BEFORE processing — fire chain immediately
-  const { remaining } = await getNextSchool(jobId, allProcessedIds);
-  if (remaining > 0) {
-    console.log(`[class-discovery] Early chain: ${remaining} remaining after ${school.name}`);
-    fireChain(jobId, allProcessedIds);
-  }
-
   console.log(`[class-discovery] Processing school: ${school.name}`);
-  const result = await processVenue(school, runId, {
-    profile: CLASS_PROFILE,
-    defaultEventType: "class",
-  });
+  let result: Awaited<ReturnType<typeof processVenue>>;
+  try {
+    result = await processVenue(school, runId, {
+      profile: CLASS_PROFILE,
+      defaultEventType: "class",
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[class-discovery] processVenue crashed for ${school.name}: ${msg}`);
+    result = {
+      venue_id: school.id, venue_name: school.name, status: "parse_error" as any,
+      events_found: 0, events_created: 0, events_updated: 0,
+      error_message: `processVenue crash: ${msg}`, ai_input_tokens: 0, ai_output_tokens: 0,
+      duration_ms: 0,
+    };
+  }
 
   try {
     if (result.status === "success" && result.events_found > 0) {
@@ -731,7 +747,12 @@ async function processSchoolWithEarlyChain(
     recent_schools: recentSchools,
   }).eq("id", jobId);
 
-  if (remaining === 0) {
+  const { remaining } = await getNextSchool(jobId, allProcessedIds);
+
+  if (remaining > 0) {
+    console.log(`[class-discovery] Sequential chain: ${remaining} remaining after ${school.name}`);
+    await fireChain(jobId, allProcessedIds);
+  } else {
     await supabase.from("scrape_jobs").update({
       status: "completed",
       completed_at: new Date().toISOString(),

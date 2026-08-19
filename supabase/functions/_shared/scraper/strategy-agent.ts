@@ -324,7 +324,7 @@ export async function executeStrategyTree(
 
   const budget = new CostBudget(
     isClassDomain
-      ? { maxAiCalls: 200, maxFetches: 100, maxUsd: 5.00, wallClockMs: 600_000 }
+      ? { maxAiCalls: 40, maxFetches: 30, maxUsd: 1.00, wallClockMs: 120_000 }
       : undefined,
   );
   const visitedUrls = new Set<string>();
