@@ -4,6 +4,18 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.3',
+    date: '2026-08-19',
+    title: 'Tappable schools, fast modal, URL visibility in scrape errors',
+    summary: 'School rows expand on tap to show URLs, scrape modal loads instantly, and "0 events" errors now include the scraped URL.',
+    details: [
+      'Fix: scrape classes modal no longer shows "0 of 0" for 8 seconds — fast-polls job row every 500ms',
+      'Add: school rows are tappable — expand to show calendar URL and website URL as clickable links',
+      'Fix: "Extraction returned 0 events" error messages now include the actual URL that was scraped',
+      'Add: backend surfaces calendarUrl and websiteUrl in scrape job progress data',
+    ],
+  },
+  {
     version: '0.20.2',
     date: '2026-08-19',
     title: 'Fix school discovery data quality + scrape progress UI',
