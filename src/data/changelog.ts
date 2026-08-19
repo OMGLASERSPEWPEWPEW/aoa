@@ -4,6 +4,19 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.5',
+    date: '2026-08-19',
+    title: 'Pre-populated school queue, rich rows, Sonar fix',
+    summary: 'All 18 schools appear immediately as queued rows when scraping starts. Sonar extraction fixed — was failing on unsupported response_format parameter.',
+    details: [
+      'Add: all schools pre-populate as "QUEUED" rows with URLs when scrape starts — no more empty modal',
+      'Add: pending rows show expected extraction fields (classes, format, instructor, schedule, skill level)',
+      'Add: completed rows replace their pending entry in-place instead of prepending',
+      'Fix: Perplexity Sonar was failing instantly (41ms) due to unsupported response_format parameter — removed it',
+      'Fix: JSON parse now strips markdown fences for Sonar responses',
+    ],
+  },
+  {
     version: '0.20.4',
     date: '2026-08-19',
     title: 'Fix class scraping stuck at 0 — platform timeout',
