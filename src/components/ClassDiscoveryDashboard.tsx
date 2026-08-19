@@ -88,7 +88,6 @@ function SchoolRow({ s }: { s: RecentSchoolEntry }) {
   const isPending = s.status === 'pending'
   const isError = !isPending && s.status !== 'success'
   const statusColor = isPending ? 'var(--ink-faint)' : isError ? '#ef4444' : AMBER
-  const hasDetails = !!(s.calendarUrl || s.websiteUrl || s.errorMessage)
 
   return (
     <div
