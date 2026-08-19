@@ -45,7 +45,7 @@ const AGGREGATOR_DOMAINS = new Set([
 const DISCOVERY_PROMPTS = [
   "List every improv and comedy training center in Chicago that offers adult classes. For each, provide the school name and the URL of their classes or training page. Include smaller studios, not just Second City and iO.",
   "List every acting studio in Chicago that offers adult classes in Meisner, scene study, on-camera, voiceover, or audition technique. For each, provide the school name and website URL. Include independent studios and conservatories, not just university programs.",
-  "List every musical theater, physical theater, sketch comedy, and comedy writing school in Chicago that offers adult classes or workshops. For each, provide the school name and website URL.",
+  "List every musical theater performance training program, physical theater, sketch comedy, and comedy writing program in Chicago that offers adult classes or workshops. Exclude music conservatories, instrumental music schools, classical music programs, dance-only studios, and orchestral training. For each, provide the school name and website URL.",
 ];
 
 function getCorsHeaders(req: Request): Record<string, string> {
@@ -344,7 +344,7 @@ async function runDiscoverAction(runId: string, cors: Record<string, string>): P
   console.log(`[class-discovery] Discovery run ${runId}: ${queriesRun} queries, ${serpResults.length} raw results, ${blocked} blocked, ${known} known, ${queued} queued`);
 
   return new Response(
-    JSON.stringify({ action: "discover", run_id: runId, queued, known, blocked, queries_run: queriesRun }),
+    JSON.stringify({ action: "discover", run_id: runId, queued, known, blocked, queries_run: queriesRun, schools: serpResults.map(r => ({ name: r.title, url: r.link, domain: r.domain })) }),
     { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
   );
 }
@@ -387,6 +387,15 @@ serve(async (req) => {
 
     // --- Start a new scrape job ---
     if (action === "start" || (!jobId && !action)) {
+      // Auto-cleanup stale jobs (stuck > 30 min)
+      const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      await supabase
+        .from("scrape_jobs")
+        .update({ status: "failed", error: "Stale job auto-cleanup (>30 min)" })
+        .eq("job_type", "class")
+        .eq("status", "running")
+        .lt("created_at", thirtyMinAgo);
+
       const { data: existingJob } = await supabase
         .from("scrape_jobs")
         .select("id")
@@ -422,7 +431,7 @@ serve(async (req) => {
 
       const newJobId = newJob?.id;
       const runId = crypto.randomUUID();
-      const result = await processFirstSchool(school, runId, newJobId!, []);
+      const result = await processSchoolWithEarlyChain(school, runId, newJobId!, []);
 
       return new Response(
         JSON.stringify(result),
@@ -454,7 +463,6 @@ serve(async (req) => {
     const { school, remaining } = await getNextSchool(jobId, processedIds);
 
     if (!school) {
-      // All schools processed — just complete, no SerpAPI (FR-1: discovery is decoupled)
       await supabase.from("scrape_jobs").update({
         status: "completed",
         completed_at: new Date().toISOString(),
@@ -467,7 +475,7 @@ serve(async (req) => {
     }
 
     const runId = crypto.randomUUID();
-    const result = await processFirstSchool(school, runId, jobId, processedIds);
+    const result = await processSchoolWithEarlyChain(school, runId, jobId, processedIds);
 
     return new Response(
       JSON.stringify(result),
@@ -483,14 +491,43 @@ serve(async (req) => {
   }
 });
 
-async function processFirstSchool(
+// Fire chain BEFORE processing so the next invocation starts independently,
+// even if the current school takes longer than the Deno isolate timeout.
+function fireChain(jobId: string, processedIds: string[]): void {
+  const selfUrl = `${SUPABASE_URL}/functions/v1/class-discovery`;
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), 8000);
+  fetch(selfUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "x-scraper-key": SCRAPER_SECRET,
+    },
+    body: JSON.stringify({ job_id: jobId, processed_ids: processedIds }),
+    signal: controller.signal,
+  }).then(
+    (r) => console.log(`[class-discovery] Chain fired: ${r.status}`),
+    () => console.log("[class-discovery] Chain aborted (expected)"),
+  );
+}
+
+async function processSchoolWithEarlyChain(
   school: VenueTarget,
   runId: string,
   jobId: string,
   previousProcessedIds: string[],
 ): Promise<Record<string, unknown>> {
-  console.log(`[class-discovery] Processing school: ${school.name}`);
+  const allProcessedIds = [...previousProcessedIds, school.id];
 
+  // Check remaining BEFORE processing — fire chain immediately
+  const { remaining } = await getNextSchool(jobId, allProcessedIds);
+  if (remaining > 0) {
+    console.log(`[class-discovery] Early chain: ${remaining} remaining after ${school.name}`);
+    fireChain(jobId, allProcessedIds);
+  }
+
+  console.log(`[class-discovery] Processing school: ${school.name}`);
   const result = await processVenue(school, runId, {
     profile: CLASS_PROFILE,
     defaultEventType: "class",
@@ -545,7 +582,6 @@ async function processFirstSchool(
     modelResults: null as unknown,
   } : null;
 
-  // Pull model results from scrape_logs (written by processVenue)
   if (trace) {
     const { data: logRow } = await supabase
       .from("scrape_logs")
@@ -586,32 +622,7 @@ async function processFirstSchool(
     recent_schools: recentSchools,
   }).eq("id", jobId);
 
-  const allProcessedIds = [...previousProcessedIds, school.id];
-  const { remaining } = await getNextSchool(jobId, allProcessedIds);
-
-  if (remaining > 0) {
-    const selfUrl = `${SUPABASE_URL}/functions/v1/class-discovery`;
-    const chainController = new AbortController();
-    setTimeout(() => chainController.abort(), 8000);
-    try {
-      await fetch(selfUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "x-scraper-key": SCRAPER_SECRET,
-        },
-        body: JSON.stringify({
-          job_id: jobId,
-          processed_ids: allProcessedIds,
-        }),
-        signal: chainController.signal,
-      });
-    } catch {
-      // Timeout or abort is expected — the next invocation runs independently
-    }
-  } else {
-    // FR-1: No runSerpSearch here — discovery is decoupled
+  if (remaining === 0) {
     await supabase.from("scrape_jobs").update({
       status: "completed",
       completed_at: new Date().toISOString(),

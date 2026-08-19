@@ -400,7 +400,7 @@ function CoverageTab() {
   const [promotingId, setPromotingId] = useState<string | null>(null)
   const [promoteError, setPromoteError] = useState<string | null>(null)
   const [discoveryRunning, setDiscoveryRunning] = useState(false)
-  const [discoveryResult, setDiscoveryResult] = useState<{ queued: number; known: number; blocked: number; queries_run: number; warning?: string } | null>(null)
+  const [discoveryResult, setDiscoveryResult] = useState<{ queued: number; known: number; blocked: number; queries_run: number; warning?: string; schools?: Array<{ name: string; url: string; domain: string }> } | null>(null)
 
   useEffect(() => {
     supabase
@@ -627,10 +627,24 @@ function CoverageTab() {
         </button>
       </div>
       {discoveryResult && (
-        <div style={{ ...mono, fontSize: 10, color: discoveryResult.warning ? '#ef4444' : '#D4A017', marginBottom: 8 }}>
-          {discoveryResult.warning
-            ? `Discovery: ${discoveryResult.warning}`
-            : `Discovery: ${discoveryResult.queries_run} queries · ${discoveryResult.queued} new schools queued · ${discoveryResult.blocked} blocked · ${discoveryResult.known} known`}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 10, color: discoveryResult.warning ? '#ef4444' : '#D4A017' }}>
+            {discoveryResult.warning
+              ? `Discovery: ${discoveryResult.warning}`
+              : `Discovery: ${discoveryResult.queries_run} queries · ${discoveryResult.queued} new schools queued · ${discoveryResult.blocked} blocked · ${discoveryResult.known} known`}
+          </div>
+          {discoveryResult.schools && discoveryResult.schools.length > 0 && (
+            <div style={{ marginTop: 6 }}>
+              {discoveryResult.schools.map((s, i) => (
+                <div key={i} style={{ ...mono, fontSize: 9, color: 'var(--ink-dim)', padding: '2px 0', display: 'flex', gap: 8 }}>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-faint)', textDecoration: 'none', flexShrink: 0 }}>
+                    {s.domain} ↗
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
       {backfillResult && backfillResult.events_processed >= 0 && (
@@ -708,9 +722,10 @@ function CoverageTab() {
                   {entry.raw_name}
                 </div>
                 {entry.raw_website_url && (
-                  <div style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {extractDomain(entry.raw_website_url ?? '')}
-                  </div>
+                  <a href={entry.raw_website_url} target="_blank" rel="noopener noreferrer"
+                    style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', textDecoration: 'none' }}>
+                    {extractDomain(entry.raw_website_url ?? '')} ↗
+                  </a>
                 )}
                 {entry.raw_description && (
                   <div style={{ ...mono, fontSize: 9, color: 'var(--ink-dim)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
