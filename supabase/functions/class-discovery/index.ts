@@ -85,7 +85,7 @@ interface DiscoveryLogEntry {
   raw_url: string;
   raw_title: string;
   domain: string;
-  disposition: "queued" | "blocked_aggregator" | "already_known_venue" | "already_in_queue" | "insert_error";
+  disposition: "inserted" | "queued" | "blocked_aggregator" | "already_known_venue" | "already_in_queue" | "insert_error";
   reason?: string;
 }
 
@@ -184,12 +184,26 @@ async function searchForSchools(): Promise<{ results: DiscoveryResult[]; queries
   return { results: allResults, queriesRun };
 }
 
-async function deduplicateAndQueue(
-  results: SerpSearchResult[],
+function generateSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
+}
+
+async function resolveUniqueSlug(baseSlug: string): Promise<string> {
+  const { data } = await supabase.from("venues").select("slug").eq("slug", baseSlug).maybeSingle();
+  if (!data) return baseSlug;
+  for (let i = 2; i <= 10; i++) {
+    const candidate = `${baseSlug}-${i}`;
+    const { data: dup } = await supabase.from("venues").select("slug").eq("slug", candidate).maybeSingle();
+    if (!dup) return candidate;
+  }
+  return `${baseSlug}-${Date.now()}`;
+}
+
+async function deduplicateAndInsert(
+  results: DiscoveryResult[],
   runId: string,
-): Promise<{ queued: number; known: number; blocked: number }> {
-  // FR-2: Pre-filter aggregator domains
-  const filtered: SerpSearchResult[] = [];
+): Promise<{ inserted: number; known: number; blocked: number }> {
+  const filtered: DiscoveryResult[] = [];
   let blocked = 0;
 
   for (const result of results) {
@@ -219,17 +233,7 @@ async function deduplicateAndQueue(
     if (v.calendar_url) existingDomains.add(extractDomain(v.calendar_url));
   }
 
-  const { data: queuedVenues } = await supabase
-    .from("venue_discovery_queue")
-    .select("raw_website_url, detail_page_url");
-
-  const queuedDomains = new Set<string>();
-  for (const q of queuedVenues ?? []) {
-    if (q.raw_website_url) queuedDomains.add(extractDomain(q.raw_website_url));
-    if (q.detail_page_url) queuedDomains.add(extractDomain(q.detail_page_url));
-  }
-
-  let queued = 0;
+  let inserted = 0;
   let known = 0;
 
   for (const result of filtered) {
@@ -247,36 +251,19 @@ async function deduplicateAndQueue(
       continue;
     }
 
-    if (queuedDomains.has(result.domain)) {
-      known++;
-      await logDiscoveryResult({
-        run_id: runId,
-        query: result.query,
-        raw_url: result.link,
-        raw_title: result.title,
-        domain: result.domain,
-        disposition: "already_in_queue",
-        reason: "Domain already in discovery queue",
-      });
-      continue;
-    }
+    const slug = await resolveUniqueSlug(generateSlug(result.title));
 
-    const { error } = await supabase.from("venue_discovery_queue").insert({
-      source_id: null,
-      run_id: runId,
-      raw_name: result.title,
-      raw_address: null,
-      raw_website_url: result.link,
-      raw_genre_tags: [],
-      raw_neighborhood: null,
-      raw_category: "school",
-      raw_description: result.snippet,
-      raw_phone: null,
-      raw_photo_url: null,
-      detail_page_url: result.link,
-    });
+    const { data: newVenue, error: venueError } = await supabase.from("venues").insert({
+      name: result.title,
+      slug,
+      venue_type: "school",
+      website_url: result.link,
+      calendar_url: result.link,
+      city: "chicago",
+      source: "discovery",
+    }).select("id").single();
 
-    if (error) {
+    if (venueError) {
       await logDiscoveryResult({
         run_id: runId,
         query: result.query,
@@ -284,24 +271,40 @@ async function deduplicateAndQueue(
         raw_title: result.title,
         domain: result.domain,
         disposition: "insert_error",
-        reason: error.message,
+        reason: `Venue insert: ${venueError.message}`,
       });
-    } else {
-      existingDomains.add(result.domain);
-      queuedDomains.add(result.domain);
-      queued++;
-      await logDiscoveryResult({
-        run_id: runId,
-        query: result.query,
-        raw_url: result.link,
-        raw_title: result.title,
-        domain: result.domain,
-        disposition: "queued",
-      });
+      continue;
     }
+
+    const { error: schoolError } = await supabase.from("schools").insert({
+      name: result.title,
+      short_name: result.title.slice(0, 14).toUpperCase(),
+      slug,
+      latitude: 41.8781,
+      longitude: -87.6298,
+      neighborhood: "Chicago",
+      discipline: "acting",
+      venue_id: newVenue.id,
+      url: result.link,
+    });
+
+    if (schoolError) {
+      console.warn(`[class-discovery] School insert failed for ${result.title}: ${schoolError.message}`);
+    }
+
+    existingDomains.add(result.domain);
+    inserted++;
+    await logDiscoveryResult({
+      run_id: runId,
+      query: result.query,
+      raw_url: result.link,
+      raw_title: result.title,
+      domain: result.domain,
+      disposition: "inserted",
+    });
   }
 
-  return { queued, known, blocked };
+  return { inserted, known, blocked };
 }
 
 // --- Get next unprocessed school for this job ---
@@ -333,18 +336,18 @@ async function getNextSchool(
 async function runDiscoverAction(runId: string, cors: Record<string, string>): Promise<Response> {
   if (!PERPLEXITY_API_KEY) {
     return new Response(
-      JSON.stringify({ action: "discover", run_id: runId, queued: 0, known: 0, blocked: 0, queries_run: 0, warning: "PERPLEXITY_API_KEY not set" }),
+      JSON.stringify({ action: "discover", run_id: runId, inserted: 0, known: 0, blocked: 0, queries_run: 0, warning: "PERPLEXITY_API_KEY not set" }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
 
   const { results: serpResults, queriesRun } = await searchForSchools();
-  const { queued, known, blocked } = await deduplicateAndQueue(serpResults, runId);
+  const { inserted, known, blocked } = await deduplicateAndInsert(serpResults, runId);
 
-  console.log(`[class-discovery] Discovery run ${runId}: ${queriesRun} queries, ${serpResults.length} raw results, ${blocked} blocked, ${known} known, ${queued} queued`);
+  console.log(`[class-discovery] Discovery run ${runId}: ${queriesRun} queries, ${serpResults.length} raw results, ${blocked} blocked, ${known} known, ${inserted} inserted`);
 
   return new Response(
-    JSON.stringify({ action: "discover", run_id: runId, queued, known, blocked, queries_run: queriesRun, schools: serpResults.map(r => ({ name: r.title, url: r.link, domain: r.domain })) }),
+    JSON.stringify({ action: "discover", run_id: runId, inserted, known, blocked, queries_run: queriesRun, schools: serpResults.map(r => ({ name: r.title, url: r.link, domain: r.domain })) }),
     { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
   );
 }
