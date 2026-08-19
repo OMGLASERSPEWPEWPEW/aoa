@@ -4,6 +4,21 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.0',
+    date: '2026-08-19',
+    title: 'Discovery-only school pipeline — no more seed data',
+    summary: 'All seeded schools removed. Schools now come exclusively from the Perplexity discovery pipeline. Extraction race slimmed to 3 fast models (Gemini, GPT, Sonar). Music schools filtered out.',
+    details: [
+      'Remove: all 12 manually seeded schools — discovery pipeline is now the sole source',
+      'Add: Perplexity Sonar as 3rd extraction model, replacing DeepSeek + Haiku in the race',
+      'Fix: discovery prompt #3 now excludes music conservatories, instrumental schools, dance-only studios',
+      'New: Find Schools returns clickable school list with URLs in the discovery results',
+      'New: discovery queue URLs are clickable (open in new tab)',
+      'New: stale job auto-cleanup (stuck > 30 min)',
+      'Perf: class scrape budget raised to 200 AI calls, 100 fetches, 10 min wall clock',
+    ],
+  },
+  {
     version: '0.19.6',
     date: '2026-08-18',
     title: '4-model race on initial extraction only — BFS uses single model',
