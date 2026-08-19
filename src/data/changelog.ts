@@ -4,6 +4,19 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.2',
+    date: '2026-08-19',
+    title: 'Fix school discovery data quality + scrape progress UI',
+    summary: 'Schools now get proper names instead of domain names, URLs are cleaned of markdown artifacts, and scrape progress shows immediately.',
+    details: [
+      'Fix: school name extraction uses multi-strategy regex with bold/numbered/bulleted patterns + domain humanization fallback',
+      'Fix: URL extraction strips markdown reference link artifacts ([1, [5, etc.)',
+      'Fix: scrape progress UI polls the job row immediately instead of waiting 60-90s for first school to process',
+      'Fix: existing discovered schools renamed from domains to proper names',
+      'Fix: TypeError load failed — polling starts before fetch completes so timeout no longer blocks progress',
+    ],
+  },
+  {
     version: '0.20.1',
     date: '2026-08-19',
     title: 'Auto-insert discovered schools — no more promotion queue',
