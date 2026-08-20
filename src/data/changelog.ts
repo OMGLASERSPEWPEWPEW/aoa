@@ -4,6 +4,17 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.7',
+    date: '2026-08-19',
+    title: 'Automatic school geocoding — pipeline does the work',
+    summary: 'Geocoding is now automatic in the pipeline. Find Schools geocodes during insertion, Scrape Classes auto-fixes schools at default coordinates. No manual step needed.',
+    details: [
+      'Fix: geocodeSchool asks Perplexity for street address as automatic fallback before defaulting to Chicago center',
+      'Fix: Scrape Classes auto-geocodes any schools stuck at default coordinates before scraping starts',
+      'Remove: "Geocode Schools" button — geocoding is a pipeline node, not a user action',
+    ],
+  },
+  {
     version: '0.20.6',
     date: '2026-08-19',
     title: 'Fix school pin stacking — geocode pipeline',
@@ -11,8 +22,6 @@ export const CHANGELOG: PatchNote[] = [
     details: [
       'Fix: Perplexity prompts now ask for physical street addresses alongside school names and URLs',
       'Fix: geocodeSchool prioritizes Perplexity-provided address → website extraction → name lookup → default',
-      'Add: geocode-backfill action uses Perplexity to find addresses for schools stuck at Chicago center',
-      'Add: "Geocode Schools" button in admin dashboard triggers backfill',
       'Fix: map skips schools at default Chicago center coordinates to prevent pin stacking',
     ],
   },
