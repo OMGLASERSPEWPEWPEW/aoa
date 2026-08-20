@@ -4,6 +4,17 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.8',
+    date: '2026-08-19',
+    title: 'Fix chain fork bug — 33/18 schools',
+    summary: 'fireChain had a 15s timeout but schools take 2+ min. Each timeout spawned a parallel invocation via retry, causing exponential fork. Now fire-and-forget with DB-tracked state.',
+    details: [
+      'Fix: fireChain is now fire-and-forget — no timeout, no retry. Retries on timeout were spawning parallel invocations',
+      'Fix: processed school IDs tracked in DB (recent_schools.venueId) instead of in-memory array passed through chain body',
+      'Fix: getNextSchool reads processed state from DB — idempotent even if forks happen',
+    ],
+  },
+  {
     version: '0.20.7',
     date: '2026-08-19',
     title: 'Automatic school geocoding — pipeline does the work',
