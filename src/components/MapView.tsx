@@ -204,7 +204,11 @@ export function MapView() {
 
     if (mode !== 'classes' || schools.length === 0) return
 
+    const CHICAGO_CENTER_LAT = 41.8781
+    const CHICAGO_CENTER_LNG = -87.6298
+
     for (const school of schools) {
+      if (school.latitude === CHICAGO_CENTER_LAT && school.longitude === CHICAGO_CENTER_LNG) continue
       const dimmed = isSchoolDimmed(school)
 
       const el = createClassMarkerElement({

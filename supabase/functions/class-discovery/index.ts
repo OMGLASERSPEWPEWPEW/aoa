@@ -44,9 +44,9 @@ const AGGREGATOR_DOMAINS = new Set([
 ]);
 
 const DISCOVERY_PROMPTS = [
-  "List every improv and comedy training center in Chicago that offers adult classes. For each, provide the school name and the URL of their classes or training page. Include smaller studios, not just Second City and iO.",
-  "List every acting studio in Chicago that offers adult classes in Meisner, scene study, on-camera, voiceover, or audition technique. For each, provide the school name and website URL. Include independent studios and conservatories, not just university programs.",
-  "List every musical theater performance training program, physical theater, sketch comedy, and comedy writing program in Chicago that offers adult classes or workshops. Exclude music conservatories, instrumental music schools, classical music programs, dance-only studios, and orchestral training. For each, provide the school name and website URL.",
+  "List every improv and comedy training center in Chicago that offers adult classes. For each, provide the school name, physical street address, and the URL of their classes or training page. Include smaller studios, not just Second City and iO.",
+  "List every acting studio in Chicago that offers adult classes in Meisner, scene study, on-camera, voiceover, or audition technique. For each, provide the school name, physical street address, and website URL. Include independent studios and conservatories, not just university programs.",
+  "List every musical theater performance training program, physical theater, sketch comedy, and comedy writing program in Chicago that offers adult classes or workshops. Exclude music conservatories, instrumental music schools, classical music programs, dance-only studios, and orchestral training. For each, provide the school name, physical street address, and website URL.",
 ];
 
 function getCorsHeaders(req: Request): Record<string, string> {
@@ -106,24 +106,35 @@ async function extractAddressFromUrl(url: string): Promise<string | null> {
   }
 }
 
-async function geocodeSchool(name: string, websiteUrl: string): Promise<{ lat: number; lng: number }> {
+async function geocodeSchool(name: string, websiteUrl: string, knownAddress?: string | null): Promise<{ lat: number; lng: number; source: string }> {
+  // Priority 1: Perplexity-provided address (same pattern as venue enrichment)
+  if (knownAddress) {
+    const geo = await geocode(knownAddress);
+    if (geo) {
+      console.log(`[class-discovery] Geocoded ${name} via Perplexity address: ${knownAddress} → ${geo.lat}, ${geo.lng}`);
+      return { lat: geo.lat, lng: geo.lng, source: "perplexity_address" };
+    }
+  }
+
+  // Priority 2: Extract address from school website HTML
   const address = await extractAddressFromUrl(websiteUrl);
   if (address) {
     const geo = await geocode(address);
     if (geo) {
-      console.log(`[class-discovery] Geocoded ${name} via address: ${address} → ${geo.lat}, ${geo.lng}`);
-      return { lat: geo.lat, lng: geo.lng };
+      console.log(`[class-discovery] Geocoded ${name} via website address: ${address} → ${geo.lat}, ${geo.lng}`);
+      return { lat: geo.lat, lng: geo.lng, source: "website_address" };
     }
   }
 
+  // Priority 3: Name-based geocode
   const geo = await geocode(`${name}, Chicago, IL`);
   if (geo) {
     console.log(`[class-discovery] Geocoded ${name} via name → ${geo.lat}, ${geo.lng}`);
-    return { lat: geo.lat, lng: geo.lng };
+    return { lat: geo.lat, lng: geo.lng, source: "name_lookup" };
   }
 
   console.log(`[class-discovery] Could not geocode ${name}, using Chicago center`);
-  return { lat: 41.8781, lng: -87.6298 };
+  return { lat: 41.8781, lng: -87.6298, source: "default" };
 }
 
 function humanizeDomain(domain: string): string {
@@ -180,6 +191,20 @@ interface DiscoveryResult {
   title: string;
   snippet: string;
   domain: string;
+  address: string | null;
+}
+
+function extractAddressNearUrl(text: string, urlIndex: number): string | null {
+  const window = text.substring(Math.max(0, urlIndex - 400), Math.min(text.length, urlIndex + 200));
+  const patterns = [
+    /(\d{1,5}\s+[NSEW]\.?\s+[\w\s.]+(?:Ave|Avenue|St|Street|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Ct|Court)\.?(?:\s*,?\s*(?:Suite|Ste|Unit|Apt|Floor|Fl|#)\s*[\w-]+)?)\s*,?\s*Chicago/i,
+    /(\d{1,5}\s+[\w\s.]+(?:Ave|Avenue|St|Street|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Ct|Court)\.?(?:\s*,?\s*(?:Suite|Ste|Unit|Apt|Floor|Fl|#)\s*[\w-]+)?)\s*,?\s*Chicago/i,
+  ];
+  for (const pat of patterns) {
+    const m = window.match(pat);
+    if (m) return `${m[1]}, Chicago, IL`;
+  }
+  return null;
 }
 
 async function searchForSchools(): Promise<{ results: DiscoveryResult[]; queriesRun: number }> {
@@ -239,6 +264,7 @@ async function searchForSchools(): Promise<{ results: DiscoveryResult[]; queries
         seenDomains.add(domain);
 
         const title = extractSchoolName(text, m.index!, domain);
+        const address = extractAddressNearUrl(text, m.index!);
 
         allResults.push({
           query: prompt.slice(0, 60),
@@ -246,6 +272,7 @@ async function searchForSchools(): Promise<{ results: DiscoveryResult[]; queries
           title,
           snippet: text.substring(Math.max(0, m.index! - 50), Math.min(text.length, m.index! + link.length + 80)).trim(),
           domain,
+          address,
         });
       }
 
@@ -327,7 +354,7 @@ async function deduplicateAndInsert(
 
     const slug = await resolveUniqueSlug(generateSlug(result.title));
 
-    const { lat, lng } = await geocodeSchool(result.title, result.link);
+    const { lat, lng } = await geocodeSchool(result.title, result.link, result.address);
     await delay(1100);
 
     const { data: newVenue, error: venueError } = await supabase.from("venues").insert({
@@ -476,18 +503,59 @@ serve(async (req) => {
         .eq("longitude", -87.6298);
 
       let updated = 0;
+      const results: Array<{ name: string; source: string; lat: number; lng: number }> = [];
+
       for (const school of stuckSchools ?? []) {
-        const { lat, lng } = await geocodeSchool(school.name, school.url ?? "");
-        if (lat !== 41.8781 || lng !== -87.6298) {
-          await supabase.from("schools").update({ latitude: lat, longitude: lng }).eq("id", school.id);
-          await supabase.from("venues").update({ latitude: lat, longitude: lng }).eq("id", school.venue_id);
+        // Try standard geocoding first (website address + name lookup)
+        let geoResult = await geocodeSchool(school.name, school.url ?? "");
+
+        // If still default, ask Perplexity for the address (same source as discovery)
+        if (geoResult.source === "default" && PERPLEXITY_API_KEY) {
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15_000);
+            const res = await fetch("https://api.perplexity.ai/chat/completions", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${PERPLEXITY_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "sonar",
+                messages: [{ role: "user", content: `What is the exact street address of "${school.name}" in Chicago, Illinois? Just the address, nothing else.` }],
+                max_tokens: 200,
+              }),
+              signal: controller.signal,
+            });
+            clearTimeout(timeout);
+
+            if (res.ok) {
+              const data = await res.json();
+              const addressText: string = data.choices?.[0]?.message?.content ?? "";
+              const addrMatch = addressText.match(/(\d{1,5}\s+[\w\s.]+(?:Ave|Avenue|St|Street|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Ct|Court)[^,\n]*)/i);
+              if (addrMatch) {
+                const perplexityAddr = `${addrMatch[1].trim()}, Chicago, IL`;
+                console.log(`[class-discovery] Perplexity address for ${school.name}: ${perplexityAddr}`);
+                geoResult = await geocodeSchool(school.name, school.url ?? "", perplexityAddr);
+              }
+            }
+          } catch (err) {
+            console.warn(`[class-discovery] Perplexity address lookup failed for ${school.name}:`, err);
+          }
+          await delay(1100);
+        }
+
+        if (geoResult.lat !== 41.8781 || geoResult.lng !== -87.6298) {
+          await supabase.from("schools").update({ latitude: geoResult.lat, longitude: geoResult.lng }).eq("id", school.id);
+          await supabase.from("venues").update({ latitude: geoResult.lat, longitude: geoResult.lng }).eq("id", school.venue_id);
           updated++;
         }
+        results.push({ name: school.name, source: geoResult.source, lat: geoResult.lat, lng: geoResult.lng });
         await delay(1100);
       }
 
       return new Response(
-        JSON.stringify({ action: "geocode-backfill", total: stuckSchools?.length ?? 0, updated }),
+        JSON.stringify({ action: "geocode-backfill", total: stuckSchools?.length ?? 0, updated, results }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }

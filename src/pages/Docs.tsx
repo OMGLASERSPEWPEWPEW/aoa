@@ -394,6 +394,8 @@ function CoverageTab() {
   const [backfillResult, setBackfillResult] = useState<{ exact_matches: number; fuzzy_matches: number; ai_matches: number; plays_created: number; events_unmatched: number; events_processed: number } | null>(null)
   const [discoveryRunning, setDiscoveryRunning] = useState(false)
   const [discoveryResult, setDiscoveryResult] = useState<{ inserted: number; known: number; blocked: number; queries_run: number; warning?: string; schools?: Array<{ name: string; url: string; domain: string }> } | null>(null)
+  const [geocodeRunning, setGeocodeRunning] = useState(false)
+  const [geocodeResult, setGeocodeResult] = useState<{ total: number; updated: number; results?: Array<{ name: string; source: string; lat: number; lng: number }> } | null>(null)
   const [unlinkedCount, setUnlinkedCount] = useState<number | null>(null)
   const [classMetrics, setClassMetrics] = useState<{ class_venue_count: number; class_event_count: number; class_with_instructor: number; class_with_level: number } | null>(null)
 
@@ -516,15 +518,42 @@ function CoverageTab() {
             const { data: { session } } = await supabase.auth.getSession()
             if (!session) { setDiscoveryRunning(false); return }
             try {
-              const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-                body: JSON.stringify({ action: 'discover' }),
-              })
-              const d = await res.json()
+              const controller = new AbortController()
+              const timer = setTimeout(() => controller.abort(), 120_000)
+              let res: Response
+              try {
+                res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                  body: JSON.stringify({ action: 'discover' }),
+                  signal: controller.signal,
+                })
+              } catch (fetchErr) {
+                // Retry once on network failure
+                await new Promise(r => setTimeout(r, 3000))
+                const controller2 = new AbortController()
+                const timer2 = setTimeout(() => controller2.abort(), 120_000)
+                try {
+                  res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ action: 'discover' }),
+                    signal: controller2.signal,
+                  })
+                } finally {
+                  clearTimeout(timer2)
+                }
+              } finally {
+                clearTimeout(timer)
+              }
+              const d = await res!.json()
               setDiscoveryResult(d)
             } catch (e) {
-              setDiscoveryResult({ inserted: 0, known: 0, blocked: 0, queries_run: 0, warning: e instanceof Error ? e.message : 'Failed' })
+              const msg = e instanceof Error ? e.message : 'Failed'
+              const userMsg = msg === 'Failed to fetch' || msg.includes('load failed') || msg.includes('aborted')
+                ? 'Network error — the server took too long or the connection dropped. Try again.'
+                : msg
+              setDiscoveryResult({ inserted: 0, known: 0, blocked: 0, queries_run: 0, warning: userMsg })
             }
             setDiscoveryRunning(false)
           }}
@@ -560,6 +589,47 @@ function CoverageTab() {
         >
           {classDiscovery.phase === 'scraping' ? `View Progress ${classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : ''}` : 'Scrape Classes'}
         </button>
+        <button
+          onClick={async () => {
+            setGeocodeRunning(true)
+            setGeocodeResult(null)
+            try {
+              const { data: { session } } = await supabase.auth.getSession()
+              const res = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session?.access_token ?? ''}`,
+                  },
+                  body: JSON.stringify({ action: 'geocode-backfill' }),
+                },
+              )
+              const data = await res.json()
+              setGeocodeResult(data)
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : 'Failed'
+              setGeocodeResult({ total: 0, updated: 0 })
+              console.error('Geocode backfill failed:', msg)
+            }
+            setGeocodeRunning(false)
+          }}
+          disabled={geocodeRunning}
+          style={{
+            ...mono,
+            fontSize: 10,
+            padding: '6px 14px',
+            background: geocodeRunning ? '#0a0a1a' : '#0a0a1a',
+            color: geocodeRunning ? '#4338ca' : '#818cf8',
+            border: `1px solid ${geocodeRunning ? '#4338ca' : '#818cf8'}`,
+            borderRadius: 2,
+            cursor: geocodeRunning ? 'default' : 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {geocodeRunning ? 'Geocoding...' : 'Geocode Schools'}
+        </button>
       </div>
       {discoveryResult && (
         <div style={{ marginBottom: 8 }}>
@@ -576,6 +646,22 @@ function CoverageTab() {
                   <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-faint)', textDecoration: 'none', flexShrink: 0 }}>
                     {s.domain} ↗
                   </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {geocodeResult && (
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ ...mono, fontSize: 10, color: geocodeResult.updated > 0 ? '#818cf8' : '#ef4444' }}>
+            Geocode: {geocodeResult.updated}/{geocodeResult.total} schools updated
+          </div>
+          {geocodeResult.results && geocodeResult.results.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              {geocodeResult.results.map((r, i) => (
+                <div key={i} style={{ ...mono, fontSize: 9, color: r.source === 'default' ? '#ef4444' : '#818cf8', padding: '1px 0' }}>
+                  {r.source === 'default' ? '✗' : '✓'} {r.name} — {r.source}
                 </div>
               ))}
             </div>
