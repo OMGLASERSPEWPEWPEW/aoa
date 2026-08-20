@@ -133,6 +133,45 @@ async function geocodeSchool(name: string, websiteUrl: string, knownAddress?: st
     return { lat: geo.lat, lng: geo.lng, source: "name_lookup" };
   }
 
+  // Priority 4: Ask Perplexity directly for the address (pipeline does the work)
+  if (PERPLEXITY_API_KEY) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15_000);
+      const res = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${PERPLEXITY_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "sonar",
+          messages: [{ role: "user", content: `What is the exact street address of "${name}" in Chicago, Illinois? Just the address, nothing else.` }],
+          max_tokens: 200,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        const data = await res.json();
+        const addressText: string = data.choices?.[0]?.message?.content ?? "";
+        const addrMatch = addressText.match(/(\d{1,5}\s+[\w\s.]+(?:Ave|Avenue|St|Street|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Ct|Court)[^,\n]*)/i);
+        if (addrMatch) {
+          const perplexityAddr = `${addrMatch[1].trim()}, Chicago, IL`;
+          console.log(`[class-discovery] Perplexity found address for ${name}: ${perplexityAddr}`);
+          const pGeo = await geocode(perplexityAddr);
+          if (pGeo) {
+            return { lat: pGeo.lat, lng: pGeo.lng, source: "perplexity_lookup" };
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[class-discovery] Perplexity address lookup failed for ${name}:`, err);
+    }
+    await delay(1100);
+  }
+
   console.log(`[class-discovery] Could not geocode ${name}, using Chicago center`);
   return { lat: 41.8781, lng: -87.6298, source: "default" };
 }
@@ -562,6 +601,23 @@ serve(async (req) => {
 
     // --- Start a new scrape job ---
     if (action === "start" || (!jobId && !action)) {
+      // Auto-geocode schools stuck at Chicago center before scraping
+      const { data: ungeocodedSchools } = await supabase
+        .from("schools")
+        .select("id, name, url, venue_id")
+        .eq("latitude", 41.8781)
+        .eq("longitude", -87.6298);
+
+      for (const school of ungeocodedSchools ?? []) {
+        const { lat, lng, source } = await geocodeSchool(school.name, school.url ?? "");
+        if (source !== "default") {
+          await supabase.from("schools").update({ latitude: lat, longitude: lng }).eq("id", school.id);
+          await supabase.from("venues").update({ latitude: lat, longitude: lng }).eq("id", school.venue_id);
+          console.log(`[class-discovery] Auto-geocoded ${school.name} → ${lat}, ${lng} (${source})`);
+        }
+        await delay(1100);
+      }
+
       // Auto-cleanup stale jobs (stuck > 30 min)
       const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       await supabase
