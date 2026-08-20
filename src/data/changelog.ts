@@ -4,6 +4,19 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.20.6',
+    date: '2026-08-19',
+    title: 'Fix school pin stacking — geocode pipeline',
+    summary: 'All 18 schools were at Chicago center because discovery never geocoded addresses. Now follows the venue enrichment pattern: Perplexity provides addresses, geocoder resolves them.',
+    details: [
+      'Fix: Perplexity prompts now ask for physical street addresses alongside school names and URLs',
+      'Fix: geocodeSchool prioritizes Perplexity-provided address → website extraction → name lookup → default',
+      'Add: geocode-backfill action uses Perplexity to find addresses for schools stuck at Chicago center',
+      'Add: "Geocode Schools" button in admin dashboard triggers backfill',
+      'Fix: map skips schools at default Chicago center coordinates to prevent pin stacking',
+    ],
+  },
+  {
     version: '0.20.5',
     date: '2026-08-19',
     title: 'Pre-populated school queue, rich rows, Sonar fix',
