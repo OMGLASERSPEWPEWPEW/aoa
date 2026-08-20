@@ -454,9 +454,21 @@ async function deduplicateAndInsert(
 
 // --- Get next unprocessed school for this job ---
 
+async function getProcessedIds(jobId: string): Promise<string[]> {
+  if (!jobId) return [];
+  const { data: job } = await supabase
+    .from("scrape_jobs")
+    .select("recent_schools")
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (!job?.recent_schools) return [];
+  const schools = job.recent_schools as Array<{ name: string; status: string; venueId?: string }>;
+  return schools.filter(s => s.status !== "pending").map(s => s.venueId).filter(Boolean) as string[];
+}
+
 async function getNextSchool(
   jobId: string,
-  processedIds: string[],
 ): Promise<{ school: VenueTarget | null; totalSchools: number; remaining: number }> {
   const { data: schools, error } = await supabase
     .from("venues")
@@ -466,6 +478,7 @@ async function getNextSchool(
 
   if (error || !schools) return { school: null, totalSchools: 0, remaining: 0 };
 
+  const processedIds = await getProcessedIds(jobId);
   const unprocessed = schools.filter((s) => !processedIds.includes(s.id));
   const next = unprocessed.length > 0 ? unprocessed[0] as VenueTarget : null;
 
@@ -525,7 +538,7 @@ serve(async (req) => {
 
     const jobId = body.job_id as string | undefined;
     const action = body.action as string | undefined;
-    const processedIds = (body.processed_ids as string[]) ?? [];
+    // processed_ids no longer passed in body — tracked in DB via recent_schools
 
     // FR-1: Standalone discovery action — runs SerpAPI immediately, independent of school scraping
     if (action === "discover") {
@@ -641,7 +654,7 @@ serve(async (req) => {
         );
       }
 
-      const { school, totalSchools } = await getNextSchool("", []);
+      const { school, totalSchools } = await getNextSchool("");
 
       if (!school) {
         return new Response(
@@ -665,12 +678,13 @@ serve(async (req) => {
       // Pre-populate all schools as "pending" so the UI shows the full queue immediately
       const { data: allSchools } = await supabase
         .from("venues")
-        .select("name, calendar_url, website_url")
+        .select("id, name, calendar_url, website_url")
         .eq("venue_type", "school")
         .not("calendar_url", "is", null);
 
-      const pendingSchools = (allSchools ?? []).map((s: { name: string; calendar_url: string; website_url: string | null }) => ({
+      const pendingSchools = (allSchools ?? []).map((s: { id: string; name: string; calendar_url: string; website_url: string | null }) => ({
         name: s.name,
+        venueId: s.id,
         status: "pending",
         eventsFound: 0,
         eventsCreated: 0,
@@ -686,7 +700,7 @@ serve(async (req) => {
       }).eq("id", newJobId);
 
       // Fire the chain so the first school gets its own invocation
-      await fireChain(newJobId!, []);
+      await fireChain(newJobId!);
 
       return new Response(
         JSON.stringify({ job_id: newJobId, school: school.name, remaining: totalSchools, total_venues: totalSchools }),
@@ -715,7 +729,7 @@ serve(async (req) => {
       );
     }
 
-    const { school, remaining } = await getNextSchool(jobId, processedIds);
+    const { school, remaining } = await getNextSchool(jobId);
 
     if (!school) {
       await supabase.from("scrape_jobs").update({
@@ -730,7 +744,7 @@ serve(async (req) => {
     }
 
     const runId = crypto.randomUUID();
-    const result = await processSchoolSequential(school, runId, jobId, processedIds);
+    const result = await processSchoolSequential(school, runId, jobId);
 
     return new Response(
       JSON.stringify(result),
@@ -746,45 +760,35 @@ serve(async (req) => {
   }
 });
 
-async function fireChain(jobId: string, processedIds: string[]): Promise<boolean> {
+async function fireChain(jobId: string): Promise<boolean> {
   const selfUrl = `${SUPABASE_URL}/functions/v1/class-discovery`;
-  const MAX_ATTEMPTS = 3;
-  const RETRY_DELAY_MS = 2000;
-  const TIMEOUT_MS = 15_000;
-
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-      const res = await fetch(selfUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "x-scraper-key": SCRAPER_SECRET,
-        },
-        body: JSON.stringify({ job_id: jobId, processed_ids: processedIds }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      console.log(`[class-discovery] Chain fired (attempt ${attempt}): ${res.status}`);
-      return true;
-    } catch (err) {
-      console.warn(`[class-discovery] Chain attempt ${attempt}/${MAX_ATTEMPTS} failed:`, err instanceof Error ? err.message : err);
-      if (attempt < MAX_ATTEMPTS) await delay(RETRY_DELAY_MS);
-    }
+  try {
+    // Fire-and-forget: don't await the response (processing takes 2+ min).
+    // Awaiting + timeout caused exponential fork — 3 retries × N schools.
+    fetch(selfUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "x-scraper-key": SCRAPER_SECRET,
+      },
+      body: JSON.stringify({ job_id: jobId }),
+    }).catch((err) => {
+      console.error(`[class-discovery] Chain fire failed:`, err instanceof Error ? err.message : err);
+    });
+    console.log(`[class-discovery] Chain fired for job ${jobId}`);
+    return true;
+  } catch (err) {
+    console.error(`[class-discovery] Chain fire failed:`, err instanceof Error ? err.message : err);
+    return false;
   }
-  console.error(`[class-discovery] Chain failed after ${MAX_ATTEMPTS} attempts`);
-  return false;
 }
 
 async function processSchoolSequential(
   school: VenueTarget,
   runId: string,
   jobId: string,
-  previousProcessedIds: string[],
 ): Promise<Record<string, unknown>> {
-  const allProcessedIds = [...previousProcessedIds, school.id];
 
   console.log(`[class-discovery] Processing school: ${school.name}`);
   let result: Awaited<ReturnType<typeof processVenue>>;
@@ -874,6 +878,7 @@ async function processSchoolSequential(
   const recentSchools = (currentJob?.recent_schools as Array<Record<string, unknown>> ?? []);
   const completedEntry = {
     name: school.name,
+    venueId: school.id,
     status: result.status,
     eventsFound: result.events_found,
     eventsCreated: result.events_created,
@@ -901,11 +906,11 @@ async function processSchoolSequential(
     recent_schools: recentSchools,
   }).eq("id", jobId);
 
-  const { remaining } = await getNextSchool(jobId, allProcessedIds);
+  const { remaining } = await getNextSchool(jobId);
 
   if (remaining > 0) {
     console.log(`[class-discovery] Sequential chain: ${remaining} remaining after ${school.name}`);
-    await fireChain(jobId, allProcessedIds);
+    await fireChain(jobId);
   } else {
     await supabase.from("scrape_jobs").update({
       status: "completed",
