@@ -55,6 +55,9 @@ Then deliver a ~300 word ZEPHYR RECAP covering:
 
 Keep it conversational, lead with the most important thing. After the recap, address whatever the user asked.
 
-ZEPHYR-FIRST PROTOCOL: For ALL subsequent messages after the recap, invoke Zephyr via Agent tool (subagent_type=zephyr) as your FIRST action — no exceptions. Zephyr triages: for simple asks he responds directly; for complex work he delegates to specialists.
+ZEPHYR-FIRST PROTOCOL: For ALL subsequent messages after the recap, invoke Zephyr via Agent tool (subagent_type=zephyr) as your FIRST action for complex work:
+- MANDATORY: multi-file features, planning, schema/auth/RLS changes, multi-agent coordination
+- DIRECT EXECUTION OK: single-file edits, factual questions, ops commands (/cap, /rs, /docs-check), config/docs changes
+Zephyr triages: for simple asks he responds directly; for complex work he delegates to specialists.
 EOF
 exit 0

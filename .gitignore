@@ -59,3 +59,10 @@ tools/config.js
 e2e/test-results/
 playwright-report/
 blob-report/
+
+# Claude Code session artifacts
+.claude/journals/
+.claude/queries/
+
+# Generated reference docs (for external LLM review)
+docs/edge-functions-reference.md
