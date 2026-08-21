@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { generateSlug } from "./slug-generator.ts";
 import { executeStrategyTree } from "./strategy-agent.ts";
 import type { VenueTarget, ScrapeResult, StrategyProfile, Program } from "./types.ts";
-import { resolveCoordinates, isBadCoordinate } from "../geocoder.ts";
+import { resolveCoordinates, isBadCoordinate, isPlausibleStreetAddress } from "../geocoder.ts";
 import { logUsage } from "../logUsage.ts";
 import { runPlayMatcherBatch } from "./play-matcher.ts";
 
@@ -260,21 +260,27 @@ export async function processClassPrograms(
   let updated = 0;
   let skippedYouth = 0;
 
-  if (schoolAddress) {
+  if (schoolAddress && isPlausibleStreetAddress(schoolAddress)) {
     const { data: venue } = await supabase
       .from("venues")
-      .select("id, address, geocode_source")
+      .select("id, address, latitude, longitude, geocode_source")
       .eq("id", venueId)
       .maybeSingle();
 
-    const existingSource = venue?.geocode_source ?? "";
-    const hasStrongSource =
-      existingSource.startsWith("llm_extracted") ||
-      existingSource.startsWith("website");
+    const SOURCE_RANK: Record<string, number> = {
+      llm_extracted: 4, website: 4, places_api: 3, mapbox_poi: 3,
+      known_address: 2, perplexity: 2, default: 0,
+    };
+    const rankOf = (s: string | null) => SOURCE_RANK[(s ?? "").split(":")[0]] ?? 1;
+    const existingRank = rankOf(venue?.geocode_source);
+    const incomingRank = 4;
+    const shouldUpdate = !venue?.geocode_source || existingRank < incomingRank
+      || isBadCoordinate(venue.latitude, venue.longitude) || venue.latitude == null;
 
-    if (venue && !venue.address && !hasStrongSource) {
+    if (venue && shouldUpdate) {
       const geo = await resolveCoordinates(schoolAddress);
       if (geo && !isBadCoordinate(geo.lat, geo.lng)) {
+        const prevSource = venue.geocode_source;
         await supabase
           .from("venues")
           .update({
@@ -301,7 +307,7 @@ export async function processClassPrograms(
             })
             .eq("id", school.id);
         }
-        console.log(`[process-venue] Address threaded: ${schoolAddress} via ${geo.provider}`);
+        console.log(`[address] llm_extracted:${geo.provider} supersedes ${prevSource} for venue ${venueId}`);
       }
     }
   }

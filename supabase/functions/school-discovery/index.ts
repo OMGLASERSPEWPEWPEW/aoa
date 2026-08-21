@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { resolveCoordinates, geocodeBusinessByName, isBadCoordinate } from "../_shared/geocoder.ts";
+import { resolveCoordinates, geocodeBusinessByName, isBadCoordinate, isPlausibleStreetAddress } from "../_shared/geocoder.ts";
 import { repairJson } from "../_shared/scraper/json-repair.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
@@ -211,7 +211,7 @@ async function geocodeSchool(
   city = "Chicago",
 ): Promise<{ lat: number; lng: number; address: string | null; source: string }> {
   // 1) Address we already hold (crawl-extracted or discovery-provided)
-  if (knownAddress) {
+  if (knownAddress && isPlausibleStreetAddress(knownAddress)) {
     const geo = await resolveCoordinates(knownAddress, city);
     if (geo)
       return {

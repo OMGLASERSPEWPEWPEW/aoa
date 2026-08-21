@@ -172,48 +172,86 @@ serve(async (req) => {
       .maybeSingle();
 
     const schoolName = schoolRow?.name ?? school.name;
-    const schoolId = schoolRow?.id;
+    let resolvedSchoolId = schoolRow?.id;
+
+    if (!resolvedSchoolId) {
+      const { data: healed, error: healErr } = await supabase.from("schools").insert({
+        name: schoolName, short_name: schoolName.slice(0, 14).toUpperCase(),
+        slug: school.slug ?? schoolName.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50),
+        latitude: school.latitude ?? 41.8781, longitude: school.longitude ?? -87.6298,
+        neighborhood: "Chicago", discipline: "acting", venue_id: school.id,
+        url: school.website_url ?? school.calendar_url, address: school.address ?? null,
+      }).select("id").single();
+      if (healErr || !healed) {
+        console.error(`[class-scrape-batch] Self-heal failed for ${school.name}: ${healErr?.message}`);
+      } else {
+        resolvedSchoolId = healed.id;
+        console.log(`[class-scrape-batch] Auto-created school for venue ${school.name}`);
+      }
+    }
 
     let eventsFound = 0;
     let eventsCreated = 0;
     let status = "success";
     let errorMessage: string | null = null;
+    let result: Awaited<ReturnType<typeof executeClassStrategy>> | null = null;
 
     try {
-      const result = await executeClassStrategy(school, schoolName, "Chicago");
+      result = await executeClassStrategy(school, schoolName, "Chicago");
 
       if (result.status === "complete" || result.status === "failed" || result.status === "escalated") {
-        if (result.programs.length > 0 && schoolId) {
+        if (result.programs.length > 0 && resolvedSchoolId) {
           const upsertResult = await processClassPrograms(
-            result.programs, schoolId, school.id, school.calendar_url, result.schoolAddress,
+            result.programs, resolvedSchoolId, school.id, school.calendar_url, result.schoolAddress,
           );
           eventsFound = result.programs.reduce((sum, p) => sum + Math.max(p.sections.length, 1), 0);
           eventsCreated = upsertResult.created;
+
+          if (result.programs.length > 0 && eventsCreated === 0) {
+            status = "persist_failed";
+            errorMessage = `${result.programs.length} programs extracted but 0 persisted`;
+          }
+        }
+
+        if (result.photoUrl) {
+          await supabase.from("venues").update({ photo_url: result.photoUrl, photo_url_source: "og_image" })
+            .eq("id", school.id).is("photo_url", null);
+          if (resolvedSchoolId) {
+            await supabase.from("schools").update({ photo_url: result.photoUrl })
+              .eq("id", resolvedSchoolId).is("photo_url", null);
+          }
+        }
+
+        if ((result.trace as any).out_of_city) {
+          await supabase.from("venues").update({ url_status: "out_of_city" }).eq("id", school.id);
         }
 
         await supabase.from("venues").update({ class_scraped_at: new Date().toISOString() }).eq("id", school.id);
 
+        const trace = result.trace as any;
         await supabase.from("scrape_logs").insert({
           run_id: crypto.randomUUID(),
           venue_id: school.id,
           venue_name: school.name,
-          status: result.status === "complete" ? "success" : result.status,
+          status: status === "persist_failed" ? "persist_failed" : result.status === "complete" ? "success" : result.status,
           events_found: eventsFound,
           events_created: eventsCreated,
           events_updated: 0,
-          error_message: result.status === "failed" ? result.trace.stopReason : null,
-          ai_input_tokens: 0,
+          error_message: errorMessage ?? (result.status === "failed" ? result.trace.stopReason : null),
+          ai_input_tokens: trace.totalAiCalls ?? 0,
           ai_output_tokens: 0,
-          duration_ms: 0,
+          duration_ms: Math.round((trace.budgetUsed ?? 0) * 1000),
           strategy_trace: result.trace,
+          cost_usd: trace.budgetUsed ?? 0,
+          fetches: trace.totalFetches ?? 0,
+          pages_visited: trace.linksFollowed?.length ?? 0,
         });
 
-        if (result.status === "failed") {
+        if (result.status === "failed" && status !== "persist_failed") {
           status = "failed";
           errorMessage = result.trace.stopReason;
         }
       } else if (result.status === "in_progress") {
-        // Crawl will resume on next invocation — self-chain
         status = "in_progress";
       }
     } catch (e) {
@@ -228,7 +266,7 @@ serve(async (req) => {
     if (currentJobId) {
       const { data: currentJob } = await supabase
         .from("scrape_jobs")
-        .select("schools_processed, events_found, events_created, events_updated, errors_count, recent_schools")
+        .select("schools_processed, events_found, events_created, events_updated, errors_count, recent_schools, total_cost_usd")
         .eq("id", currentJobId)
         .single();
 
@@ -236,20 +274,29 @@ serve(async (req) => {
       const newProcessed = (currentJob?.schools_processed ?? 0) + skipCount;
       const newEventsFound = (currentJob?.events_found ?? 0) + eventsFound;
       const newEventsCreated = (currentJob?.events_created ?? 0) + eventsCreated;
-      const newErrors = (currentJob?.errors_count ?? 0) + (status !== "success" && status !== "in_progress" ? 1 : 0);
+      const newErrors = (currentJob?.errors_count ?? 0) + (status !== "success" && status !== "in_progress" && status !== "persist_failed" ? 1 : 0);
 
       const recentSchools = (currentJob?.recent_schools as Array<Record<string, unknown>> ?? []);
-      recentSchools.unshift({
-        name: school.name,
-        venueId: school.id,
-        status,
-        eventsFound,
-        eventsCreated,
+      const trace = result?.trace as any;
+      const idx = recentSchools.findIndex((r: any) => r.venueId === school.id);
+      const entry: Record<string, unknown> = {
+        name: school.name, venueId: school.id, status,
+        invocations: (idx >= 0 ? (((recentSchools[idx] as any).invocations as number) ?? 1) : 0) + 1,
+        eventsFound, eventsCreated,
+        programsExtracted: result?.programs?.length ?? 0,
+        costUsd: trace?.budgetUsed ?? null,
+        pagesVisited: trace?.totalFetches ?? null,
+        stopReason: trace?.stopReason ?? null,
+        completeness: trace?.completenessAfterFollows ?? null,
+        address: result?.schoolAddress ?? null,
         calendarUrl: school.calendar_url,
         timestamp: new Date().toISOString(),
-      });
-      if (recentSchools.length > 15) recentSchools.length = 15;
+      };
+      if (idx >= 0) recentSchools.splice(idx, 1);
+      recentSchools.unshift(entry);
+      if (recentSchools.length > 25) recentSchools.length = 25;
 
+      const costThisInvocation = trace?.budgetUsed ?? 0;
       await supabase.from("scrape_jobs").update({
         schools_processed: newProcessed,
         events_found: newEventsFound,
@@ -257,6 +304,7 @@ serve(async (req) => {
         errors_count: newErrors,
         current_venue: school.name,
         recent_schools: recentSchools,
+        total_cost_usd: ((currentJob as any)?.total_cost_usd ?? 0) + costThisInvocation,
       }).eq("id", currentJobId);
 
       if (remainingAfter > 0 || status === "in_progress") {

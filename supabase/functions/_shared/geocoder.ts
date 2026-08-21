@@ -11,6 +11,7 @@ export interface GeoResult {
 const BAD_COORDS: Array<{ lat: number; lng: number; label: string }> = [
   { lat: 41.8781, lng: -87.6298, label: "chicago_default_fallback" },
   { lat: 41.8755616, lng: -87.6244212, label: "nominatim_chicago_centroid" },
+  { lat: 41.887063, lng: -87.62925, label: "mapbox_chicago_city_point" },
 ];
 const BAD_RADIUS_DEG = 0.0015;
 
@@ -27,6 +28,13 @@ export function isBadCoordinate(lat: number, lng: number): boolean {
       Math.abs(lat - b.lat) < BAD_RADIUS_DEG &&
       Math.abs(lng - b.lng) < BAD_RADIUS_DEG,
   );
+}
+
+export function isPlausibleStreetAddress(s: string | null | undefined): boolean {
+  if (!s) return false;
+  const t = s.trim();
+  if (/^unknown/i.test(t)) return false;
+  return /^\d{1,6}\s+\S/.test(t);
 }
 
 // --- Provider chain ---

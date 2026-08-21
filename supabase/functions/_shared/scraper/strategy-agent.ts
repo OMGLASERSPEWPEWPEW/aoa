@@ -9,6 +9,7 @@ import { CostBudget, CLASS_CRAWL_TOTALS } from "./cost-budget.ts";
 import { lookupVenueOnTic, ticShowsToEnrichments, enrichFromTicDetail } from "./tic-lookup.ts";
 import { resolveVenueUrl } from "./url-resolver.ts";
 import { runRecon, type ReconResult } from "./recon.ts";
+import { extractOgImage } from "./og-image-extractor.ts";
 import { AOA_UA, enforceRateLimit, extractRegistrableDomain, classifyFetchError } from "./politeness.ts";
 import { classifyPage, extractHeadings, extractTitle, CLASSIFIER_ROUTING } from "./page-classifier.ts";
 import { stripBoilerplate } from "./boilerplate.ts";
@@ -864,6 +865,7 @@ export interface ClassStrategyResult {
   schoolAddress: string | null;
   trace: StrategyTrace;
   invocations: number;
+  photoUrl: string | null;
 }
 
 async function fetchWithUA(url: string, timeoutMs = FETCH_TIMEOUT): Promise<{ raw: string; ok: boolean }> {
@@ -1002,6 +1004,7 @@ export async function executeClassStrategy(
   const classifierCounts: Record<string, number> = {};
   let boilerplateDroppedTotal = 0;
   const fetchErrors = { blocked: 0, timeout: 0, dead: 0, other: 0 };
+  let ogImage: string | null = null;
 
   if (!isResume) {
     const seedStep = Date.now();
@@ -1014,12 +1017,17 @@ export async function executeClassStrategy(
       await sb.from("crawl_state").insert(state);
       return {
         status: "failed", programs: [], schoolAddress: null,
-        trace: buildTrace(steps, budget, [], 0, 0), invocations: 1,
+        trace: buildTrace(steps, budget, [], 0, 0), invocations: 1, photoUrl: null,
       };
     }
 
     visited.add(canonicalizeUrl(seedUrl));
     const seedCleaned = htmlToMarkdown(seedRaw, seedUrl);
+
+    const rawOg = extractOgImage(seedRaw, seedUrl);
+    if (rawOg && rawOg.startsWith("https://") && !rawOg.endsWith(".svg") && rawOg.length <= 500) {
+      ogImage = rawOg;
+    }
 
     const recon = await runRecon({ name: schoolName, city }, seedUrl, seedRaw, seedCleaned, budget);
 
@@ -1029,7 +1037,7 @@ export async function executeClassStrategy(
       await sb.from("crawl_state").insert(state);
       return {
         status: "failed", programs: [], schoolAddress: null,
-        trace: buildTrace(steps, budget, [], 0, 0), invocations: 1,
+        trace: buildTrace(steps, budget, [], 0, 0), invocations: 1, photoUrl: ogImage,
       };
     }
 
@@ -1173,12 +1181,34 @@ export async function executeClassStrategy(
   let finalStatus: "in_progress" | "complete" | "failed" | "escalated";
   let stopReason: string;
 
+  const hasHighScoreFrontier = frontier.some(f => f.score >= 80);
+
   if (frontier.length > 0 && totalsRemain && invCount < 4) {
     finalStatus = "in_progress";
-    stopReason = "invocation_cap";
+    stopReason = programs.length === 0 && hasHighScoreFrontier
+      ? "zero_programs_frontier_remaining" : "invocation_cap";
+  } else if (programs.length === 0 && hasHighScoreFrontier && !totalsRemain) {
+    finalStatus = "failed";
+    stopReason = "zero_programs_budget_exhausted";
+  } else if (programs.length === 0 && frontier.length === 0) {
+    finalStatus = "complete";
+    stopReason = "frontier_exhausted_zero_programs";
   } else {
     finalStatus = "complete";
     stopReason = frontier.length === 0 ? "frontier_exhausted" : (budget.stopReason ?? "complete");
+  }
+
+  const resolvedOgImage = ogImage ?? (state as any).photo_url ?? null;
+
+  let outOfCity = false;
+  if (schoolAddress) {
+    const stateMatch = schoolAddress.match(/,\s*([A-Z]{2})\s*\d{5}/);
+    const trailingMatch = schoolAddress.match(/,\s*([A-Z]{2})\s*$/);
+    const detectedState = stateMatch?.[1] ?? trailingMatch?.[1];
+    if (detectedState && detectedState !== "IL") {
+      outOfCity = true;
+      console.log(`[sv4] Out-of-city detected: ${schoolAddress} (${detectedState} ≠ IL)`);
+    }
   }
 
   const stateUpdate: Record<string, unknown> = {
@@ -1195,6 +1225,7 @@ export async function executeClassStrategy(
     budget_used: totalUsed,
     invocation_count: invCount,
     stop_reason: finalStatus !== "in_progress" ? stopReason : null,
+    photo_url: resolvedOgImage,
     updated_at: new Date().toISOString(),
   };
 
@@ -1213,8 +1244,9 @@ export async function executeClassStrategy(
   (trace as any).invocations = invCount;
   (trace as any).programsFound = programs.length;
   (trace as any).addressFound = schoolAddress;
+  if (outOfCity) (trace as any).out_of_city = true;
 
   console.log(`[sv4] ${venue.name} tier=${state.tier} inv=${invCount} fetches=${totalUsed.fetches} programs=${programs.length} completeness=${completeness} stop=${stopReason}`);
 
-  return { status: finalStatus, programs, schoolAddress, trace, invocations: invCount };
+  return { status: finalStatus, programs, schoolAddress, trace, invocations: invCount, photoUrl: resolvedOgImage };
 }
