@@ -4,6 +4,25 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.25.0',
+    date: '2026-08-21',
+    title: 'Admin blocklist + class metrics fix + block UI',
+    summary: 'Admins can block venues/schools by domain or entry; blocked sources vanish from the app and are rejected by discovery. Class metrics now count the right table.',
+    details: [
+      'Fix: get_class_coverage_metrics rewritten against class_sessions — the 0-classes bug is gone',
+      'New: blocked_sources table with domain/entry scope and five reasons',
+      'New: is_admin() SECURITY DEFINER helper — single source of truth for server-side admin checks',
+      'New: is_source_blocked() definer helper — RLS read filters on venues, events, schools, class_sessions',
+      'New: block_source/unblock_source RPCs with admin guard',
+      'New: BlockSheet with real consequence counts, normalized domain, no confirm()',
+      'New: BlockedList with one-tap unblock from BLOCKED (n)',
+      'New: Curator blocklist guard — discovery insert + target selection skip blocked domains',
+      'New: blocked_admin discovery-log disposition',
+      'New: --access-bg token in both themes',
+      'New: TS↔SQL parity evaluator for normalize_domain',
+    ],
+  },
+  {
     version: '0.24.0',
     date: '2026-08-21',
     title: 'Discovery v2 — Registry, Idempotent Reconciliation, Honest UI',
