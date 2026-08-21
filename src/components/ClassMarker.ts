@@ -4,19 +4,15 @@ import { isEnrolling } from '../lib/classData'
 const DISCIPLINE_COLORS: Record<Discipline, string> = {
   improv: 'oklch(.80 .16 110)',
   acting: 'oklch(.64 .19 20)',
-  writing: 'oklch(.68 .13 235)',
-  musical: 'oklch(.68 .18 330)',
-  devised: 'oklch(.72 .14 165)',
-  youth: 'oklch(.78 .15 65)',
+  // Reserved hues for future disciplines:
+  // writing: 'oklch(.68 .13 235)', musical: 'oklch(.68 .18 330)',
+  // devised: 'oklch(.72 .14 165)', youth: 'oklch(.78 .15 65)',
 }
 
 const DISCIPLINE_GLYPHS: Record<Discipline, string> = {
   improv: '◍',
   acting: '▭',
-  writing: '✎',
-  musical: '♪',
-  devised: '◎',
-  youth: '★',
+  // Reserved glyphs: writing ✎, musical ♪, devised ◎, youth ★
 }
 
 export { DISCIPLINE_COLORS, DISCIPLINE_GLYPHS }

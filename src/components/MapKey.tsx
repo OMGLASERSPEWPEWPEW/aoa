@@ -41,7 +41,6 @@ function ClassesKey() {
     <div style={panelStyle}>
       <div><span style={{ color: 'oklch(.80 .16 110)' }}>◍</span> improv</div>
       <div><span style={{ color: 'oklch(.64 .19 20)' }}>▭</span> acting</div>
-      <div><span style={{ color: 'oklch(.68 .13 235)' }}>✎</span> writing</div>
       <div>● enrolling now</div>
       <div>◌ between sessions</div>
       <div style={{ color: 'var(--ink-faint)' }}>□ theaters, dimmed</div>

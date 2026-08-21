@@ -333,6 +333,9 @@ export interface VenueCoverageMetrics {
   pending_in_queue: number;
   last_discovery_run: string | null;
   last_run_alert: boolean;
+  blocked_count: number;
+  venues_missing_calendar: number;
+  venues_missing_photo: number;
 }
 
 // --- Scraper v4: Class extraction types ---

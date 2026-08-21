@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom'
 import { useCostDashboard } from '../hooks/useCostDashboard'
 import { useVenueCoverage } from '../hooks/useVenueCoverage'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'
+import { useClassCoverage } from '../hooks/useClassCoverage'
+import { useSchoolAudit } from '../hooks/useSchoolAudit'
 import type { QueueItem, AuditVenue } from '../lib/types'
 import { useVenueAudit } from '../hooks/useVenueAudit'
 import { useScrape } from '../contexts/ScrapeContext'
@@ -16,6 +18,12 @@ import { DiscoveryQueueSection } from '../components/admin/DiscoveryQueueSection
 import { VenuePromoteModal } from '../components/admin/VenuePromoteModal'
 import { BlockSheet } from '../components/admin/BlockSheet'
 import { BlockedList } from '../components/admin/BlockedList'
+import { CoverageDomainTabs } from '../components/admin/CoverageDomainTabs'
+import { CoverageBar } from '../components/admin/CoverageBar'
+import { AuditRow } from '../components/admin/AuditRow'
+import { DryPipelineCard } from '../components/admin/DryPipelineCard'
+import { DisciplineBar } from '../components/admin/DisciplineBar'
+import { ClassFieldTiles } from '../components/admin/ClassFieldTiles'
 
 const tabs = ['Design', 'AI Prompts', 'Costs', 'Coverage'] as const
 type Tab = (typeof tabs)[number]
@@ -405,6 +413,11 @@ function CoverageTab() {
   const { items: blockedItems } = useBlockedSources()
   const [blockTarget, setBlockTarget] = useState<AuditVenue | null>(null)
   const [showBlockedList, setShowBlockedList] = useState(false)
+  const [domain, setDomain] = useState<'theaters' | 'schools'>(() =>
+    (sessionStorage.getItem('admin-domain-tab') as 'theaters' | 'schools') || 'theaters'
+  )
+  const classCov = useClassCoverage()
+  const schoolAudit = useSchoolAudit()
 
   useEffect(() => {
     supabase
@@ -457,8 +470,29 @@ function CoverageTab() {
     refetchMetrics()
   }
 
+  const handleDomainChange = (d: 'theaters' | 'schools') => {
+    setDomain(d)
+    sessionStorage.setItem('admin-domain-tab', d)
+  }
+
   return (
     <>
+      <CoverageDomainTabs
+        domain={domain}
+        counts={{ theaters: metrics?.total_aoa_venues ?? 0, schools: classCov.metrics?.school_count ?? 0 }}
+        onChange={handleDomainChange}
+      />
+
+      {domain === 'theaters' && (<>
+      {metrics && (
+        <CoverageBar
+          totalKnown={metrics.total_known_chicago}
+          totalOurs={metrics.total_aoa_venues}
+          withCalendar={metrics.venues_with_calendar_url}
+          missingCalendar={metrics.venues_missing_calendar ?? (metrics.total_aoa_venues - metrics.venues_with_calendar_url)}
+          animate
+        />
+      )}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
         <div>
           <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>
@@ -721,6 +755,55 @@ function CoverageTab() {
           }}
         />
       )}
+      </>)}
+
+      {domain === 'schools' && (<>
+        {classCov.metrics && (
+          <>
+            {classCov.metrics.session_count === 0 && classCov.metrics.school_count > 0 && (
+              <DryPipelineCard schoolCount={classCov.metrics.school_count} onCurateAll={() => { runClassDiscovery(); classCov.refetch() }} />
+            )}
+            {classCov.metrics.session_count > 0 && (
+              <>
+                <DisciplineBar byDiscipline={classCov.metrics.by_discipline} total={classCov.metrics.school_count} />
+                <ClassFieldTiles
+                  sessionCount={classCov.metrics.session_count}
+                  fields={[
+                    { label: 'START DATE', count: classCov.metrics.with_start_date },
+                    { label: 'PRICE', count: classCov.metrics.with_price },
+                    { label: 'LEVEL', count: classCov.metrics.with_level },
+                    { label: 'TEACHER', count: classCov.metrics.with_teacher },
+                  ]}
+                />
+              </>
+            )}
+          </>
+        )}
+        {!schoolAudit.loading && schoolAudit.schools.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-faint)', textTransform: 'uppercase', marginBottom: 8 }}>
+              School Audit ({schoolAudit.schools.length})
+            </div>
+            {schoolAudit.schools.slice(0, 30).map(s => (
+              <AuditRow
+                key={s.id}
+                row={{
+                  id: s.id,
+                  name: s.name,
+                  neighborhood: s.neighborhood,
+                  diagnosis: s.diagnosis,
+                  session_count: s.session_count,
+                  consecutive_failures: s.consecutive_failures,
+                  domain: s.domain,
+                  has_open_suggestions: s.has_open_suggestions,
+                }}
+                onOpen={() => {}}
+                onBlock={() => setBlockTarget({ id: s.id, name: s.name, neighborhood: s.neighborhood, venue_type: 'school', has_calendar_url: true, has_photo: !!s.url, event_count: s.session_count, source: 'school', website_url: s.url })}
+              />
+            ))}
+          </div>
+        )}
+      </>)}
 
       {blockTarget && (
         <BlockSheet

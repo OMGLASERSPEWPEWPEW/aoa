@@ -323,7 +323,7 @@ export interface EventSpectrumRow {
 
 // F70-F74: Classes and Schools
 
-export type Discipline = 'improv' | 'acting' | 'writing' | 'musical' | 'devised' | 'youth'
+export type Discipline = 'improv' | 'acting'
 
 export type MapMode = 'shows' | 'classes'
 
