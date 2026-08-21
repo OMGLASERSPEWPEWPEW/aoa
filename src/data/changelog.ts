@@ -4,6 +4,29 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.24.0',
+    date: '2026-08-21',
+    title: 'Discovery v2 — Registry, Idempotent Reconciliation, Honest UI',
+    summary: 'Discovery pipeline rewritten with rejection memory, identity validation, metro guards, and UI honesty fixes.',
+    details: [
+      'New: venues.status registry — active/candidate/rejected/out_of_city/duplicate/fetch_blocked',
+      'New: discovery_rejections table — permanent memory prevents re-inserting bad URLs across runs',
+      'New: 6-step reconciliation pipeline — rejection memory → aggregator → domain → name → validation gate → geocode+insert',
+      'New: Identity/locality/organization LLM check gates every new candidate before insert',
+      'New: Name matching with Jaccard + Levenshtein catches aliases ("The Revival" = "The Revival Improv Theater")',
+      'New: Region-sliced prompts (6 total) — North Side + West/South Side variants improve recall',
+      'New: Metro-radius geocode guard (40km) — stops Ambler PA, Oakland, Nashville from pinning',
+      'New: Pin ledger in admin dashboard — every school explains its disposition (shown/hidden/rejected/merged)',
+      'New: Co-located marker fan-out — overlapping schools (Vagabond + Green Shirt) get radial pixel offsets',
+      'New: production_or_festival classifier kind — plays/festivals no longer ingested as classes',
+      'Fix: "Hold a spot" removed — replaced with honest "SIGN UP ↗" that opens the school\'s page',
+      'Fix: Fake seat counts ("12 OF 16 TAKEN") and "N ENROLLING" removed — only extraction truth shown',
+      'Fix: Aggregator blocklist expanded — loopchicago, backstage, chicagoreader, reddit + 10 more',
+      'Fix: scrape_logs duration_ms and ai_input_tokens no longer store dollars/call-counts as wrong types',
+      'Cleanup: Chris Thatcher rejected, backstage CAS rejected, Revival deduplicated, All Out + Third Coast marked out_of_city',
+    ],
+  },
+  {
     version: '0.23.0',
     date: '2026-08-21',
     title: 'Learning Layer — site profiles + evidence-based Jina fallback',
