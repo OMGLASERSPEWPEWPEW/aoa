@@ -441,7 +441,47 @@ CLAUDE.md (Key Files + Database, at acr-docs-qa) · Feature doc **NEW** `docs/fe
 
 **DG-3 — Scaffold block entry point:** Accepted. Temporary `⊘` on `VenueAuditTable` rows ships in Phase 2 (`acr-block-ui`), removed by `acr-6a-tiles-audit` in Phase 4.
 
-*(Executor appends below: write-site census table, copy-sweep grep output, screenshots refs, deviations, attempts summaries.)*
+### Execution Progress (2026-08-21)
+
+**Phase 0 — Landing:** ✅ Complete. Spec package landed, DG-1–3 recorded.
+- Commit: `ba050f0` docs(prd|adr|graphs|qa): admin coverage redesign spec package
+
+**Phase 1 — Fix the Wrong Number (v0.23.1 → shipped in v0.25.0):** ✅ Complete.
+- Migration `20260823000001` applied. RPC returns all 10 `ClassCoverageMetrics` keys.
+- Parity: `session_count` verified against direct `class_sessions` count.
+- Docs.tsx inline classMetrics remapped to new keys (`school_count`, `session_count`, `with_teacher`, `with_level`).
+
+**Phase 2 — Blocklist Core + Enforcement:** ✅ Complete.
+- `acr-blocklist-lib`: 13 fixture pairs, TS tests green. Committed test-first per Loop v2.
+- `acr-mig-blocked-sources`: Migration `20260823000002` applied. `is_admin()`, `normalize_domain()`, `blocked_sources`, `is_source_blocked()`, `block_source`/`unblock_source` RPCs. Parity evaluator 13/13 match.
+- `acr-curator-blocklist-guard`: `_shared/curator/blocklist.ts` created. All 4 Edge Functions modified (venue-discovery, school-discovery, event-scrape-batch, class-scrape-batch). Deployed successfully.
+- `acr-mig-read-filters`: Migration `20260823000003` applied. 4 SELECT policies recreated with `is_source_blocked()` USING clause. Class coverage RPC updated with block filter.
+- `acr-block-ui`: `BlockSheet.tsx`, `BlockedList.tsx`, `useBlockSource.ts`, `useBlockedSources.ts`, `adminInvalidation.ts` created. DG-3 scaffold `⊘` on VenueAuditTable. Query keys extended.
+- Commit: `b7803f0` feat(admin): blocklist + class metrics fix + block UI + curator guard
+- **Deviation D-9:** Version shipped as v0.25.0 (not 0.24.0 per graph) because repo was already at 0.24.0 when spec landed.
+
+**Phase 3 — Theatre-Only Disciplines:** ✅ Complete.
+- Migration `20260823000004` applied (reassign → CHECK narrow). Only `acting` existed in DB.
+- `Discipline` type narrowed to `'improv' | 'acting'`. ClassMarker/MapKey cleaned up, hues reserved.
+- Grep gate: zero dropped discipline string literals in src/.
+
+**Phase 4 — Panels, 6a, 6b:** ✅ Complete.
+- `acr-mig-venue-metrics`: Migration `20260823000005` applied. `blocked_count`, `venues_missing_calendar`, `venues_missing_photo` added to venue metrics RPC.
+- `acr-tokens-access-bg`: `--access-bg` added to both themes in tokens.css.
+- `acr-domain-tabs-split`: `CoverageDomainTabs.tsx` created. `CoverageTab` split into THEATERS/SCHOOLS panels with sessionStorage persistence.
+- `acr-6a-coverage-work`: `CoverageBar.tsx`, `WorkActions.tsx` created. CoverageBar wired into theaters panel.
+- `acr-6a-tiles-audit`: `diagnosis.ts` + tests (11 passing), `NeedsALookTiles.tsx`, `AuditRow.tsx` created. `useVenueAudit` extended with diagnosis, consecutive_failures, domain, has_open_suggestions stub.
+- `acr-6b-hooks`: `useClassCoverage.ts`, `useSchoolAudit.ts` created.
+- `acr-6b-panel`: `DryPipelineCard.tsx`, `DisciplineBar.tsx`, `ClassFieldTiles.tsx` created. Schools panel composed with DryPipelineCard guard, DisciplineBar, ClassFieldTiles, and school AuditRows.
+- Commit: `f78c1bb` feat(admin): THEATERS/SCHOOLS panels + discipline narrowing + coverage bar + school audit
+- **Deviation:** WorkActions and NeedsALookTiles components created but not yet wired into Docs.tsx theaters panel — the existing inline buttons still function. Full replacement deferred to avoid breaking scrape context wiring.
+- **Deviation:** DG-3 scaffold `⊘` on VenueAuditTable not yet removed — VenueAuditTable still renders in theaters panel alongside the new components. Full teardown deferred to Phase 7.
+
+**Deployed:** v0.25.0 via `vercel --prod` (auto-deploy broken for this project).
+
+**Remaining:** Phase 5 (provenance + detail pages), Phase 6 (suggestions UI), Phase 7 (copy + teardown), Phase 8 (docs closure).
+
+*(Executor appends below: write-site census table, copy-sweep grep output, screenshots refs, additional deviations, attempts summaries.)*
 
 ---
 
