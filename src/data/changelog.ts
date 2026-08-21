@@ -4,6 +4,22 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.23.0',
+    date: '2026-08-21',
+    title: 'Learning Layer — site profiles + evidence-based Jina fallback',
+    summary: 'Scraper v4 now learns from each crawl and renders JS-heavy sites via Jina when evidence indicates hidden content.',
+    details: [
+      'New: site_profiles table — machine-learned per-domain crawl hints (entry points, dead-end patterns, render_needed flag)',
+      'New: Warm start path — fresh profiles skip recon, seed frontier from known productive pages, cut fetches from 30-90 to 5-8',
+      'New: needsRender() evidence-based Jina trigger — fires when classifier says content page but extraction returns 0 programs',
+      'New: Jina integration in v4 executeClassStrategy — both seed page and BFS per-page fallback',
+      'New: preferJina mode — render_needed domains skip plain fetch entirely, go straight through Jina',
+      'New: Profile staleness detection — consecutive failures increment, stale profiles trigger cold crawl',
+      'Fix: StrategyTrace type debt — 7 fields promoted from (trace as any) hacks to typed interface properties',
+      'New: /swarm skill — parallel multi-task dispatch with agent fan-out and synthesis',
+    ],
+  },
+  {
     version: '0.22.0',
     date: '2026-08-21',
     title: 'v4.2 — Persistence, Pin Accuracy, Sheet UX, Dashboard & Cost',
