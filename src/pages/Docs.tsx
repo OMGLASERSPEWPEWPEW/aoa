@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCostDashboard } from '../hooks/useCostDashboard'
 import { useVenueCoverage } from '../hooks/useVenueCoverage'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'
@@ -396,6 +396,7 @@ function CostsTab() {
 }
 
 function CoverageTab() {
+  const navigate = useNavigate()
   const { metrics, loading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useVenueCoverage()
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
   const audit = useVenueAudit()
@@ -797,7 +798,7 @@ function CoverageTab() {
                   domain: s.domain,
                   has_open_suggestions: s.has_open_suggestions,
                 }}
-                onOpen={() => {}}
+                onOpen={(id) => navigate(`/app/admin/school/${id}`)}
                 onBlock={() => setBlockTarget({ id: s.id, name: s.name, neighborhood: s.neighborhood, venue_type: 'school', has_calendar_url: true, has_photo: !!s.url, event_count: s.session_count, source: 'school', website_url: s.url })}
               />
             ))}

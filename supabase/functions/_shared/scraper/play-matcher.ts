@@ -8,6 +8,7 @@
 // All errors are caught and logged — this function NEVER throws.
 
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { guardedUpdate } from "../curator/overrides.ts";
 import type { PlayRecord, AiPlayIdentification, PlayMatchSummary } from "./types.ts";
 import { logUsage } from "../logUsage.ts";
 
@@ -549,10 +550,7 @@ export async function runPlayMatcherBatch(
       // Try exact match
       const exactHit = exactMatch(event.title, catalog);
       if (exactHit) {
-        await supabase
-          .from("events")
-          .update({ play_id: exactHit.id })
-          .eq("id", event.id);
+        await guardedUpdate(supabase, "event", event.id, { play_id: exactHit.id });
         summary.exact_matches++;
         continue;
       }
@@ -560,10 +558,7 @@ export async function runPlayMatcherBatch(
       // Try fuzzy match (single-word titles bypass to AI)
       const fuzzyHit = fuzzyMatch(event.title, catalog);
       if (fuzzyHit) {
-        await supabase
-          .from("events")
-          .update({ play_id: fuzzyHit.play.id })
-          .eq("id", event.id);
+        await guardedUpdate(supabase, "event", event.id, { play_id: fuzzyHit.play.id });
         summary.fuzzy_matches++;
         continue;
       }
@@ -612,11 +607,7 @@ export async function runPlayMatcherBatch(
           continue;
         }
 
-        // Set play_id on the event
-        await supabase
-          .from("events")
-          .update({ play_id: result.playId })
-          .eq("id", candidate.id);
+        await guardedUpdate(supabase, "event", candidate.id, { play_id: result.playId });
 
         summary.ai_matches++;
         if (result.created) {

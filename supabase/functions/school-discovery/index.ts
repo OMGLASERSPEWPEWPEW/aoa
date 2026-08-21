@@ -4,6 +4,7 @@ import { resolveCoordinates, geocodeBusinessByName, isBadCoordinate, isPlausible
 import { repairJson } from "../_shared/scraper/json-repair.ts";
 import { discoveryMatch } from "../_shared/scraper/venue-name-matcher.ts";
 import { isBlockedDomain } from "../_shared/curator/blocklist.ts";
+import { guardedUpdate } from "../_shared/curator/overrides.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -538,10 +539,13 @@ async function reconcileAndInsert(results: DiscoveryResult[], runId: string): Pr
 
     // If this was a name-match replacement for a dead/rejected venue, update instead of insert
     if (nameMatch.matched && nameMatch.venueId) {
-      await supabase.from("venues").update({
+      await guardedUpdate(supabase, "venue", nameMatch.venueId, {
         website_url: result.link, calendar_url: result.link, status: insertStatus,
-      }).eq("id", nameMatch.venueId);
-      await supabase.from("schools").update({ url: result.link, status: insertStatus }).eq("venue_id", nameMatch.venueId);
+      }, { source_url: result.link });
+      const { data: matchedSchool } = await supabase.from("schools").select("id").eq("venue_id", nameMatch.venueId).maybeSingle();
+      if (matchedSchool) {
+        await guardedUpdate(supabase, "school", matchedSchool.id, { url: result.link, status: insertStatus }, { source_url: result.link });
+      }
       report.inserted.push({ name: result.title, url: result.link });
       existingDomains.add(result.domain);
       await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "replaced_url", reason: `Updated URL on existing venue ${nameMatch.matchedName}` });
@@ -556,6 +560,7 @@ async function reconcileAndInsert(results: DiscoveryResult[], runId: string): Pr
     const geocodeSource = geoResult.source;
     const geocodeStatus = geoResult.source === "default" ? "default" : "ok";
 
+    // no guard: inserts precede any override — see ADR-0012 D-5
     const { data: newVenue, error: venueError } = await supabase.from("venues").insert({
       name: result.title, slug, venue_type: "school", website_url: result.link,
       calendar_url: result.link, city: "chicago", source: "discovery", status: insertStatus,
@@ -644,16 +649,13 @@ serve(async (req) => {
         geoResult.source !== "default" &&
         !isBadCoordinate(geoResult.lat, geoResult.lng)
       ) {
-        await supabase
-          .from("venues")
-          .update({
-            latitude: geoResult.lat,
-            longitude: geoResult.lng,
-            address: geoResult.address ?? venue.address,
-            geocode_source: geoResult.source,
-            geocode_status: "ok",
-          })
-          .eq("id", venue.id);
+        await guardedUpdate(supabase, "venue", venue.id, {
+          latitude: geoResult.lat,
+          longitude: geoResult.lng,
+          address: geoResult.address ?? venue.address,
+          geocode_source: geoResult.source,
+          geocode_status: "ok",
+        });
 
         const { data: school } = await supabase
           .from("schools")
@@ -661,14 +663,11 @@ serve(async (req) => {
           .eq("venue_id", venue.id)
           .maybeSingle();
         if (school) {
-          await supabase
-            .from("schools")
-            .update({
-              latitude: geoResult.lat,
-              longitude: geoResult.lng,
-              address: geoResult.address ?? venue.address,
-            })
-            .eq("id", school.id);
+          await guardedUpdate(supabase, "school", school.id, {
+            latitude: geoResult.lat,
+            longitude: geoResult.lng,
+            address: geoResult.address ?? venue.address,
+          });
         }
 
         fixed++;

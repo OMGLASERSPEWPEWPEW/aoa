@@ -31,6 +31,8 @@ import { ProductionDetail } from './pages/ProductionDetail'
 import { PlayDetail } from './pages/PlayDetail'
 import { Docs } from './pages/Docs'
 import { DocsViewer } from './pages/DocsViewer'
+import { AdminVenueDetail } from './pages/AdminVenueDetail'
+import { AdminSchoolDetail } from './pages/AdminSchoolDetail'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ScrapeProvider } from './contexts/ScrapeContext'
 export default function App() {
@@ -65,6 +67,8 @@ export default function App() {
             <Route path="play/:playId" element={<PlayDetail />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="admin/venue/:id" element={<AdminVenueDetail />} />
+            <Route path="admin/school/:id" element={<AdminSchoolDetail />} />
             <Route path="admin" element={<Docs />} />
             <Route path="admin/:page" element={<DocsViewer />} />
           </Route>

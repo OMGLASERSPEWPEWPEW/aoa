@@ -15,6 +15,7 @@ import type {
   Pass2Verification,
 } from "../_shared/scraper/types.ts";
 import { logUsage } from "../_shared/logUsage.ts";
+import { guardedUpdate } from "../_shared/curator/overrides.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY")!;
@@ -349,8 +350,9 @@ export async function processVenue(
       };
 
       if (existing) {
-        const { error } = await supabase.from("events").update(row).eq("id", existing.id);
-        if (error) throw new Error(`Update failed: ${error.message}`);
+        await guardedUpdate(supabase, "event", existing.id, row, {
+          source_url: venue.calendar_url,
+        });
         result.events_updated++;
       } else {
         const { error } = await supabase.from("events").insert(row);
@@ -416,10 +418,10 @@ async function enrichVenue(
         result.photo_extracted = true;
         result.photo_url = ogImage;
 
-        await supabase
-          .from("venues")
-          .update({ photo_url: ogImage, photo_url_source: "og_image" })
-          .eq("id", venue.id);
+        await guardedUpdate(supabase, "venue", venue.id, {
+          photo_url: ogImage,
+          photo_url_source: "og_image",
+        }, { source_url: venue.website_url ?? undefined });
       }
     }
 

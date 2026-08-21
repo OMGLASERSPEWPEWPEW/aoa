@@ -5,6 +5,7 @@ import { processClassPrograms } from "../_shared/scraper/process-venue.ts";
 import type { VenueTarget, SiteProfileRow } from "../_shared/scraper/types.ts";
 import { extractRegistrableDomain } from "../_shared/scraper/politeness.ts";
 import { isEntityBlocked } from "../_shared/curator/blocklist.ts";
+import { guardedUpdate } from "../_shared/curator/overrides.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -237,11 +238,20 @@ serve(async (req) => {
         }
 
         if (result.photoUrl) {
-          await supabase.from("venues").update({ photo_url: result.photoUrl, photo_url_source: "og_image" })
-            .eq("id", school.id).is("photo_url", null);
+          const { data: curVenue } = await supabase.from("venues").select("photo_url").eq("id", school.id).maybeSingle();
+          if (!curVenue?.photo_url) {
+            await guardedUpdate(supabase, "venue", school.id, {
+              photo_url: result.photoUrl,
+              photo_url_source: "og_image",
+            }, { source_url: school.calendar_url ?? undefined });
+          }
           if (resolvedSchoolId) {
-            await supabase.from("schools").update({ photo_url: result.photoUrl })
-              .eq("id", resolvedSchoolId).is("photo_url", null);
+            const { data: curSchool } = await supabase.from("schools").select("photo_url").eq("id", resolvedSchoolId).maybeSingle();
+            if (!curSchool?.photo_url) {
+              await guardedUpdate(supabase, "school", resolvedSchoolId, {
+                photo_url: result.photoUrl,
+              }, { source_url: school.calendar_url ?? undefined });
+            }
           }
         }
 

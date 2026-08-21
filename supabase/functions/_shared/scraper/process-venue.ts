@@ -5,6 +5,7 @@ import type { VenueTarget, ScrapeResult, StrategyProfile, Program } from "./type
 import { resolveCoordinates, isBadCoordinate, isPlausibleStreetAddress, isOutsideMetro } from "../geocoder.ts";
 import { logUsage } from "../logUsage.ts";
 import { runPlayMatcherBatch } from "./play-matcher.ts";
+import { guardedUpdate } from "../curator/overrides.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,7 +40,7 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
     // Self-healing: update calendar_url if recovery found a working URL (FR-33)
     if (recoveredUrl && recoveredUrl !== venue.calendar_url) {
       try {
-        await supabase.from("venues").update({ calendar_url: recoveredUrl }).eq("id", venue.id);
+        await guardedUpdate(supabase, "venue", venue.id, { calendar_url: recoveredUrl });
         console.log(`[process-venue] Self-healed calendar_url for ${venue.name}: ${recoveredUrl}`);
       } catch (e) {
         console.warn(`[process-venue] Failed to self-heal URL for ${venue.name}:`, e);
@@ -118,8 +119,9 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
       };
 
       if (existing) {
-        const { error } = await supabase.from("events").update(row).eq("id", existing.id);
-        if (error) throw new Error(`Update failed: ${error.message}`);
+        await guardedUpdate(supabase, "event", existing.id, row, {
+          source_url: (event as any).source_url ?? venue.calendar_url,
+        });
         result.events_updated++;
         upsertedEventIds.push(existing.id);
       } else {
@@ -232,9 +234,10 @@ export async function processClassSessions(
       .maybeSingle();
 
     if (existing) {
-      const { error } = await supabase.from("class_sessions").update(row).eq("id", existing.id);
-      if (error) console.error(`[class-sessions] Update failed for "${event.title}":`, error.message);
-      else updated++;
+      await guardedUpdate(supabase, "class_session", existing.id, row, {
+        source_url: sourceUrl,
+      });
+      updated++;
     } else {
       const { error } = await supabase.from("class_sessions").insert(row);
       if (error) console.error(`[class-sessions] Insert failed for "${event.title}":`, error.message);
@@ -281,16 +284,13 @@ export async function processClassPrograms(
       const geo = await resolveCoordinates(schoolAddress);
       if (geo && !isBadCoordinate(geo.lat, geo.lng) && !isOutsideMetro(geo.lat, geo.lng)) {
         const prevSource = venue.geocode_source;
-        await supabase
-          .from("venues")
-          .update({
-            address: schoolAddress,
-            latitude: geo.lat,
-            longitude: geo.lng,
-            geocode_source: `llm_extracted:${geo.provider}`,
-            geocode_status: "ok",
-          })
-          .eq("id", venueId);
+        await guardedUpdate(supabase, "venue", venueId, {
+          address: schoolAddress,
+          latitude: geo.lat,
+          longitude: geo.lng,
+          geocode_source: `llm_extracted:${geo.provider}`,
+          geocode_status: "ok",
+        });
 
         const { data: school } = await supabase
           .from("schools")
@@ -298,14 +298,11 @@ export async function processClassPrograms(
           .eq("venue_id", venueId)
           .maybeSingle();
         if (school) {
-          await supabase
-            .from("schools")
-            .update({
-              address: schoolAddress,
-              latitude: geo.lat,
-              longitude: geo.lng,
-            })
-            .eq("id", school.id);
+          await guardedUpdate(supabase, "school", school.id, {
+            address: schoolAddress,
+            latitude: geo.lat,
+            longitude: geo.lng,
+          });
         }
         console.log(`[address] llm_extracted:${geo.provider} supersedes ${prevSource} for venue ${venueId}`);
       }
@@ -370,9 +367,10 @@ export async function processClassPrograms(
         .maybeSingle();
 
       if (existing) {
-        const { error } = await supabase.from("class_sessions").update(row).eq("id", existing.id);
-        if (error) console.error(`[class-programs] Update failed for "${title}":`, error.message);
-        else updated++;
+        await guardedUpdate(supabase, "class_session", existing.id, row, {
+          source_url: sourceUrl,
+        });
+        updated++;
       } else {
         const { error } = await supabase.from("class_sessions").insert(row);
         if (error) console.error(`[class-programs] Insert failed for "${title}":`, error.message);

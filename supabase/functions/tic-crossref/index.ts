@@ -8,6 +8,7 @@ import {
   aiMatchVenues,
 } from "../_shared/scraper/venue-name-matcher.ts";
 import type { TicShow } from "../_shared/scraper/types.ts";
+import { guardedUpdate } from "../_shared/curator/overrides.ts";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5204",
@@ -190,7 +191,9 @@ serve(async (req) => {
         updates.found_by = [...existingFoundBy, "tic"];
       }
 
-      await supabase.from("events").update(updates).eq("id", eventId);
+      await guardedUpdate(supabase, "event", eventId, updates, {
+        source_url: show.detailUrl,
+      });
       enriched++;
     }
 

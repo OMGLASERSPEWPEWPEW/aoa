@@ -427,6 +427,98 @@ export interface BlockRequest {
   note?: string
 }
 
+// Admin: Field provenance types (Phase 5)
+
+export type OverridableEntity = 'venue' | 'school' | 'class_session' | 'event'
+
+export interface FieldOverride {
+  id: string
+  entity_type: OverridableEntity
+  entity_id: string
+  field_name: string
+  value: unknown
+  previous_value: unknown | null
+  edited_by: string
+  edited_at: string
+}
+
+export type FieldState = 'curated' | 'held' | 'empty'
+
+export type FieldEditor =
+  | 'text' | 'textarea' | 'url' | 'enum' | 'boolean'
+  | 'money' | 'tags' | 'image' | 'latlng'
+
+export interface AdminFieldModel {
+  name: string
+  label: string
+  editor: FieldEditor
+  value: unknown
+  state: FieldState
+  override: FieldOverride | null
+  consequence: string | null
+  sourceLabel: string | null
+  suggestion: CuratorSuggestion | null
+  options?: readonly string[]
+  maxLength?: number
+  hint?: string
+}
+
+export type SuggestionStatus = 'open' | 'accepted' | 'dismissed' | 'muted'
+
+export interface SuggestionEvidence {
+  events_found?: number
+  events_found_current?: number
+  confidence?: number
+  source_url?: string
+}
+
+export interface CuratorSuggestion {
+  id: string
+  entity_type: OverridableEntity
+  entity_id: string
+  field_name: string
+  suggested_value: unknown
+  evidence: SuggestionEvidence | null
+  times_suggested: number
+  status: SuggestionStatus
+  first_seen_at: string
+  last_seen_at: string
+}
+
+// Admin: Diagnosis types
+
+export type DiagnosisKind =
+  | 'ok' | 'dead_site' | 'mistyped' | 'aggregator' | 'no_calendar' | 'never_curated'
+
+export interface Diagnosis {
+  kind: DiagnosisKind
+  label: string
+  severity: 'neutral' | 'warn' | 'danger'
+}
+
+export interface AuditVenueRow extends AuditVenue {
+  diagnosis: Diagnosis
+  consecutive_failures: number
+  has_open_suggestions: boolean
+  domain: string | null
+}
+
+export interface AuditSchoolRow {
+  id: string
+  name: string
+  short_name: string
+  neighborhood: string
+  discipline: Discipline
+  price_band: '$' | '$$' | '$$$' | null
+  session_count: number
+  last_curated_at: string | null
+  diagnosis: Diagnosis
+  has_open_suggestions: boolean
+  domain: string | null
+}
+
+export type AdminDomain = 'theaters' | 'schools'
+
 export interface ClassCoverageMetrics {
   school_count: number
   schools_never_curated: number
