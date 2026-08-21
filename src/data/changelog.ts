@@ -4,6 +4,28 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.22.0',
+    date: '2026-08-21',
+    title: 'v4.2 — Persistence, Pin Accuracy, Sheet UX, Dashboard & Cost',
+    summary: 'Comprehensive post-mortem patch fixing silent data drops, wrong pin locations, half-built ClassSheet UI, dashboard duplicates, and missing cost visibility.',
+    details: [
+      'Fix: Self-heal missing school rows instead of silently dropping extracted programs (persistence hardening)',
+      'Fix: Source-ranked address precedence — crawl-extracted addresses now supersede weak discovery sources',
+      'Fix: Mapbox city-point (41.887, -87.629) added to BAD_COORDS — 8 stacked schools unstacked',
+      'Fix: isPlausibleStreetAddress gate rejects junk like "Chicago, IL" before geocoding',
+      'Fix: Stop logic never declares complete at 0 programs with high-score frontier remaining',
+      'Fix: Out-of-city detection — schools in Nashville/Oakland flagged, excluded from map',
+      'Fix: Dashboard keyed upsert — one row per school, no more duplicates on resume invocations',
+      'Add: THE CLASSES section in ClassSheet with tappable session rows (replaces ALSO NEARBY as primary)',
+      'Add: Address line with directions link in ClassSheet header',
+      'Add: Hero image from og:image capture during seed page crawl',
+      'Add: Primary button and ↗ now link to signup/source URLs (previously dead)',
+      'Add: Cost visibility — per-school and total USD in dashboard, scrape_logs.cost_usd column',
+      'Add: persist_failed status when programs extracted but 0 persisted',
+      'Remove: TELL ME MORE button (had no handler)',
+    ],
+  },
+  {
     version: '0.21.1',
     date: '2026-08-21',
     title: 'Geocoding v2 — provider chain + centroid guard',
