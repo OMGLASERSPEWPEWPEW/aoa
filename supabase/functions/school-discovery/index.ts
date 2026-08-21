@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { geocode, geocodeByBusinessName } from "../_shared/geocoder.ts";
+import { resolveCoordinates, geocodeBusinessByName, isBadCoordinate } from "../_shared/geocoder.ts";
 import { repairJson } from "../_shared/scraper/json-repair.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
@@ -105,68 +105,162 @@ async function logDiscoveryResult(entry: {
   catch { console.warn("[school-discovery] Failed to write discovery_log entry for", entry.raw_url); }
 }
 
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ");
+}
+
+async function fetchPage(url: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const res = await fetch(url, {
+      headers: { "User-Agent": "AOA-ClassFinder/1.0" },
+      signal: controller.signal,
+      redirect: "follow",
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
+async function extractAddressFromSite(
+  websiteUrl: string,
+  city: string,
+): Promise<string | null> {
+  const addrRegex = buildAddressRegex(city);
+  const candidates = [websiteUrl];
+  try {
+    const origin = new URL(websiteUrl).origin;
+    candidates.push(`${origin}/contact`, `${origin}/contact-us`);
+  } catch {
+    /* keep just websiteUrl */
+  }
+
+  for (const url of candidates) {
+    const html = await fetchPage(url);
+    if (!html) continue;
+    const m = htmlToText(html).match(addrRegex);
+    if (m) return `${m[1].trim()}, ${city}, IL`;
+  }
+  return null;
+}
+
+async function perplexityFindAddress(
+  name: string,
+  city: string,
+): Promise<string | null> {
+  if (!PERPLEXITY_API_KEY) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch("https://api.perplexity.ai/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "sonar",
+        messages: [
+          {
+            role: "user",
+            content:
+              `What is the current street address of "${name}", an arts/acting school in ${city}, Illinois? ` +
+              `Respond with ONLY a JSON object, no prose: ` +
+              `{"street_address": "<number street, unit if any>", "confidence": "high"|"medium"|"low"} ` +
+              `If you cannot find it, respond {"street_address": null, "confidence": "low"}.`,
+          },
+        ],
+        max_tokens: 200,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const parsed = repairJson(
+      data.choices?.[0]?.message?.content ?? "",
+    ) as { street_address?: unknown } | null;
+    const addr = parsed?.street_address;
+    if (typeof addr !== "string" || addr.length < 6) return null;
+
+    if (!/^\d{1,6}\s+\S/.test(addr.trim())) return null;
+    const withCity = new RegExp(`\\b${city}\\b`, "i").test(addr)
+      ? addr.trim()
+      : `${addr.trim()}, ${city}, IL`;
+    return withCity;
+  } catch {
+    return null;
+  } finally {
+    await delay(1100);
+  }
+}
+
 async function geocodeSchool(
   name: string,
   websiteUrl: string,
   knownAddress?: string | null,
   city = "Chicago",
 ): Promise<{ lat: number; lng: number; address: string | null; source: string }> {
-  const addrRegex = buildAddressRegex(city);
-
+  // 1) Address we already hold (crawl-extracted or discovery-provided)
   if (knownAddress) {
-    const geo = await geocode(knownAddress);
-    if (geo) return { lat: geo.lat, lng: geo.lng, address: knownAddress, source: "perplexity_address" };
+    const geo = await resolveCoordinates(knownAddress, city);
+    if (geo)
+      return {
+        lat: geo.lat,
+        lng: geo.lng,
+        address: knownAddress,
+        source: `known_address:${geo.provider}`,
+      };
   }
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
-    const res = await fetch(websiteUrl, {
-      headers: { "User-Agent": "AOA-ClassFinder/1.0" },
-      signal: controller.signal, redirect: "follow",
-    });
-    clearTimeout(timeout);
-    if (res.ok) {
-      const html = await res.text();
-      const m = html.match(addrRegex);
-      if (m) {
-        const addr = `${m[1].trim()}, ${city}, IL`;
-        const geo = await geocode(addr);
-        if (geo) return { lat: geo.lat, lng: geo.lng, address: addr, source: "regex" };
-      }
-    }
-  } catch { /* website unreachable */ }
-
-  const placesResult = await geocodeByBusinessName(name, city);
-  if (placesResult) return { lat: placesResult.lat, lng: placesResult.lng, address: placesResult.address, source: "places_api" };
-
-  const geo = await geocode(`${name}, ${city}, IL`);
-  if (geo) return { lat: geo.lat, lng: geo.lng, address: null, source: "name_lookup" };
-
-  if (PERPLEXITY_API_KEY) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15_000);
-      const res = await fetch("https://api.perplexity.ai/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${PERPLEXITY_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "sonar", messages: [{ role: "user", content: `What is the exact street address of "${name}" in ${city}, Illinois? Just the address, nothing else.` }], max_tokens: 200 }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      if (res.ok) {
-        const data = await res.json();
-        const addrMatch = (data.choices?.[0]?.message?.content ?? "").match(addrRegex);
-        if (addrMatch) {
-          const addr = `${addrMatch[1].trim()}, ${city}, IL`;
-          const pGeo = await geocode(addr);
-          if (pGeo) return { lat: pGeo.lat, lng: pGeo.lng, address: addr, source: "perplexity" };
-        }
-      }
-    } catch { /* perplexity unreachable */ }
-    await delay(1100);
+  // 2) The school's own website (tag-stripped footer/contact regex)
+  const siteAddr = websiteUrl
+    ? await extractAddressFromSite(websiteUrl, city)
+    : null;
+  if (siteAddr) {
+    const geo = await resolveCoordinates(siteAddr, city);
+    if (geo)
+      return {
+        lat: geo.lat,
+        lng: geo.lng,
+        address: siteAddr,
+        source: `website:${geo.provider}`,
+      };
   }
 
+  // 3) Perplexity web-search for the address (validated by geocoding + guard)
+  const pplxAddr = await perplexityFindAddress(name, city);
+  if (pplxAddr) {
+    const geo = await resolveCoordinates(pplxAddr, city);
+    if (geo)
+      return {
+        lat: geo.lat,
+        lng: geo.lng,
+        address: pplxAddr,
+        source: `perplexity:${geo.provider}`,
+      };
+  }
+
+  // 4) Business-name search: Google Places if keyed, else Mapbox POI. NEVER Nominatim-by-name.
+  const biz = await geocodeBusinessByName(name, city);
+  if (biz)
+    return {
+      lat: biz.lat,
+      lng: biz.lng,
+      address: biz.address,
+      source: biz.provider,
+    };
+
+  // 5) Honest failure — MapView's filter hides default-coordinate schools by design.
   return { lat: 41.8781, lng: -87.6298, address: null, source: "default" };
 }
 
@@ -361,16 +455,31 @@ serve(async (req) => {
   const limit = typeof body.limit === "number" ? body.limit : 50;
 
   if (action === "geocode-backfill") {
-    const { data: stuckVenues } = await supabase
+    const names = Array.isArray(body.names) ? body.names as string[] : null;
+
+    let query = supabase
       .from("venues")
-      .select("id, name, website_url, calendar_url, address, latitude, longitude")
+      .select("id, name, website_url, calendar_url, address, latitude, longitude, geocode_status")
       .eq("venue_type", "school")
-      .or(`geocode_status.eq.default,geocode_status.is.null,latitude.eq.41.8781,latitude.is.null`)
+      .or(
+        [
+          "latitude.is.null",
+          "and(latitude.eq.41.8781,longitude.eq.-87.6298)",
+          "and(latitude.eq.41.8755616,longitude.eq.-87.6244212)",
+        ].join(","),
+      )
       .limit(limit);
+
+    if (names) {
+      query = query.in("name", names);
+    }
+
+    const { data: stuckVenues } = await query;
 
     let processed = 0;
     let fixed = 0;
     const stillDefault: string[] = [];
+    const sources: Record<string, string> = {};
 
     for (const venue of stuckVenues ?? []) {
       processed++;
@@ -378,12 +487,20 @@ serve(async (req) => {
 
       const geoResult = await geocodeSchool(venue.name, url, venue.address);
 
-      if (geoResult.source !== "default") {
-        await supabase.from("venues").update({
-          latitude: geoResult.lat, longitude: geoResult.lng,
-          address: geoResult.address ?? venue.address,
-          geocode_source: geoResult.source, geocode_status: "ok",
-        }).eq("id", venue.id);
+      if (
+        geoResult.source !== "default" &&
+        !isBadCoordinate(geoResult.lat, geoResult.lng)
+      ) {
+        await supabase
+          .from("venues")
+          .update({
+            latitude: geoResult.lat,
+            longitude: geoResult.lng,
+            address: geoResult.address ?? venue.address,
+            geocode_source: geoResult.source,
+            geocode_status: "ok",
+          })
+          .eq("id", venue.id);
 
         const { data: school } = await supabase
           .from("schools")
@@ -391,18 +508,29 @@ serve(async (req) => {
           .eq("venue_id", venue.id)
           .maybeSingle();
         if (school) {
-          await supabase.from("schools").update({
-            latitude: geoResult.lat, longitude: geoResult.lng,
-            address: geoResult.address ?? venue.address,
-          }).eq("id", school.id);
+          await supabase
+            .from("schools")
+            .update({
+              latitude: geoResult.lat,
+              longitude: geoResult.lng,
+              address: geoResult.address ?? venue.address,
+            })
+            .eq("id", school.id);
         }
 
         fixed++;
-        console.log(`[school-discovery] Backfill fixed ${venue.name} → ${geoResult.lat},${geoResult.lng} (${geoResult.source})`);
+        sources[venue.name] = geoResult.source;
+        console.log(
+          `[school-discovery] Backfill fixed ${venue.name} → ${geoResult.lat},${geoResult.lng} (${geoResult.source})`,
+        );
       } else {
-        await supabase.from("venues").update({
-          geocode_source: "default", geocode_status: "default",
-        }).eq("id", venue.id);
+        await supabase
+          .from("venues")
+          .update({
+            geocode_source: "default",
+            geocode_status: "default",
+          })
+          .eq("id", venue.id);
         stillDefault.push(venue.name);
       }
 
@@ -410,7 +538,13 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ action: "geocode-backfill", processed, fixed, still_default: stillDefault }),
+      JSON.stringify({
+        action: "geocode-backfill",
+        processed,
+        fixed,
+        still_default: stillDefault,
+        sources,
+      }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }

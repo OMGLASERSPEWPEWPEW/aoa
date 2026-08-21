@@ -1,7 +1,7 @@
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import type { EnrichmentCandidate } from "../_shared/scraper/types.ts";
 import { extractOgImage } from "../_shared/scraper/og-image-extractor.ts";
-import { geocode } from "./geocoder.ts";
+import { geocode, isBadCoordinate } from "../_shared/geocoder.ts";
 import { findCalendarUrl } from "./calendar-finder.ts";
 import { classifyVenueType } from "./venue-type-classifier.ts";
 
@@ -97,10 +97,13 @@ export async function enrichBatch(
     // Step 1: Geocode
     if (address) {
       const geo = await geocode(address);
-      if (geo) {
+      if (geo && !isBadCoordinate(geo.lat, geo.lng)) {
         update.enriched_latitude = geo.lat;
         update.enriched_longitude = geo.lng;
         update.geocode_source = geo.source;
+      } else if (geo) {
+        update.geocode_source = "centroid_rejected";
+        stepsFailed.push("geocoding");
       } else {
         update.geocode_source = "failed";
         stepsFailed.push("geocoding");

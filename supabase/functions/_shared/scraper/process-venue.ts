@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { generateSlug } from "./slug-generator.ts";
 import { executeStrategyTree } from "./strategy-agent.ts";
 import type { VenueTarget, ScrapeResult, StrategyProfile, Program } from "./types.ts";
-import { geocode } from "../geocoder.ts";
+import { resolveCoordinates, isBadCoordinate } from "../geocoder.ts";
 import { logUsage } from "../logUsage.ts";
 import { runPlayMatcherBatch } from "./play-matcher.ts";
 
@@ -267,22 +267,41 @@ export async function processClassPrograms(
       .eq("id", venueId)
       .maybeSingle();
 
-    if (venue && !venue.address) {
-      const geo = await geocode(`${schoolAddress}`);
-      if (geo) {
-        await supabase.from("venues").update({
-          address: schoolAddress, latitude: geo.lat, longitude: geo.lng,
-          geocode_source: "llm_extracted", geocode_status: "ok",
-        }).eq("id", venueId);
+    const existingSource = venue?.geocode_source ?? "";
+    const hasStrongSource =
+      existingSource.startsWith("llm_extracted") ||
+      existingSource.startsWith("website");
+
+    if (venue && !venue.address && !hasStrongSource) {
+      const geo = await resolveCoordinates(schoolAddress);
+      if (geo && !isBadCoordinate(geo.lat, geo.lng)) {
+        await supabase
+          .from("venues")
+          .update({
+            address: schoolAddress,
+            latitude: geo.lat,
+            longitude: geo.lng,
+            geocode_source: `llm_extracted:${geo.provider}`,
+            geocode_status: "ok",
+          })
+          .eq("id", venueId);
 
         const { data: school } = await supabase
-          .from("schools").select("id").eq("venue_id", venueId).maybeSingle();
+          .from("schools")
+          .select("id")
+          .eq("venue_id", venueId)
+          .maybeSingle();
         if (school) {
-          await supabase.from("schools").update({
-            address: schoolAddress, latitude: geo.lat, longitude: geo.lng,
-          }).eq("id", school.id);
+          await supabase
+            .from("schools")
+            .update({
+              address: schoolAddress,
+              latitude: geo.lat,
+              longitude: geo.lng,
+            })
+            .eq("id", school.id);
         }
-        console.log(`[process-venue] Address threaded: ${schoolAddress}`);
+        console.log(`[process-venue] Address threaded: ${schoolAddress} via ${geo.provider}`);
       }
     }
   }
