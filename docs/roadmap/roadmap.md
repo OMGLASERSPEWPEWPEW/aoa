@@ -91,6 +91,13 @@
 - **Dependencies:** Art Classes Discovery (in progress), class-discovery Edge Function (deployed)
 - **Summary:** Fixes three compounding bugs that prevented the class discovery pipeline from ever finding new schools: SerpAPI search never executes (self-chain abort), aggregator domain poisoning filters all results, queries too narrow. Adds decoupled discovery action, aggregator blocklist, 12+ discipline queries, observability logging, iO duplicate fix, and admin queue promotion flow. Diagnosed by 4-model panel (GPT-5.6 Sol, Gemini 3.5 Flash, DeepSeek V4 Pro, Claude Opus 4.8).
 
+## Class Pipeline v2 (School Discovery + Class Scrape Batch)
+- **Status:** In Progress
+- **Target:** August 2026
+- **Priority:** P0
+- **Dependencies:** Shared scraper infra (processVenue, processClassSessions), venues/schools tables
+- **Summary:** Rebuilds the broken class-discovery monolith (928 lines, runaway loops) as two clean functions mirroring the working venue/show pattern. school-discovery handles finding schools, class-scrape-batch handles scraping classes. State tracked via venues.class_scraped_at column instead of JSON blob. Supersedes Art Classes Discovery and Class Discovery Pipeline Fix.
+
 ## Belt Progression System
 - **Status:** Planned
 - **Target:** September 2026

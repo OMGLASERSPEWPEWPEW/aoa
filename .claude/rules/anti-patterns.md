@@ -24,6 +24,36 @@ Only use `.single()` when a UNIQUE constraint guarantees exactly one result.
 The authenticated role cannot read `auth.users`. Use `auth.uid()` for the current user's ID
 or `auth.jwt() ->> 'email'` for their email. Join against your own `profiles` table instead.
 
+## NEVER manually insert or fill data
+Do NOT write migrations with hardcoded data (coordinates, names, addresses, etc.).
+Do NOT web-scrape addresses and paste them into SQL. Do NOT fill in data "for now."
+All data comes from the automated pipeline — scrapers, discovery, enrichment.
+If the pipeline can't produce the data, FIX THE PIPELINE.
+
+WHAT HAPPENS: Manual data rots, can't scale, violates the whole point of building scrapers.
+The user builds pipelines specifically so they don't have to hand-enter data.
+SOURCE: Art of Art project, August 2026. Repeated offense.
+
+## Scrapers are designed for any city, not just Chicago
+Chicago is the first city. The next could be New York with 200 theater schools or
+Boise with 3. Every design decision must hold for all of them.
+
+This is why hardcoded values break things: a limit of 20 schools silently drops results
+in New York and wastes iterations in Boise. A cost cap of $0.50 might cover Chicago
+but starve a larger city, or overspend in a tiny one. These aren't fixes — they're
+assumptions about one city baked into code that's supposed to serve all of them.
+
+The right termination condition is always the data itself: the loop ends when there are
+no more pending items in the database, not when a counter hits a number someone guessed.
+When a loop runs away, the bug is in how "done" is determined — fix that, because a
+hardcoded cap just hides the bug until the next city exposes it again.
+
+The same applies to manual data curation. Hand-entering 18 Chicago schools doesn't scale
+to city #2. If the pipeline can't discover and populate schools automatically, the
+pipeline is what needs fixing.
+
+SOURCE: Art of Art project, August 2026. Multiple sessions lost to this pattern.
+
 ## NEVER skip JWT verification in Edge Functions
 Even with `--no-verify-jwt` (needed for CORS preflight to work), always verify the JWT
 inside the function body: `const { data: { user } } = await supabase.auth.getUser(token)`

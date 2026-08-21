@@ -1,6 +1,6 @@
 ---
 name: escalate
-description: Consult GPT-5.5, Gemini 3.1 Pro, DeepSeek V4 Pro, and Claude Opus 4.8 in parallel for independent analysis. Modes: diagnosis (stubborn bugs), review (code/approach review), architecture (design decisions), freeform (any question). Use when you've struck out on a fix 3+ times.
+description: Consult GPT-5.6 Sol, Gemini 3.5 Flash, DeepSeek V4 Pro, and Claude Opus 4.8 in parallel for independent analysis. Modes: diagnosis (stubborn bugs), review (code/approach review), architecture (design decisions), freeform (any question). Use when you've struck out on a fix 3+ times.
 ---
 
 # Escalate: Multi-Model Panel

@@ -1962,3 +1962,349 @@ Proposed commits (3):
 
 ---
 
+## 2026-08-18_13-57-52 (session 99bb7cad)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now constructing the diagnosis input with facts only.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Stale file from a prior session. Let me overwrite it.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+---
+
+## 2026-08-18_14-05-48 (session 99bb7cad)
+
+**assistant**: Good catch. Let me check what's configured.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: There it is — lines 272-296. The models are hardcoded as GPT-4o, Gemini 2.5 Pro, and DeepSeek Reasoner (R1). Let me update them to the latest.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me also update the escalate skill itself to reference the current models.
+
+**assistant**: [tool: Read]
+
+**assistant**: The skill description already references the new models — it was the provider configs in the code that were stale. Now check if there's an Anthropic key available.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-18_16-39-56 (session 99bb7cad)
+
+**user**: ok we're at 2 of 10 schools.  we don't see to be getting parse errors from i0chicago or the secondcity training center. But we're also not getting feedback. Like can we surface the reasoning part of the flash bots under each?
+
+What do you see in logs?
+
+**assistant**: [tool: Bash]
+
+**assistant**: They're **both working now.** iO Chicago: 4 events found, 4 created. Second City: 4 events found, 4 created. No more PARSE_ERROR.
+
+Second City took 188 seconds (3 minutes) — it hit the budget_time limit, meaning it was BFS crawling subpages and extracting from them. That's exactly what was supposed to happen — the SPA index page returned nothing, Jina rendered it, BFS followed links, and the parallel models found classes on the detail pages. 14 AI calls across 17 fetches.
+
+The scrape is still ru...
+
+**assistant**: [tool: Bash]
+
+**assistant**: **Both succeeded, zero errors.** 8 events found, 8 created. Still running through the remaining 8 schools.
+
+Now about surfacing which model won — the `strategy_trace` has the data but the dashboard doesn't show it yet. Let me check what the trace looks like for these.
+
+**assistant**: [tool: Bash]
+
+**assistant**: This is the money shot. Look at this:
+
+**iO Chicago** — 4 models raced:
+| Model | Events | Time | Status |
+|-------|--------|------|--------|
+| DeepSeek V4 Flash | 0 | 55s | **timeout** |
+| Gemini 3.5 Flash | 0 | 33s | empty |
+| **GPT-5.6 Luna** | **4** | **13s** | **ok** |
+| Claude Haiku 4.5 | 0 | 22s | empty |
+
+GPT-5.6 Luna was the ONLY model that found anything. DeepSeek timed out. Without parallel models, this would have been another PARSE_ERROR.
+
+**Second City** — 4 models raced:
+| Model | ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: Discovery still 0. The Perplexity discovery call is being fire-and-forgotten from the frontend — it's probably failing silently. Let me check if it's even reachable by calling it directly.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-19_15-28-35 (session 76b4c31a)
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/retro
+
+# Retro — Session Retrospective
+
+```
+    +==============================================================+
+    |                                                              |
+    |     * ============================================== *      |
+    |     |  R E T R O S P E C T I V E                     |      |
+    |     * ============================================== *      |
+    |                             ...
+
+**assistant**: Running the retro. Let me scan the conversation for errors, wasted effort, and patterns.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: Good, I see the runbook style. Now let me write the retro findings and persist the rules.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me add an RLS rule to the Supabase runbook since this is an operational pattern.
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-19_15-35-17 (session ba54d7ad)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Let me check if there's a stuck running job blocking new ones.
+
+**assistant**: [tool: Bash]
+
+**assistant**: There it is. Job `659e670a` is stuck in `running` status with 0 schools processed — created about an hour ago. That's blocking new jobs from starting (the 409 conflict guard).
+
+The Edge Function likely processed the first school but crashed or timed out before it could self-chain, leaving the job row in `running` status forever.
+
+This isn't a code bug from our model changes — it's a stuck job that needs to be cleared. Let me write a quick plan.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: There's a stuck job blocking everything. Cancelling it now.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-19_16-41-57 (session 12cfac3e)
+
+**user**: its not picking up
+
+**user**: its not picking up. can you manually deploy vercel? Is it not catching?
+
+**assistant**: [tool: Bash]
+
+**assistant**: Push went through — nothing ahead of origin. Let me check Vercel deployment status.
+
+**assistant**: [tool: Bash]
+
+**assistant**: There's a deployment from 30min ago (before our push). Let me check if a new one was triggered by our push, and if not, trigger one manually.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: The latest deployment is 30min old — our push hasn't triggered a new build. The auto-deploy hook might not be catching. Let me deploy manually.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-19_18-01-01 (session fa779539)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Good. Let me verify the build still passes, then propose the commits.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean. Let me read the diffs for the commit messages.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Here's my proposed commit plan:
+
+**Proposed commits (2):**
+
+**1.** `chore(build): bump version to 0.20.3 — tappable schools, fast modal, URL in errors`
+- `package.json`, `src/data/changelog.ts`
+
+**2.** `fix(gateway,ui): tappable school rows, fast scrape modal, URL in error messages (v0.20.3)`
+- Why: Scrape classes modal showed stale zeros for 8s, school rows had no URLs to investigate, and "0 events" errors gave no URL to debug.
+- `src/components/ClassDiscoveryDashboard.tsx`, `src/contexts/Scrap...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-20_12-48-49 (session be32c2f0)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: mcp__chrome-devtools__navigate_page]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now that's a proper pipeline visualization. The venue discovery DAG shows:
+
+- **Fetch & Parse** phase: Fetch Directory → Parse HTML (linear top)
+- **Dedup** phase: Parse HTML fans out to 3 parallel signals — URL Match, Address Match, Trigram Similarity
+- **Enrich** phase: All 3 dedup signals converge into Geocode, then fan out to Find Calendar + Photo + Classify
+- **Review** phase: Both enrich branches converge into Admin Review
+
+Node types are clearly distinguished:
+- Deterministic nodes (dark ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: mcp__chrome-devtools__list_console_messages]
+
+**assistant**: [tool: mcp__chrome-devtools__list_network_requests]
+
+**assistant**: All Supabase queries returning 200. The 404 is just the favicon — harmless. Let me verify that.
+
+**assistant**: [tool: mcp__chrome-devtools__list_network_requests]
+
+---
+
+## 2026-08-20_13-17-21 (session 94bb15f9)
+
+**assistant**: SOTA scraping in 2026:
+
+**Headless browsers** (Playwright, Puppeteer) render JavaScript-heavy pages, handle SPAs, execute interactions. They see what a user sees.
+
+**LLM extraction** — feed raw HTML or rendered text to a model, ask for structured output. Replaces hand-written CSS selectors and regex with a prompt. Handles layout changes gracefully because the model understands semantics, not DOM structure.
+
+**Agentic crawling** — an LLM decides what links to follow, what pages to visit next, whe...
+
+**user**: Are there open source projects that do this
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: [tool: WebSearch]
+
+**assistant**: The main ones:
+
+**[Firecrawl](https://www.firecrawl.dev/blog/best-open-source-web-scraping-libraries)** — crawls URLs, returns clean markdown or structured JSON. Has an extract mode where you pass a schema and it returns data matching it. Open source, TypeScript/Python SDKs.
+
+**[Browser Use](https://scrapfly.io/blog/posts/best-tools-for-ai-webscraping)** — ~98k GitHub stars. An LLM drives a real browser — navigates, clicks, fills forms, extracts. You give it a goal in natural language. MIT licen...
+
+---
+
+## 2026-08-20_13-30-29 (session 94bb15f9)
+
+**assistant**: Firecrawl is the closest to what we need. It does exactly what our `processVenue` does — crawl a website, follow links, extract structured data — but without hand-written extraction prompts and link-following logic.
+
+**GitHub:** https://github.com/mendableai/firecrawl
+
+150k+ stars, AGPL-3.0 license, TypeScript/Python SDKs. Has a self-hostable version and a cloud API. The key feature for us: you give it a URL and a schema, it returns structured JSON. No regex, no markdown parsing.
+
+Sources:
+- [Fi...
+
+**user**: ok I cloned it to /development/firecrawl 
+
+Based on the repository can you suggest changes to our codebase and implementation. 
+
+Am I correct we wont need to signup for anything?
+
+**assistant**: [tool: Agent]
+
+**assistant**: [tool: Agent]
+
+**assistant**: Good news: **you don't need to sign up for Firecrawl**. Self-hosting with Docker Compose is fully supported — no account, no cloud API key. You DO need an LLM API key (OpenAI, or self-host Ollama) if you want the structured extraction / agent features, but you already have OpenAI and multiple other provider keys.
+
+Here's what Firecrawl changes for us vs what stays:
+
+**Firecrawl replaces** (our weakest code):
+- HTML fetching + JS rendering (replaces our raw `fetch()` calls that fail on JS-heavy s...
+
+**user**: [Request interrupted by user]
+
+**user**: I dont want to self host or use docker. Can't we just amend out codebase so it works as is through supabase edge functions etc? Can you explore that with /new-feature
+
+**assistant**: [tool: AskUserQuestion]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: I feel like youre not listening to me. I said amend our codebase so it works through what we have. i.e. we look at the code, take what we need to adapt our scrapper. You already mentioned what features would help. I don't want an API. Can you rearticulate what I just said what's your understanding?
+
+---
+
+## 2026-08-20_13-46-28 (session be32c2f0)
+
+**assistant**: Stepped to node 2 (getNextSchool). Let me click the INPUT tab to see the PRD spec data.
+
+**assistant**: [tool: mcp__chrome-devtools__take_snapshot]
+
+**assistant**: The detail panel shows the getNextSchool() description with the exact SQL query and the key principle: "The database IS the state." Let me click INPUT to see the PRD spec data.
+
+**assistant**: [tool: mcp__chrome-devtools__click]
+
+**assistant**: [tool: mcp__chrome-devtools__evaluate_script]
+
+**assistant**: [tool: mcp__chrome-devtools__take_screenshot]
+
+**assistant**: [tool: Read]
+
+**assistant**: Everything works. The INPUT tab for getNextSchool() shows the exact PRD query spec:
+
+- `query`: venues WHERE venue_type="school" AND calendar_url NOT NULL AND (class_scraped_at IS NULL OR < 24h)
+- `order`: class_scraped_at ASC NULLS FIRST
+- `limit`: 1
+
+All 6 tabs are functional with step-through, detail panels, and correct data. Let me clean up.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Done. The Venue & Show Explorer now has **6 tabs**:
+
+| Tab | Architecture | Key thing to notice |
+|-----|-------------|---------------------|
+| Find Venues | 9-node fan-out DAG | 3 dedup signals, calendar finder, admin review |
+| Scrape Shows | 9-node with TIC branch | Parallel TIC + BFS crawl, play matcher |
+| Find Schools (v1) | 6-node linear | Perplexity AI, aggregator blocklist, admin queue |
+| Scrape Classes (v1) | 8-node fan-out | Full strategy tree visible, class field weights |
+| **Find ...
+
+---
+

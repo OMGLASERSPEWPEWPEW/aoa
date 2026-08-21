@@ -92,6 +92,10 @@ Zephyr (`.claude/agents/zephyr/agent.md`) is the Master Product Manager who orch
 - **Push back when needed** if something seems like a bad idea
 - **Never be timid** — state reasoning confidently, then let the user decide
 
+## Technical Decision-Making
+
+When making technical decisions, do not give much weight to technical costs. Instead prefer quality, elegance, and long-term maintainability.
+
 ## Response Timestamps
 
 **End every response with a timestamp:**
@@ -185,5 +189,6 @@ Agents organized in `.claude/agents/divisions.json`:
 | `/rs` | Restart dev server |
 | `/new-design` | AI graph engineer — audits codebase against design handoff, produces executable graph doc with loop specs |
 | `/iterate` | Batch bug/feature/change resolution with graphs, tests, and paper trail |
+| `/swarm` | Parallel multi-task dispatch — decomposes prompt, fans out agents, synthesizes results |
 
 **Skills are NEVER auto-triggered.** They must be explicitly invoked by the user with `/<skill-name>`.

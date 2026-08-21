@@ -1559,3 +1559,447 @@ Let me explore the existing code and docs to understand what needs updating.
 
 ---
 
+## 2026-08-18_11-45-48 (session d98b3cc0)
+
+**assistant**: Big session. Version already at 0.18.1 with matching changelog. Untracked design assets and prior-session files excluded (same set as before).
+
+**Proposed commits (6):**
+
+**1.** `fix(gateway): decouple play join from event detail query (v0.16.5)`
+
+> Why: The play:plays(*) embed in fetchEventById silently failed and returned null for every show detail page. Panel diagnosis (3/3 consensus) identified the plays join as the culprit.
+> Files: queries.ts, ProductionDetail.tsx, types.ts, tonight.test.t...
+
+**user**: yes
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-18_14-13-16 (session 99bb7cad)
+
+**assistant**: Now let me update the ai-gateway models registry with current models.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now update the default model reference in the lookup helpers, and also update the `MODEL_REGISTRY` example comment.
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me also update the DeepSeek memory reference since the old model names are deprecated.
+
+**assistant**: [tool: Read]
+
+**assistant**: That memory is still accurate — it already references V4 Flash/Pro and notes the deprecation. Good. Let me verify the patterns diagnosis lib was copied correctly and do a quick sanity check.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-18_16-24-12 (session 99bb7cad)
+
+**assistant**: Both deployed. Here's what changed:
+
+- **4 flash models fire in parallel** on every extraction: DeepSeek V4 Flash, Gemini 3.5 Flash, GPT-5.6 Luna, Claude Haiku 4.5. Best result (most events) wins. All results logged in strategy trace for ranking.
+- **Fetch timeout**: 15s → 45s
+- **AI call timeout**: 30s → 55s (was killing iO Chicago, Annoyance, Bienen)
+- **Jina Reader threshold for classes**: 300 → 2000 chars (catches Second City SPA at 393 chars)
+- **Budget wall clock**: 60s → 180s
+- **BFS runs...
+
+**user**: we do need to push via /cap to get it in the app
+
+**assistant**: [tool: Skill]
+
+**user**: Base directory for this skill: /Users/dericortiz/Development/aoa/.claude/skills/cap
+
+# /c&p — Commit and Push
+
+Group changes into logical commits with machine-readable messages, then push.
+
+## Commit Convention
+
+### Message format
+
+```
+type(scope): imperative summary (72 chars max)
+
+Why: one or two sentences explaining reasoning, not the diff
+Files: key-file-1.ts, key-file-2.ts, key-file-3.ts
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Rules:**
+- Summary: imperative mood ("Add", "Fix"...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Version is already bumped to 0.19.0 in package.json and changelog. Let me read the diff for accurate commit messages.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-18_16-28-53 (session 99bb7cad)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: To answer your question — you're right, I should have caught it. The `/cap` skill has Version Check as Phase 1.5 specifically to prevent this. I bumped to 0.19.0 earlier in the session for the discovery pipeline work, then made major code changes (4-model parallel extraction, timeout fixes, BFS changes) without bumping again. The skill checks if `package.json` version matches the latest changelog entry — they matched (both 0.19.0) so it didn't flag. But the code had changed significantly since t...
+
+**user**: [Request interrupted by user]
+
+**user**: im not blaming you im trying to understand how does this get through the cracks
+
+**assistant**: The gap is in how the version check works. Here's the exact sequence:
+
+1. Early in session: I bumped to 0.19.0, updated changelog, deployed
+2. Later in session: I made major new changes (4-model parallel, timeout fixes, BFS)
+3. `/cap` runs Phase 1.5 Version Check — it compares `package.json` version to the latest `changelog.ts` entry. They match (both say 0.19.0). Check passes. Green light.
+
+**The check doesn't know 0.19.0 was already pushed.** It only compares two local files to each other. If ...
+
+**assistant**: [tool: Write]
+
+---
+
+## 2026-08-18_16-47-09 (session 99bb7cad)
+
+**assistant**: **Proposed commits (3):**
+
+**1.** `chore(build): bump version to 0.19.2 — admin button rename`
+
+> Files: package.json, changelog.ts
+
+**2.** `feat(ui): split admin into 4 buttons — Find Venues, Scrape Shows, Find Schools, Scrape Classes`
+
+> Why: Three buttons did four things. "Discover Classes" both searched for new schools AND scraped known schools. Split into separate buttons so each does one thing.
+> Files: Docs.tsx
+
+**3.** `chore(infra): fix /cap version check to compare against origin/main`
+...
+
+**user**: okay but what can we edit so you like understand how we work? because your conception of deployed doesn't square with how we work
+
+**assistant**: You're right — I've been running `vercel deploy --prod` manually, which pushes a build to Vercel that isn't in git. In your workflow, deployment happens automatically when code is pushed to main. So `/cap` IS the deploy step. There is no separate deploy.
+
+My mental model was: make changes → deploy to test → commit later. Your actual flow is: make changes → `/cap` commits and pushes → Vercel auto-deploys from the push. The `vercel deploy --prod` command I've been running creates ghost deployments...
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me also update CLAUDE.md so the commands section is clear:
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-19_15-15-31 (session bb8bf5a8)
+
+**assistant**: This is a straightforward addition. The best spot is right after the "Proactive Agent Behavior" section — it's a decision-making philosophy that naturally fits alongside those behavioral guidelines. I'll add it as a new section called "Technical Decision-Making."
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ToolSearch]
+
+**assistant**: Simple one-line addition to CLAUDE.md. Plan is ready.
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Edit]
+
+**assistant**: I'll also save this as a feedback memory so it carries across all future sessions.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-19_15-17-58 (session bb8bf5a8)
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clear picture. 28 project CLAUDE.md files need the line (aoa already has it), plus the template at `patterns/template-app/CLAUDE.md`. Since each file has different structure, I need to figure out a safe insertion strategy. Let me check how these files end — appending to the bottom is the safest universal approach.
+
+**assistant**: [tool: Bash]
+
+**assistant**: These files vary wildly in structure — appending is the cleanest approach. Let me write the plan.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: Running the append loop now.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now verifying.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-19_16-00-43 (session ba54d7ad)
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now let me propose the commits:
+
+**Proposed commits (4):**
+
+1. `chore(build): bump version to 0.20.0 — discovery-only school pipeline`
+   - package.json, src/data/changelog.ts
+
+2. `perf(gateway): slim extraction race to 3 models, add Perplexity Sonar (v0.20.0)`
+   - supabase/functions/_shared/scraper/strategy-agent.ts
+
+3. `feat(gateway,ui): discovery-only school pipeline with clickable results (v0.20.0)`
+   - supabase/functions/class-discovery/index.ts, src/pages/Docs.tsx
+
+4. `chore(db): remove ...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: 4 commits ready. Pushing.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-19_16-37-00 (session 12cfac3e)
+
+**assistant**: Now let me verify the build still passes, then read the diffs for accurate commit messages.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Build passes. Here's the proposed commit grouping:
+
+```
+Proposed commits (2):
+
+1. chore(build): bump version to 0.20.1 — auto-insert discovered schools
+   Files: package.json, src/data/changelog.ts
+
+2. feat(gateway,ui): auto-insert discovered schools, remove promotion queue (v0.20.1)
+   Why: Schools from Perplexity were staging in venue_discovery_queue requiring manual
+        Promote/Reject — unnecessary friction since schools should go straight to the DB
+        for class scraping.
+   Files: s...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-19_18-01-01 (session fa779539)
+
+**assistant**: [tool: Edit]
+
+**assistant**: Good. Let me verify the build still passes, then propose the commits.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Clean. Let me read the diffs for the commit messages.
+
+**assistant**: [tool: Bash]
+
+**assistant**: Here's my proposed commit plan:
+
+**Proposed commits (2):**
+
+**1.** `chore(build): bump version to 0.20.3 — tappable schools, fast modal, URL in errors`
+- `package.json`, `src/data/changelog.ts`
+
+**2.** `fix(gateway,ui): tappable school rows, fast scrape modal, URL in error messages (v0.20.3)`
+- Why: Scrape classes modal showed stale zeros for 8s, school rows had no URLs to investigate, and "0 events" errors gave no URL to debug.
+- `src/components/ClassDiscoveryDashboard.tsx`, `src/contexts/Scrap...
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-19_20-51-21 (session 914ae828)
+
+**assistant**: Clean — only the comment remains. Let me also kill the current stuck job and deploy.
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: Now version bump, commit, push, deploy.
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Edit]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-19_21-07-50 (session 5ec44dbd)
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Read]
+
+**assistant**: Now I have enough context. Let me construct the escalate input and run it.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Bash]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: did we not write a file
+
+---
+
+## 2026-08-20_12-50-31 (session 94bb15f9)
+
+**assistant**: [tool: Write]
+
+**assistant**: Now the graph engineering doc.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now the QA doc.
+
+**assistant**: [tool: Write]
+
+**assistant**: Now update the roadmap and do the handoff review.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Edit]
+
+**assistant**: Now the architecture doc with exact specifics. Let me write it directly into the PRD since the architecture is tightly coupled.
+
+**assistant**: [tool: Edit]
+
+---
+
+## 2026-08-20_12-58-13 (session 94bb15f9)
+
+**assistant**: Let me explore the schema to understand all the school/class data relationships before documenting a clear procedure.
+
+**assistant**: [tool: Agent]
+
+**assistant**: Got the full dependency map. Let me write the plan.
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**assistant**: [tool: Bash]
+
+**assistant**: [tool: Write]
+
+**assistant**: Now let me push it.
+
+**assistant**: [tool: Bash]
+
+---
+
+## 2026-08-20_13-43-05 (session 94bb15f9)
+
+**assistant**: [tool: Read]
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: ExitPlanMode]
+
+**user**: [Request interrupted by user for tool use]
+
+**user**: can we clear the school and class data we have first
+
+**user**: can we clear the school and class data we have first, based on the documentation we  wrote
+
+**assistant**: [tool: Bash]
+
+**assistant**: 9 schools with bad names from the broken discovery. We already have the reset migration pattern documented. Let me run it.
+
+**assistant**: [tool: Write]
+
+**assistant**: [tool: Bash]
+
+---
+

@@ -28,6 +28,20 @@
 **Right**: Add temporary debug output to the response: `{ _debug: { keyStart: SECRET?.slice(0,8), keyLen: SECRET?.length } }`. Deploy, test, remove debug.
 **Why**: `supabase secrets set` may have been called with a different value than what's currently deployed. The only source of truth is the running function.
 
+## RLS for Observability Tables
+
+### Rule: Check RLS before blaming MCP auth
+
+**Wrong**: MCP can't read a table → assume OAuth is broken → ask user to re-authenticate.
+**Right**: Check if the table has `anon SELECT` policy. MCP uses the anon role. No anon policy = no access, period.
+**Why**: Wasted two OAuth attempts when the real fix was a one-line RLS policy. The MCP auth was fine — the table just didn't allow anon reads.
+
+### Rule: Every log table gets anon SELECT at creation time
+
+**Wrong**: Create `discovery_logs` with only `authenticated SELECT` policy.
+**Right**: Always include `CREATE POLICY "anon_read_<table>" ON <table> FOR SELECT TO anon USING (true);` for any table Claude needs to query.
+**Why**: Log tables contain operational data, not user PII. Claude reads them via MCP (anon role) or REST API (anon key). No anon policy = Claude is blind.
+
 ## Scrape Job Queue
 
 ### Rule: Gap-priority queries MUST include a `scraped_at` recency filter
