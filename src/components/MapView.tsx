@@ -207,27 +207,47 @@ export function MapView() {
     const CHICAGO_CENTER_LAT = 41.8781
     const CHICAGO_CENTER_LNG = -87.6298
 
+    // Group schools by approximate coordinate for co-located fan-out
+    const coordGroups = new Map<string, typeof schools>()
     for (const school of schools) {
       if (school.latitude === CHICAGO_CENTER_LAT && school.longitude === CHICAGO_CENTER_LNG) continue
-      const dimmed = isSchoolDimmed(school)
+      const key = `${school.latitude.toFixed(4)},${school.longitude.toFixed(4)}`
+      const group = coordGroups.get(key) ?? []
+      group.push(school)
+      coordGroups.set(key, group)
+    }
 
-      const el = createClassMarkerElement({
-        school,
-        isSelected: selectedSchool?.id === school.id,
-        dimmed,
-        onClick: () => {
-          markerClickedRef.current = true
-          setSelectedSchool(prev => prev?.id === school.id ? null : school)
-          setSelectedVenue(null)
-          map.flyTo({ center: [school.longitude, school.latitude], zoom: 14, duration: 600 })
-        },
+    for (const group of coordGroups.values()) {
+      const n = group.length
+      group.forEach((school, i) => {
+        const dimmed = isSchoolDimmed(school)
+
+        const el = createClassMarkerElement({
+          school,
+          isSelected: selectedSchool?.id === school.id,
+          dimmed,
+          onClick: () => {
+            markerClickedRef.current = true
+            setSelectedSchool(prev => prev?.id === school.id ? null : school)
+            setSelectedVenue(null)
+            map.flyTo({ center: [school.longitude, school.latitude], zoom: 14, duration: 600 })
+          },
+        })
+
+        // Radial pixel offset for co-located markers
+        if (n > 1) {
+          const angle = (2 * Math.PI * i) / n
+          const radius = 16
+          el.style.marginLeft = `${Math.cos(angle) * radius}px`
+          el.style.marginTop = `${Math.sin(angle) * radius}px`
+        }
+
+        const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([school.longitude, school.latitude])
+          .addTo(map)
+
+        classMarkersRef.current.set(school.id, { marker, el, school })
       })
-
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-        .setLngLat([school.longitude, school.latitude])
-        .addTo(map)
-
-      classMarkersRef.current.set(school.id, { marker, el, school })
     }
   }, [schools, classFilters, isSchoolDimmed, mode, selectedSchool])
 

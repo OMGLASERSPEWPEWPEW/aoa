@@ -95,13 +95,6 @@ export function ClassSheet({ school, allSchools, onClose, onSelectSchool }: Prop
     return `LEVEL ${s.level}`
   }
 
-  function seatStatus(s: ClassSession | null): string | null {
-    if (!s) return null
-    if (s.drop_in) return 'WALK-INS WELCOME'
-    if (!enrolling) return 'WAITLIST OPEN'
-    if (s.seats_total && s.seats_taken != null) return `${s.seats_taken} OF ${s.seats_total} TAKEN`
-    return null
-  }
 
   return (
     <>
@@ -204,10 +197,8 @@ export function ClassSheet({ school, allSchools, onClose, onSelectSchool }: Prop
                 <span style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: enrolling ? dc : 'var(--ink-faint)', textTransform: 'uppercase' }}>
                   {enrolling ? 'NEXT SESSION' : 'BETWEEN SESSIONS'}
                 </span>
-                {seatStatus(session) && (
-                  <span style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)' }}>
-                    {seatStatus(session)}
-                  </span>
+                {session.drop_in && (
+                  <span style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)' }}>WALK-INS WELCOME</span>
                 )}
               </div>
 
@@ -266,57 +257,29 @@ export function ClassSheet({ school, allSchools, onClose, onSelectSchool }: Prop
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
-            {(() => {
-              const actionUrl = session?.signup_url ?? session?.source_url ?? school.url
-              return actionUrl ? (
+          {(() => {
+            const actionUrl = session?.signup_url ?? session?.source_url ?? school.url
+            return actionUrl ? (
+              <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
                 <a
                   href={actionUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
                     flex: 1, height: 46,
-                    ...serif, fontStyle: 'italic', fontSize: 15,
-                    background: enrolling ? dc : 'var(--ink)',
+                    ...mono, fontSize: 12, letterSpacing: '0.12em',
+                    background: dc,
                     color: '#0c0a05',
                     border: 'none', borderRadius: 3, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    textDecoration: 'none',
+                    textDecoration: 'none', fontWeight: 600,
                   }}
                 >
-                  {session?.drop_in ? 'Just show up' : enrolling ? 'Hold a spot' : 'Join the waitlist'}
+                  SIGN UP ↗
                 </a>
-              ) : (
-                <button
-                  disabled
-                  style={{
-                    flex: 1, height: 46,
-                    ...serif, fontStyle: 'italic', fontSize: 15,
-                    background: 'var(--bg-card)', color: 'var(--ink-faint)',
-                    border: '1px solid var(--rule)', borderRadius: 3, cursor: 'default', opacity: 0.6,
-                  }}
-                >
-                  No link yet
-                </button>
-              )
-            })()}
-
-            {(session?.signup_url ?? session?.source_url ?? school.url) && (
-              <a
-                href={session?.signup_url ?? session?.source_url ?? school.url!}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  width: 46, height: 46,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: '1px solid var(--rule)', borderRadius: 3,
-                  color: 'var(--ink-dim)', textDecoration: 'none', fontSize: 20,
-                }}
-              >
-                ↗
-              </a>
-            )}
-          </div>
+              </div>
+            ) : null
+          })()}
 
           {/* WHO TEACHES IT */}
           {school.teachers.length > 0 && (
@@ -367,9 +330,8 @@ export function ClassSheet({ school, allSchools, onClose, onSelectSchool }: Prop
 
             return (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
-                  <span>THE CLASSES</span>
-                  <span style={{ color: dc }}>{classSessions.length} ENROLLING</span>
+                <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', marginBottom: 8 }}>
+                  THE CLASSES
                 </div>
                 {classSessions.map(s => {
                   const url = s.signup_url ?? s.source_url

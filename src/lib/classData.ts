@@ -10,6 +10,7 @@ export async function fetchClassMapData(userId: string | null): Promise<ClassMap
   const { data: schools, error: schoolErr } = await supabase
     .from('schools')
     .select('*')
+    .eq('status', 'active')
 
   if (schoolErr) throw schoolErr
   if (!schools?.length) return { schools: [], userInterests: [] }

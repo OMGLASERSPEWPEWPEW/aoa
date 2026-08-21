@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useScrape, type RecentSchoolEntry, type ModelResult } from '../contexts/ScrapeContext'
+import { PinLedger } from './admin/PinLedger'
 
 const serif = { fontFamily: "'Newsreader', Georgia, serif" } as const
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
@@ -261,13 +262,17 @@ export function ClassDiscoveryDashboard({ onMinimize }: { onMinimize: () => void
         <div style={{ height: 12 }} />
 
         {cd.recentSchools.length > 0 && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
+          <div style={{ overflowY: 'auto', padding: '0 16px 16px' }}>
             <div style={{ ...mono, fontSize: 8, letterSpacing: '0.12em', color: 'var(--ink-faint)', marginBottom: 8 }}>
               RECENT SCHOOLS
             </div>
             {cd.recentSchools.map((s, i) => <SchoolRow key={i} s={s} />)}
           </div>
         )}
+
+        <div style={{ padding: '0 16px 16px' }}>
+          <PinLedger />
+        </div>
       </div>
 
       <div style={{ borderTop: `1px solid ${AMBER_DIM}`, background: AMBER_BG }}>

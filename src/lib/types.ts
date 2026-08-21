@@ -343,6 +343,7 @@ export interface School {
   url: string | null
   photo_url: string | null
   address: string | null
+  status: string
   created_at: string
 }
 
