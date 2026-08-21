@@ -1,7 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { generateSlug } from "./slug-generator.ts";
 import { executeStrategyTree } from "./strategy-agent.ts";
-import type { VenueTarget, ScrapeResult, StrategyProfile } from "./types.ts";
+import type { VenueTarget, ScrapeResult, StrategyProfile, Program } from "./types.ts";
+import { geocode } from "../geocoder.ts";
 import { logUsage } from "../logUsage.ts";
 import { runPlayMatcherBatch } from "./play-matcher.ts";
 
@@ -242,4 +243,118 @@ export async function processClassSessions(
   }
 
   return { created, updated };
+}
+
+function normalizeForUpsert(s: string | null): string {
+  return (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+export async function processClassPrograms(
+  programs: Program[],
+  schoolId: string,
+  venueId: string,
+  sourceUrl: string,
+  schoolAddress: string | null,
+): Promise<{ created: number; updated: number; skippedYouth: number }> {
+  let created = 0;
+  let updated = 0;
+  let skippedYouth = 0;
+
+  if (schoolAddress) {
+    const { data: venue } = await supabase
+      .from("venues")
+      .select("id, address, geocode_source")
+      .eq("id", venueId)
+      .maybeSingle();
+
+    if (venue && !venue.address) {
+      const geo = await geocode(`${schoolAddress}`);
+      if (geo) {
+        await supabase.from("venues").update({
+          address: schoolAddress, latitude: geo.lat, longitude: geo.lng,
+          geocode_source: "llm_extracted", geocode_status: "ok",
+        }).eq("id", venueId);
+
+        const { data: school } = await supabase
+          .from("schools").select("id").eq("venue_id", venueId).maybeSingle();
+        if (school) {
+          await supabase.from("schools").update({
+            address: schoolAddress, latitude: geo.lat, longitude: geo.lng,
+          }).eq("id", school.id);
+        }
+        console.log(`[process-venue] Address threaded: ${schoolAddress}`);
+      }
+    }
+  }
+
+  for (const program of programs) {
+    if (program.audience === "youth") {
+      skippedYouth++;
+      continue;
+    }
+
+    const level = program.skill_level === "beginner" ? 1
+      : program.skill_level === "intermediate" ? 2
+      : program.skill_level === "advanced" ? 3
+      : 2;
+
+    const sections = program.sections.length > 0 ? program.sections : [null];
+
+    for (const section of sections) {
+      const title = program.program_name;
+      const normTitle = normalizeForUpsert(title);
+      const normSchedule = normalizeForUpsert(section?.schedule ?? "");
+      const startsOn = section?.start_date ?? null;
+
+      const row: Record<string, unknown> = {
+        school_id: schoolId,
+        title,
+        program_name: program.program_name,
+        level,
+        starts_on: startsOn,
+        end_date: section?.end_date ?? null,
+        schedule: section?.schedule ?? null,
+        day_of_week: section?.day_of_week ?? null,
+        start_time: section?.start_time ?? null,
+        end_time: section?.end_time ?? null,
+        weeks: program.duration_weeks ?? null,
+        price: program.price_min ?? program.price_max ?? null,
+        discipline: program.discipline ?? null,
+        audience: program.audience ?? "adult",
+        description: program.description ?? null,
+        instructor_name: section?.instructor_name ?? null,
+        status: section?.status ?? "unknown",
+        drop_in: program.skill_level === "drop-in",
+        no_experience: program.skill_level === "beginner" || program.prerequisite == null,
+        audition_required: false,
+        prerequisite: program.prerequisite ?? null,
+        signup_url: section?.register_url ?? program.register_url ?? null,
+        notes: section?.notes ?? null,
+        extraction_status: section ? (startsOn ? "complete" : "no_dates_on_site") : "program_no_sections",
+        scraped_at: new Date().toISOString(),
+        source_url: sourceUrl,
+      };
+
+      const { data: existing } = await supabase
+        .from("class_sessions")
+        .select("id")
+        .eq("school_id", schoolId)
+        .ilike("title", normTitle)
+        .eq("schedule", section?.schedule ?? "")
+        .eq("starts_on", startsOn ?? "")
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase.from("class_sessions").update(row).eq("id", existing.id);
+        if (error) console.error(`[class-programs] Update failed for "${title}":`, error.message);
+        else updated++;
+      } else {
+        const { error } = await supabase.from("class_sessions").insert(row);
+        if (error) console.error(`[class-programs] Insert failed for "${title}":`, error.message);
+        else created++;
+      }
+    }
+  }
+
+  return { created, updated, skippedYouth };
 }

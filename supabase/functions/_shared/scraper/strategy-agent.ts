@@ -1,12 +1,17 @@
-import { cleanHtml, extractJsonLd, type JsonLdEvent } from "./html-cleaner.ts";
-import { buildExtractionPrompt } from "./extraction-prompt.ts";
+import { cleanHtml, htmlToMarkdown, extractJsonLd, type JsonLdEvent } from "./html-cleaner.ts";
+import { repairJson } from "./json-repair.ts";
+import { buildExtractionPrompt, buildClassExtractionPrompt } from "./extraction-prompt.ts";
 import { buildVerificationPrompt } from "./verification-prompt.ts";
 import { buildTargetedExtractionPrompt } from "./targeted-prompt.ts";
-import { extractCandidateLinks, prioritizeLinks } from "./link-extractor.ts";
-import { DEFAULT_FIELD_WEIGHTS, shouldFollowLinks, mergeTargetedExtraction, averageCompleteness, evaluateCompleteness } from "./completeness-evaluator.ts";
-import { CostBudget } from "./cost-budget.ts";
+import { extractCandidateLinks, prioritizeLinks, canonicalizeUrl, hardFilterLinks, scoreLinksLLM } from "./link-extractor.ts";
+import { DEFAULT_FIELD_WEIGHTS, shouldFollowLinks, mergeTargetedExtraction, averageCompleteness, evaluateCompleteness, averageProgramCompleteness } from "./completeness-evaluator.ts";
+import { CostBudget, CLASS_CRAWL_TOTALS } from "./cost-budget.ts";
 import { lookupVenueOnTic, ticShowsToEnrichments, enrichFromTicDetail } from "./tic-lookup.ts";
 import { resolveVenueUrl } from "./url-resolver.ts";
+import { runRecon, type ReconResult } from "./recon.ts";
+import { AOA_UA, enforceRateLimit, extractRegistrableDomain, classifyFetchError } from "./politeness.ts";
+import { classifyPage, extractHeadings, extractTitle, CLASSIFIER_ROUTING } from "./page-classifier.ts";
+import { stripBoilerplate } from "./boilerplate.ts";
 import type {
   VenueTarget,
   Pass1Event,
@@ -16,7 +21,11 @@ import type {
   StrategyStep,
   TargetedEnrichment,
   StrategyProfile,
+  Program,
+  ClassExtractionResult,
 } from "./types.ts";
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
@@ -189,11 +198,8 @@ async function extractWithAllModels(
         const result = await m.fn(systemPrompt, content);
         let events: Pass1Event[] = [];
         if (result.content) {
-          try {
-            const cleaned = result.content.replace(/^[\s\S]*?```(?:json)?\s*\n?/i, "").replace(/\n?\s*```[\s\S]*$/, "").trim();
-            const parsed = JSON.parse(cleaned || result.content);
-            events = parsed.events ?? [];
-          } catch { /* parse error */ }
+          const parsed = repairJson(result.content) as { events?: Pass1Event[] } | null;
+          if (parsed) events = parsed.events ?? [];
         }
         return {
           model: m.name,
@@ -399,7 +405,7 @@ export async function executeStrategyTree(
   }
 
   // Extract events from venue calendar
-  let cleaned = cleanHtml(rawHtml);
+  let cleaned = htmlToMarkdown(rawHtml, seedUrl);
 
   // Jina Reader fallback for JS-rendered sites (higher threshold for class domain)
   const jinaThreshold = isClassDomain ? 2000 : 300;
@@ -569,7 +575,7 @@ export async function executeStrategyTree(
       visitedUrls.add(venue.website_url);
       budget.recordFetch();
 
-      const fbCleaned = cleanHtml(fbHtml);
+      const fbCleaned = htmlToMarkdown(fbHtml, venue.website_url!);
       if (fbCleaned.length >= 100) {
         const fbResult = await callDeepSeek(buildExtractionPrompt(venue.name), fbCleaned);
         budget.recordAiCall(fbResult.inputTokens, fbResult.outputTokens);
@@ -577,12 +583,12 @@ export async function executeStrategyTree(
         totalOutputTokens += fbResult.outputTokens;
 
         if (fbResult.content) {
-          try {
-            const parsed = JSON.parse(fbResult.content);
+          const parsed = repairJson(fbResult.content) as { events?: Pass1Event[] } | null;
+          if (parsed) {
             events = parsed.events ?? [];
             rawHtml = fbHtml;
             for (const e of events) foundByMap.set(e.title.toLowerCase(), new Set(["venue_website"]));
-          } catch { /* parse error */ }
+          }
         }
 
         steps.push({
@@ -636,7 +642,7 @@ export async function executeStrategyTree(
       // JSON-LD from subpage
       const subpageLd = extractJsonLd(linkHtml);
 
-      let linkCleaned = cleanHtml(linkHtml);
+      let linkCleaned = htmlToMarkdown(linkHtml, link.url);
 
       // Jina fallback for thin subpages
       if (linkCleaned.length < 300 && budget.canAffordFetch()) {
@@ -659,8 +665,8 @@ export async function executeStrategyTree(
       let fieldsFilledIn: string[] = [];
 
       if (linkResult.content) {
-        try {
-          const parsed = JSON.parse(linkResult.content);
+        const parsed = repairJson(linkResult.content) as { events?: Pass1Event[] } | null;
+        if (parsed) {
           const pageEvents: Pass1Event[] = parsed.events ?? [];
 
           for (const pe of pageEvents) {
@@ -705,7 +711,7 @@ export async function executeStrategyTree(
               if (ld.image && !match.photo_url) match.photo_url = ld.image;
             }
           }
-        } catch { /* parse error */ }
+        }
       }
 
       // Extract links from THIS subpage and add to frontier (BFS)
@@ -752,10 +758,8 @@ export async function executeStrategyTree(
 
       let pass2Events: Pass2Verification[] = [];
       if (pass2Result.content) {
-        try {
-          const parsed = JSON.parse(pass2Result.content);
-          pass2Events = parsed.events ?? [];
-        } catch { /* parse error */ }
+        const parsed = repairJson(pass2Result.content) as { events?: Pass2Verification[] } | null;
+        if (parsed) pass2Events = parsed.events ?? [];
       }
 
       mergedEvents = mergeExtractionResults(events, pass2Events, weights);
@@ -830,4 +834,387 @@ function buildTrace(
     completenessAfterFollows: after,
     stopReason: budget.stopReason ?? "complete",
   };
+}
+
+// --- Scraper v4: Class-domain strategy with resumable BFS ---
+
+const SUPABASE_URL_FOR_STATE = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_FOR_STATE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+interface CrawlStateRow {
+  id: string;
+  venue_id: string;
+  domain: string;
+  tier: number;
+  status: string;
+  frontier: Array<{ url: string; anchor: string; score: number }>;
+  visited: string[];
+  programs_partial: Program[];
+  school_address: string | null;
+  block_hashes: Record<string, number>;
+  link_score_cache: Record<string, number>;
+  budget_used: { fetches: number; aiCalls: number; usd: number };
+  invocation_count: number;
+  stop_reason: string | null;
+}
+
+export interface ClassStrategyResult {
+  status: "in_progress" | "complete" | "failed" | "escalated";
+  programs: Program[];
+  schoolAddress: string | null;
+  trace: StrategyTrace;
+  invocations: number;
+}
+
+async function fetchWithUA(url: string, timeoutMs = FETCH_TIMEOUT): Promise<{ raw: string; ok: boolean }> {
+  const domain = extractRegistrableDomain(url);
+  await enforceRateLimit(domain);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": AOA_UA },
+      signal: controller.signal,
+      redirect: "follow",
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return { raw: "", ok: false };
+    return { raw: await res.text(), ok: true };
+  } catch {
+    clearTimeout(timeout);
+    return { raw: "", ok: false };
+  }
+}
+
+function getClassAiConfig(): { key: string; url: string; model: string } | null {
+  const openai = OPENAI_API_KEY || Deno.env.get("OPENAI_API_KEY");
+  if (openai) return { key: openai, url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" };
+  if (DEEPSEEK_API_KEY) return { key: DEEPSEEK_API_KEY, url: "https://api.deepseek.com/chat/completions", model: "deepseek-chat" };
+  return null;
+}
+
+async function extractClassPrograms(
+  content: string,
+  url: string,
+  schoolName: string,
+  city: string,
+  budget: CostBudget,
+): Promise<ClassExtractionResult | null> {
+  const ai = getClassAiConfig();
+  if (!ai || !budget.canAffordAiCall()) return null;
+
+  const runDate = new Date().toISOString().slice(0, 10);
+  const systemPrompt = buildClassExtractionPrompt(schoolName, city, runDate);
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT);
+    const res = await fetch(ai.url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${ai.key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: ai.model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Page URL: ${url}\nPage content (markdown):\n---\n${content.slice(0, 28_000)}\n---` },
+        ],
+        temperature: 0,
+        max_tokens: 4000,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+
+    const data: DeepSeekResponse = await res.json();
+    budget.recordAiCall(data.usage.prompt_tokens, data.usage.completion_tokens);
+    const raw = data.choices?.[0]?.message?.content ?? "";
+    const parsed = repairJson(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+
+    return {
+      school_address: (parsed as any).school_address ?? null,
+      programs: Array.isArray((parsed as any).programs) ? (parsed as any).programs : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function executeClassStrategy(
+  venue: VenueTarget,
+  schoolName: string,
+  city: string,
+): Promise<ClassStrategyResult> {
+  const sb = createClient(SUPABASE_URL_FOR_STATE, SERVICE_ROLE_FOR_STATE);
+  const seedUrl = venue.calendar_url;
+  const domain = extractRegistrableDomain(seedUrl);
+
+  const { data: existingState } = await sb
+    .from("crawl_state")
+    .select("*")
+    .eq("venue_id", venue.id)
+    .eq("status", "running")
+    .maybeSingle();
+
+  let state: CrawlStateRow;
+  let isResume = false;
+
+  if (existingState) {
+    const raw = existingState;
+    state = {
+      ...raw,
+      frontier: typeof raw.frontier === "string" ? JSON.parse(raw.frontier) : (raw.frontier ?? []),
+      visited: typeof raw.visited === "string" ? JSON.parse(raw.visited) : (raw.visited ?? []),
+      programs_partial: typeof raw.programs_partial === "string" ? JSON.parse(raw.programs_partial) : (raw.programs_partial ?? []),
+      block_hashes: typeof raw.block_hashes === "string" ? JSON.parse(raw.block_hashes) : (raw.block_hashes ?? {}),
+      link_score_cache: typeof raw.link_score_cache === "string" ? JSON.parse(raw.link_score_cache) : (raw.link_score_cache ?? {}),
+      budget_used: typeof raw.budget_used === "string" ? JSON.parse(raw.budget_used) : (raw.budget_used ?? { fetches: 0, aiCalls: 0, usd: 0 }),
+    } as CrawlStateRow;
+    isResume = true;
+  } else {
+    state = {
+      id: crypto.randomUUID(),
+      venue_id: venue.id,
+      domain,
+      tier: 1,
+      status: "running",
+      frontier: [],
+      visited: [],
+      programs_partial: [],
+      school_address: null,
+      block_hashes: {},
+      link_score_cache: {},
+      budget_used: { fetches: 0, aiCalls: 0, usd: 0 },
+      invocation_count: 0,
+      stop_reason: null,
+    };
+  }
+
+  const budget = CostBudget.fromResumable(CLASS_CRAWL_TOTALS, state.budget_used);
+  const steps: StrategyStep[] = [];
+  const visited = new Set(state.visited);
+  const scoreCache = new Map(Object.entries(state.link_score_cache));
+  let blockHashes = { ...state.block_hashes };
+  let programs = [...state.programs_partial];
+  let schoolAddress = state.school_address;
+  let noProgressCount = 0;
+  const classifierCounts: Record<string, number> = {};
+  let boilerplateDroppedTotal = 0;
+  const fetchErrors = { blocked: 0, timeout: 0, dead: 0, other: 0 };
+
+  if (!isResume) {
+    const seedStep = Date.now();
+    const { raw: seedRaw, ok: seedOk } = await fetchWithUA(seedUrl);
+    budget.recordFetch();
+
+    if (!seedOk) {
+      state.status = "failed";
+      state.stop_reason = "seed_fetch_failed";
+      await sb.from("crawl_state").insert(state);
+      return {
+        status: "failed", programs: [], schoolAddress: null,
+        trace: buildTrace(steps, budget, [], 0, 0), invocations: 1,
+      };
+    }
+
+    visited.add(canonicalizeUrl(seedUrl));
+    const seedCleaned = htmlToMarkdown(seedRaw, seedUrl);
+
+    const recon = await runRecon({ name: schoolName, city }, seedUrl, seedRaw, seedCleaned, budget);
+
+    if (recon.identity === "mismatch" && recon.identityConfidence >= 0.7) {
+      state.status = "failed";
+      state.stop_reason = "identity_mismatch";
+      await sb.from("crawl_state").insert(state);
+      return {
+        status: "failed", programs: [], schoolAddress: null,
+        trace: buildTrace(steps, budget, [], 0, 0), invocations: 1,
+      };
+    }
+
+    const catalogSeeds = recon.catalogUrls.map((url) => ({ url, anchor: "catalog", score: 100 }));
+    const sitemapSeeds = recon.sitemapUrls.slice(0, 20).map((url) => ({ url, anchor: "sitemap", score: 80 }));
+
+    const rawLinks = extractCandidateLinks(seedRaw, seedUrl, [], "class");
+    const mdLinks = rawLinks.map((l) => ({ url: l.url, anchor: l.anchorText }));
+    const filtered = hardFilterLinks(
+      mdLinks, visited, scoreCache, new URL(seedUrl).origin,
+      recon.allowedExternalHosts, recon.robotsDisallow, [],
+    );
+
+    const llmScores = await scoreLinksLLM(filtered, schoolName, city, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
+    for (const [url, score] of llmScores) scoreCache.set(url, score);
+
+    const scoredLinks = filtered
+      .map((l) => ({ ...l, score: llmScores.get(canonicalizeUrl(l.url)) ?? 20 }))
+      .filter((l) => l.score >= 25);
+
+    state.frontier = [...catalogSeeds, ...sitemapSeeds, ...scoredLinks]
+      .sort((a, b) => b.score - a.score);
+
+    const { stripped, updatedHashes, droppedCount } = stripBoilerplate(seedCleaned, blockHashes);
+    blockHashes = updatedHashes;
+    boilerplateDroppedTotal += droppedCount;
+
+    const title = extractTitle(seedRaw);
+    const headings = extractHeadings(stripped);
+    const classResult = await classifyPage(seedUrl, title, headings, stripped.slice(0, 1200), schoolName, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
+    classifierCounts[classResult.page_kind] = (classifierCounts[classResult.page_kind] ?? 0) + 1;
+
+    const routing = CLASSIFIER_ROUTING[classResult.page_kind] ?? { runExtraction: false, harvestLinks: true };
+    if (routing.runExtraction) {
+      const extraction = await extractClassPrograms(stripped, seedUrl, schoolName, city, budget);
+      if (extraction) {
+        if (extraction.school_address && !schoolAddress) schoolAddress = extraction.school_address;
+        if (extraction.programs.length > 0) {
+          programs.push(...extraction.programs);
+        }
+      }
+    }
+
+    steps.push({
+      step: "initial_extract", url: seedUrl, aiCalls: budget.aiCallsMade,
+      inputTokens: 0, outputTokens: 0, eventsAffected: programs.length,
+      fieldsFilledIn: ["recon", `platform:${recon.platform}`], durationMs: Date.now() - seedStep,
+    });
+  }
+
+  let frontier = [...state.frontier];
+  frontier.sort((a, b) => b.score - a.score);
+
+  while (frontier.length > 0 && !budget.isExhausted()) {
+    const next = frontier.shift()!;
+    const canonical = canonicalizeUrl(next.url);
+    if (visited.has(canonical)) continue;
+    visited.add(canonical);
+
+    const pageStart = Date.now();
+    let raw: string;
+    try {
+      const result = await fetchWithUA(next.url);
+      budget.recordFetch();
+      if (!result.ok) {
+        const errType = classifyFetchError(new Error(`HTTP error for ${next.url}`));
+        fetchErrors[errType]++;
+        continue;
+      }
+      raw = result.raw;
+    } catch (e) {
+      budget.recordFetch();
+      const errType = classifyFetchError(e);
+      fetchErrors[errType]++;
+      continue;
+    }
+
+    const cleaned = htmlToMarkdown(raw, next.url);
+    const { stripped, updatedHashes, droppedCount } = stripBoilerplate(cleaned, blockHashes);
+    blockHashes = updatedHashes;
+    boilerplateDroppedTotal += droppedCount;
+
+    const title = extractTitle(raw);
+    const headings = extractHeadings(stripped);
+    const classification = await classifyPage(next.url, title, headings, stripped.slice(0, 1200), schoolName, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
+    classifierCounts[classification.page_kind] = (classifierCounts[classification.page_kind] ?? 0) + 1;
+
+    const routing = CLASSIFIER_ROUTING[classification.page_kind] ?? { runExtraction: false, harvestLinks: true };
+    let programsFromPage = 0;
+
+    if (routing.runExtraction) {
+      const extraction = await extractClassPrograms(stripped, next.url, schoolName, city, budget);
+      if (extraction) {
+        if (extraction.school_address && !schoolAddress) schoolAddress = extraction.school_address;
+        programsFromPage = extraction.programs.length;
+        if (programsFromPage > 0) programs.push(...extraction.programs);
+      }
+    }
+
+    if (routing.harvestLinks) {
+      const pageLinks = extractCandidateLinks(raw, next.url, [], "class");
+      const mdLinks = pageLinks.map((l) => ({ url: l.url, anchor: l.anchorText }));
+      const filtered = hardFilterLinks(
+        mdLinks, visited, scoreCache, new URL(seedUrl).origin, [], [], [],
+      );
+      if (filtered.length > 0 && budget.canAffordAiCall()) {
+        const newScores = await scoreLinksLLM(filtered, schoolName, city, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
+        for (const [url, score] of newScores) scoreCache.set(url, score);
+        const newLinks = filtered
+          .map((l) => ({ ...l, score: newScores.get(canonicalizeUrl(l.url)) ?? 15 }))
+          .filter((l) => l.score >= 25);
+        frontier.push(...newLinks);
+        frontier.sort((a, b) => b.score - a.score);
+      }
+    }
+
+    if (programsFromPage === 0) noProgressCount++;
+    else noProgressCount = 0;
+    if (noProgressCount >= 3) break;
+
+    steps.push({
+      step: "link_follow", url: next.url, aiCalls: 0,
+      inputTokens: 0, outputTokens: 0, eventsAffected: programsFromPage,
+      fieldsFilledIn: [classification.page_kind], durationMs: Date.now() - pageStart,
+    });
+  }
+
+  const completeness = averageProgramCompleteness(programs);
+  const budgetJson = budget.toJSON();
+  const totalUsed = {
+    fetches: state.budget_used.fetches + budgetJson.fetches,
+    aiCalls: state.budget_used.aiCalls + budgetJson.aiCalls,
+    usd: state.budget_used.usd + budgetJson.usd,
+  };
+  const invCount = state.invocation_count + 1;
+
+  const totalsRemain = totalUsed.fetches < CLASS_CRAWL_TOTALS.maxFetches
+    && totalUsed.aiCalls < CLASS_CRAWL_TOTALS.maxAiCalls
+    && totalUsed.usd < CLASS_CRAWL_TOTALS.maxUsd;
+
+  let finalStatus: "in_progress" | "complete" | "failed" | "escalated";
+  let stopReason: string;
+
+  if (frontier.length > 0 && totalsRemain && invCount < 4) {
+    finalStatus = "in_progress";
+    stopReason = "invocation_cap";
+  } else {
+    finalStatus = "complete";
+    stopReason = frontier.length === 0 ? "frontier_exhausted" : (budget.stopReason ?? "complete");
+  }
+
+  const stateUpdate: Record<string, unknown> = {
+    venue_id: venue.id,
+    domain,
+    tier: state.tier,
+    status: finalStatus === "in_progress" ? "running" : finalStatus,
+    frontier,
+    visited: [...visited],
+    programs_partial: programs,
+    school_address: schoolAddress,
+    block_hashes: blockHashes,
+    link_score_cache: Object.fromEntries(scoreCache),
+    budget_used: totalUsed,
+    invocation_count: invCount,
+    stop_reason: finalStatus !== "in_progress" ? stopReason : null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (isResume) {
+    await sb.from("crawl_state").update(stateUpdate).eq("id", state.id);
+  } else {
+    await sb.from("crawl_state").insert({ id: state.id, ...stateUpdate, created_at: new Date().toISOString() });
+  }
+
+  const trace = buildTrace(
+    steps, budget, [...visited], 0, completeness,
+  );
+  (trace as any).classifierCounts = classifierCounts;
+  (trace as any).boilerplateDroppedBlocks = boilerplateDroppedTotal;
+  (trace as any).fetchErrors = fetchErrors;
+  (trace as any).invocations = invCount;
+  (trace as any).programsFound = programs.length;
+  (trace as any).addressFound = schoolAddress;
+
+  console.log(`[sv4] ${venue.name} tier=${state.tier} inv=${invCount} fetches=${totalUsed.fetches} programs=${programs.length} completeness=${completeness} stop=${stopReason}`);
+
+  return { status: finalStatus, programs, schoolAddress, trace, invocations: invCount };
 }

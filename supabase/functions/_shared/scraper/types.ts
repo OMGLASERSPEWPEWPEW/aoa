@@ -290,6 +290,46 @@ export interface VenueCoverageMetrics {
   last_run_alert: boolean;
 }
 
+// --- Scraper v4: Class extraction types ---
+
+export interface Section {
+  schedule: string | null;
+  day_of_week: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  instructor_name: string | null;
+  status: string;
+  register_url: string | null;
+  notes: string | null;
+}
+
+export interface Program {
+  program_name: string;
+  discipline: string;
+  audience: string;
+  skill_level: string | null;
+  prerequisite: string | null;
+  description: string | null;
+  price_min: number | null;
+  price_max: number | null;
+  duration_weeks: number | null;
+  register_url: string | null;
+  sections: Section[];
+}
+
+export interface ClassExtractionResult {
+  school_address: string | null;
+  programs: Program[];
+}
+
+export interface ClassifierResult {
+  page_kind: string;
+  has_dates: boolean;
+  has_prices: boolean;
+}
+
 // --- Play Catalog types ---
 
 export interface PlayRecord {

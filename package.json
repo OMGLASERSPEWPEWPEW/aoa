@@ -1,7 +1,7 @@
 {
   "name": "house",
   "private": true,
-  "version": "0.20.8",
+  "version": "0.21.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "explore": "npx serve tools -l 5208 --no-clipboard"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

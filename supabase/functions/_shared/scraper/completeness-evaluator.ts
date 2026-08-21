@@ -1,4 +1,4 @@
-import type { Pass1Event, EventCompleteness, CandidateLink, TargetedEnrichment } from "./types.ts";
+import type { Pass1Event, EventCompleteness, CandidateLink, TargetedEnrichment, Program, Section } from "./types.ts";
 
 export const DEFAULT_FIELD_WEIGHTS: Record<string, number> = {
   start_date: 40,
@@ -141,4 +141,45 @@ export function averageCompleteness(events: Pass1Event[], weights?: Record<strin
   if (events.length === 0) return 0;
   const total = events.reduce((sum, e, i) => sum + evaluateCompleteness(e, i, weights).score, 0);
   return Math.round(total / events.length);
+}
+
+export const CLASS_SECTION_WEIGHTS: Record<string, number> = {
+  start_date: 25,
+  schedule: 20,
+  price: 15,
+  instructor_name: 15,
+  register_url: 5,
+  status: 5,
+};
+
+export function evaluateSectionCompleteness(section: Section, program: Program): number {
+  let score = 0;
+  const max = 85;
+  if (section.start_date) score += 25;
+  if (section.schedule || (section.day_of_week && section.start_time)) score += 20;
+  if (program.price_min != null || program.price_max != null) score += 15;
+  if (section.instructor_name) score += 15;
+  if (section.register_url || program.register_url) score += 5;
+  if (section.status && section.status !== "unknown") score += 5;
+  return Math.round((score / max) * 100);
+}
+
+export function averageProgramCompleteness(programs: Program[]): number {
+  if (programs.length === 0) return 0;
+  let totalScore = 0;
+  let totalSections = 0;
+
+  for (const p of programs) {
+    if (p.sections.length === 0) {
+      totalScore += 15;
+      totalSections++;
+    } else {
+      for (const s of p.sections) {
+        totalScore += evaluateSectionCompleteness(s, p);
+        totalSections++;
+      }
+    }
+  }
+
+  return totalSections > 0 ? Math.round(totalScore / totalSections) : 0;
 }

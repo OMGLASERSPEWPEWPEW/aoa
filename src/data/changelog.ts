@@ -4,6 +4,23 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.21.0',
+    date: '2026-08-20',
+    title: 'Scraper v4 — tiered escalation with resumable BFS',
+    summary: 'Four-tier scraper with LLM frontier scoring, page classification, boilerplate stripping, and resumable crawls. ASC went from 3 events to 75 class sessions.',
+    details: [
+      'New: Tier 0 reconnaissance — identity check, platform fingerprint, sitemap/catalog discovery, robots.txt',
+      'New: LLM-scored frontier replaces keyword scoring — catalogs found first, blogs/kids pages skipped',
+      'New: Page classifier gate — only extracts from class-relevant pages, not faculty bios or policies',
+      'New: Cross-page boilerplate stripping — nav-menu bleed eliminated via FNV-1a block hashing',
+      'New: Class-native extraction prompt — Program/Section hierarchy instead of flat show-shaped extraction',
+      'New: Resumable crawls via crawl_state table — crawls span multiple Edge Function invocations',
+      'New: Direct class_sessions writes — no more events→class_sessions double-write',
+      'New: Geocode backfill action — fixed 6 schools with real coordinates, address regex handles suffix-less streets',
+      'New: Multi-provider AI support — OpenAI gpt-4o-mini primary, DeepSeek fallback',
+    ],
+  },
+  {
     version: '0.20.8',
     date: '2026-08-19',
     title: 'Fix chain fork bug — 33/18 schools',

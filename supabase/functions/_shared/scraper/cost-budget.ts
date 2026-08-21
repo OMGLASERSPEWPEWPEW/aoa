@@ -62,4 +62,35 @@ export class CostBudget {
   setStopReason(reason: string): void {
     if (!this._stopReason) this._stopReason = reason;
   }
+
+  toJSON(): { fetches: number; aiCalls: number; usd: number; wallMs: number } {
+    return { fetches: this._fetchesMade, aiCalls: this._aiCallsMade, usd: this._spent, wallMs: Date.now() - this.startTime };
+  }
+
+  static fromResumable(
+    totals: BudgetOpts,
+    used: { fetches: number; aiCalls: number; usd: number },
+  ): CostBudget {
+    const remaining: BudgetOpts = {
+      maxFetches: Math.min(CLASS_INVOCATION_CAPS.maxFetches, totals.maxFetches - used.fetches),
+      maxAiCalls: Math.min(CLASS_INVOCATION_CAPS.maxAiCalls, totals.maxAiCalls - used.aiCalls),
+      maxUsd: totals.maxUsd - used.usd,
+      wallClockMs: CLASS_INVOCATION_CAPS.wallClockMs,
+    };
+    return new CostBudget(remaining);
+  }
 }
+
+export const CLASS_CRAWL_TOTALS: BudgetOpts = {
+  maxFetches: 90,
+  maxAiCalls: 60,
+  maxUsd: 0.60,
+  wallClockMs: 480_000,
+};
+
+export const CLASS_INVOCATION_CAPS: BudgetOpts = {
+  maxFetches: 22,
+  maxAiCalls: 18,
+  maxUsd: 0.20,
+  wallClockMs: 150_000,
+};
