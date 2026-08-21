@@ -4,6 +4,27 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.26.0',
+    date: '2026-08-21',
+    title: 'Admin detail pages + field provenance + curator guard',
+    summary: 'Per-field provenance system: admin edits are tracked and protected from curator overwrites. Full venue and school detail pages with save/discard workflow.',
+    details: [
+      'New: field_overrides table — tracks admin per-field edits with previous_value history',
+      'New: curator_suggestions table — parks blocked writes so the admin sees what the curator found',
+      'New: Curator guard (guardedUpdate) wired into all write sites — event scraper, class scraper, school discovery, play matcher, TIC crossref, process-venue',
+      'New: apply_field_override RPC — atomic column update + override upsert + suggestion dismiss',
+      'New: release_field_override RPC — hands field back to curator, reopens muted suggestions',
+      'New: accept_suggestion / dismiss_suggestion RPCs with mute-after-2 logic',
+      'Fix: is_admin() now returns FALSE (not NULL) for unauthenticated users',
+      'New: fieldMeta.ts — VENUE_FIELDS (12 fields) and SCHOOL_FIELDS (11 fields) with order, editors, consequences',
+      'New: fieldState.ts — curated/held/empty detection with 0 and false as values, not empty',
+      'New: AdminVenueDetail + AdminSchoolDetail pages with provenance strip, field editors, save bar',
+      'New: AdminField component — three visual states, all editor types, 44px touch targets',
+      'New: ProvenanceStrip — live field counts, held/empty/notes stats, last curated date',
+      'New: useEntityDetail hook — staged edits, save/discard, field model assembly',
+    ],
+  },
+  {
     version: '0.25.0',
     date: '2026-08-21',
     title: 'Admin blocklist + class metrics fix + block UI',
