@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { resolveCoordinates, geocodeBusinessByName, isBadCoordinate, isPlausibleStreetAddress } from "../_shared/geocoder.ts";
+import { resolveCoordinates, geocodeBusinessByName, isBadCoordinate, isPlausibleStreetAddress, isOutsideMetro } from "../_shared/geocoder.ts";
 import { repairJson } from "../_shared/scraper/json-repair.ts";
+import { discoveryMatch } from "../_shared/scraper/venue-name-matcher.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -20,14 +21,27 @@ const AGGREGATOR_DOMAINS = new Set([
   "eventbrite.com", "goldstar.com", "groupon.com", "timeout.com",
   "choosechicago.com", "dochub.com", "meetup.com", "thumbtack.com",
   "bark.com", "lessons.com", "takelessons.com",
+  "loopchicago.com", "backstage.com", "chicagoreader.com",
+  "tripadvisor.com", "wikipedia.org", "instagram.com", "linkedin.com",
+  "tiktok.com", "youtube.com", "x.com", "twitter.com", "patch.com",
+  "nextdoor.com", "google.com", "maps.google.com", "reddit.com",
 ]);
 
 const JSON_INSTRUCTION = `\n\nReturn your answer as a JSON array. Each element must have exactly these fields:\n{"name": "School Name", "address": "Full Street Address, City, State", "url": "https://..."}\n\nDo not include any text outside the JSON array. No markdown, no explanations.`;
 
+const NORTH_SLICE = " Focus on the North Side: Andersonville, Uptown, Lakeview, Lincoln Square, Rogers Park, Edgewater.";
+const SOUTH_WEST_SLICE = " Focus on the West and South Sides: Logan Square, Wicker Park, Pilsen, Hyde Park, Bridgeport.";
+
+const BASE_PROMPTS = [
+  "List every improv and comedy training center in Chicago that offers adult classes. Include smaller studios, not just Second City and iO.",
+  "List every acting studio in Chicago that offers adult classes in Meisner, scene study, on-camera, voiceover, or audition technique. Include independent studios and conservatories, not just university programs.",
+  "List every musical theater performance training program, physical theater, sketch comedy, and comedy writing program in Chicago that offers adult classes or workshops. Exclude music conservatories, instrumental music schools, classical music programs, dance-only studios, and orchestral training.",
+];
+
 const DISCOVERY_PROMPTS = [
-  "List every improv and comedy training center in Chicago that offers adult classes. Include smaller studios, not just Second City and iO." + JSON_INSTRUCTION,
-  "List every acting studio in Chicago that offers adult classes in Meisner, scene study, on-camera, voiceover, or audition technique. Include independent studios and conservatories, not just university programs." + JSON_INSTRUCTION,
-  "List every musical theater performance training program, physical theater, sketch comedy, and comedy writing program in Chicago that offers adult classes or workshops. Exclude music conservatories, instrumental music schools, classical music programs, dance-only studios, and orchestral training." + JSON_INSTRUCTION,
+  ...BASE_PROMPTS.map(p => p + JSON_INSTRUCTION),
+  ...BASE_PROMPTS.map(p => p + NORTH_SLICE + JSON_INSTRUCTION),
+  ...BASE_PROMPTS.map(p => p + SOUTH_WEST_SLICE + JSON_INSTRUCTION),
 ];
 
 function getCorsHeaders(req: Request): Record<string, string> {
@@ -369,34 +383,163 @@ async function resolveUniqueSlug(baseSlug: string): Promise<string> {
   return `${baseSlug}-${Date.now()}`;
 }
 
-async function deduplicateAndInsert(results: DiscoveryResult[], runId: string): Promise<{ inserted: number; known: number; blocked: number }> {
-  const filtered: DiscoveryResult[] = [];
-  let blocked = 0;
-  for (const result of results) {
-    if (isAggregatorDomain(result.domain)) {
-      blocked++;
-      await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "blocked_aggregator", reason: "Domain matched aggregator blocklist" });
-      continue;
-    }
-    filtered.push(result);
-  }
+interface ReconciliationReport {
+  inserted: Array<{ name: string; url: string }>;
+  alias_matched: Array<{ name: string; matched_to: string }>;
+  rejected: Array<{ name: string; reason: string }>;
+  already_known: number;
+  previously_rejected: number;
+  blocked: number;
+}
 
-  const { data: existingVenues } = await supabase.from("venues").select("website_url, calendar_url");
+const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY") ?? null;
+
+async function identityCheck(
+  name: string, url: string, pageText: string, city: string,
+): Promise<{ identity: "match" | "mismatch" | "uncertain"; confidence: number; reason: string }> {
+  const apiKey = DEEPSEEK_API_KEY;
+  if (!apiKey) return { identity: "uncertain", confidence: 0.5, reason: "no API key" };
+
+  const prompt = `Is this page the official website of "${name}", an organization offering in-person adult classes in ${city}? Answer mismatch if: the page is an article, directory, or city guide ABOUT such organizations; the organization is based in a different city; or "${name}" appears to be a person rather than an organization.\n\nPage text (first 2000 chars):\n${pageText.slice(0, 2000)}\n\nRespond only: {"identity":"match"|"mismatch"|"uncertain","confidence":0-1,"reason":"<10 words"}`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12_000);
+    const res = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 200,
+        temperature: 0,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return { identity: "uncertain", confidence: 0.5, reason: `API ${res.status}` };
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content ?? "";
+    const parsed = repairJson(raw) as { identity?: string; confidence?: number; reason?: string } | null;
+    return {
+      identity: (parsed?.identity === "match" || parsed?.identity === "mismatch") ? parsed.identity : "uncertain",
+      confidence: typeof parsed?.confidence === "number" ? parsed.confidence : 0.5,
+      reason: typeof parsed?.reason === "string" ? parsed.reason : "parse error",
+    };
+  } catch {
+    return { identity: "uncertain", confidence: 0.5, reason: "fetch failed" };
+  }
+}
+
+async function reconcileAndInsert(results: DiscoveryResult[], runId: string): Promise<ReconciliationReport> {
+  const report: ReconciliationReport = {
+    inserted: [], alias_matched: [], rejected: [], already_known: 0, previously_rejected: 0, blocked: 0,
+  };
+
+  // Load registry state
+  const { data: rejections } = await supabase.from("discovery_rejections").select("domain, url");
+  const rejectedDomains = new Set((rejections ?? []).filter(r => r.domain).map(r => r.domain!));
+  const rejectedUrls = new Set((rejections ?? []).filter(r => r.url).map(r => r.url!));
+
+  const { data: existingVenues } = await supabase.from("venues").select("id, name, website_url, calendar_url, aliases, status");
   const existingDomains = new Set<string>();
   for (const v of existingVenues ?? []) {
     if (v.website_url) existingDomains.add(extractDomain(v.website_url));
     if (v.calendar_url) existingDomains.add(extractDomain(v.calendar_url));
   }
+  const venueRegistry = (existingVenues ?? []).map(v => ({
+    id: v.id as string,
+    name: v.name as string,
+    aliases: (Array.isArray(v.aliases) ? v.aliases : []) as string[],
+    status: v.status as string,
+  }));
 
-  let inserted = 0;
-  let known = 0;
-  for (const result of filtered) {
+  for (const result of results) {
+    // Step 1: REJECTION MEMORY
+    if (rejectedDomains.has(result.domain) || rejectedUrls.has(result.link)) {
+      report.previously_rejected++;
+      await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "previously_rejected", reason: "Domain/URL in rejection memory" });
+      continue;
+    }
+
+    // Step 2: AGGREGATOR LIST
+    if (isAggregatorDomain(result.domain)) {
+      report.blocked++;
+      await supabase.from("discovery_rejections").insert({ domain: result.domain, school_name: result.title, reason: "aggregator" });
+      rejectedDomains.add(result.domain);
+      await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "blocked_aggregator", reason: "Domain matched aggregator blocklist" });
+      continue;
+    }
+
+    // Step 3: DOMAIN MATCH
     if (existingDomains.has(result.domain)) {
-      known++;
+      report.already_known++;
       await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "already_known_venue", reason: "Domain matches existing venue" });
       continue;
     }
 
+    // Step 4: NAME MATCH
+    const nameMatch = discoveryMatch(result.title, venueRegistry);
+    if (nameMatch.matched && nameMatch.venueId) {
+      const matchedVenue = venueRegistry.find(v => v.id === nameMatch.venueId)!;
+
+      // Append alias if new
+      const currentAliases = matchedVenue.aliases;
+      if (!currentAliases.includes(result.title) && matchedVenue.name !== result.title) {
+        const updatedAliases = [...currentAliases, result.title];
+        await supabase.from("venues").update({ aliases: updatedAliases }).eq("id", matchedVenue.id);
+        matchedVenue.aliases = updatedAliases;
+      }
+
+      if (matchedVenue.status === "active") {
+        report.alias_matched.push({ name: result.title, matched_to: matchedVenue.name });
+        await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "alias_matched", reason: `Matched to ${matchedVenue.name}` });
+        continue;
+      }
+
+      // Rejected/dead venue — candidate URL is a replacement; run gate on it
+      // (falls through to step 5 below, but on pass updates existing row instead of inserting)
+    }
+
+    // Step 5: VALIDATION GATE
+    const pageHtml = await fetchPage(result.link);
+    if (!pageHtml) {
+      await supabase.from("discovery_rejections").insert({ domain: result.domain, url: result.link, school_name: result.title, reason: "dead_url" });
+      rejectedDomains.add(result.domain);
+      report.rejected.push({ name: result.title, reason: "dead_url" });
+      await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "rejected", reason: "URL returned no content (dead/403)" });
+      continue;
+    }
+
+    const pageText = htmlToText(pageHtml);
+    const check = await identityCheck(result.title, result.link, pageText, "Chicago");
+
+    if (check.identity === "mismatch" && check.confidence >= 0.7) {
+      const reason = check.reason.includes("person") ? "not_an_organization"
+        : check.reason.includes("city") || check.reason.includes("different") ? "out_of_city"
+        : "identity_mismatch";
+      await supabase.from("discovery_rejections").insert({ domain: result.domain, url: result.link, school_name: result.title, reason });
+      rejectedDomains.add(result.domain);
+      report.rejected.push({ name: result.title, reason });
+      await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "rejected", reason: `${reason}: ${check.reason}` });
+      continue;
+    }
+
+    const insertStatus = check.identity === "uncertain" ? "candidate" : "active";
+
+    // If this was a name-match replacement for a dead/rejected venue, update instead of insert
+    if (nameMatch.matched && nameMatch.venueId) {
+      await supabase.from("venues").update({
+        website_url: result.link, calendar_url: result.link, status: insertStatus,
+      }).eq("id", nameMatch.venueId);
+      await supabase.from("schools").update({ url: result.link, status: insertStatus }).eq("venue_id", nameMatch.venueId);
+      report.inserted.push({ name: result.title, url: result.link });
+      existingDomains.add(result.domain);
+      await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "replaced_url", reason: `Updated URL on existing venue ${nameMatch.matchedName}` });
+      continue;
+    }
+
+    // Step 6: GEOCODE + INSERT
     const slug = await resolveUniqueSlug(generateSlug(result.title));
     const geoResult = await geocodeSchool(result.title, result.link, result.address);
     await delay(1100);
@@ -406,7 +549,7 @@ async function deduplicateAndInsert(results: DiscoveryResult[], runId: string): 
 
     const { data: newVenue, error: venueError } = await supabase.from("venues").insert({
       name: result.title, slug, venue_type: "school", website_url: result.link,
-      calendar_url: result.link, city: "chicago", source: "discovery",
+      calendar_url: result.link, city: "chicago", source: "discovery", status: insertStatus,
       latitude: geoResult.lat, longitude: geoResult.lng,
       address: geoResult.address, geocode_source: geocodeSource, geocode_status: geocodeStatus,
     }).select("id").single();
@@ -419,14 +562,15 @@ async function deduplicateAndInsert(results: DiscoveryResult[], runId: string): 
     await supabase.from("schools").insert({
       name: result.title, short_name: result.title.slice(0, 14).toUpperCase(), slug,
       latitude: geoResult.lat, longitude: geoResult.lng, neighborhood: "Chicago", discipline: "acting",
-      venue_id: newVenue.id, url: result.link, address: geoResult.address,
+      venue_id: newVenue.id, url: result.link, address: geoResult.address, status: insertStatus,
     });
 
     existingDomains.add(result.domain);
-    inserted++;
-    await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "inserted" });
+    venueRegistry.push({ id: newVenue.id, name: result.title, aliases: [], status: insertStatus });
+    report.inserted.push({ name: result.title, url: result.link });
+    await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: insertStatus === "candidate" ? "inserted_candidate" : "inserted", reason: check.identity === "uncertain" ? "Identity uncertain — inserted as candidate" : undefined });
   }
-  return { inserted, known, blocked };
+  return report;
 }
 
 serve(async (req) => {
@@ -559,12 +703,15 @@ serve(async (req) => {
   }
 
   const { results: serpResults, queriesRun } = await searchForSchools();
-  const { inserted, known, blocked } = await deduplicateAndInsert(serpResults, runId);
+  const report = await reconcileAndInsert(serpResults, runId);
 
-  console.log(`[school-discovery] Run ${runId}: ${queriesRun} queries, ${serpResults.length} raw results, ${blocked} blocked, ${known} known, ${inserted} inserted`);
+  console.log(`[school-discovery] Run ${runId}: ${queriesRun} queries, ${serpResults.length} raw results, ${report.blocked} blocked, ${report.already_known} known, ${report.inserted.length} inserted, ${report.alias_matched.length} aliases, ${report.rejected.length} rejected, ${report.previously_rejected} remembered`);
 
   return new Response(
-    JSON.stringify({ action: "discover", run_id: runId, inserted, known, blocked, queries_run: queriesRun, schools: serpResults.map(r => ({ name: r.title, url: r.link, domain: r.domain })) }),
+    JSON.stringify({
+      action: "discover", run_id: runId, queries_run: queriesRun,
+      ...report,
+    }),
     { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
   );
 });

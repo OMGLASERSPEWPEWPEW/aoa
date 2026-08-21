@@ -231,12 +231,25 @@ serve(async (req) => {
         }
 
         if ((result.trace as any).out_of_city) {
-          await supabase.from("venues").update({ url_status: "out_of_city" }).eq("id", school.id);
+          await supabase.from("venues").update({ url_status: "out_of_city", status: "out_of_city" }).eq("id", school.id);
+          await supabase.from("schools").update({ status: "out_of_city" }).eq("venue_id", school.id);
+        }
+
+        // Candidate→active promotion on first successful crawl with programs
+        if (eventsFound > 0 && result.status === "complete") {
+          const { data: venue } = await supabase.from("venues").select("status").eq("id", school.id).maybeSingle();
+          if (venue?.status === "candidate") {
+            await supabase.from("venues").update({ status: "active", verified_at: new Date().toISOString() }).eq("id", school.id);
+            await supabase.from("schools").update({ status: "active" }).eq("venue_id", school.id);
+            console.log(`[class-scrape-batch] Promoted ${school.name} from candidate to active`);
+          }
         }
 
         await supabase.from("venues").update({ class_scraped_at: new Date().toISOString() }).eq("id", school.id);
 
         const trace = result.trace as any;
+        const wallMs = trace.wallMs ?? null;
+        const tokenSum = trace.totalInputTokens ?? null;
         await supabase.from("scrape_logs").insert({
           run_id: crypto.randomUUID(),
           venue_id: school.id,
@@ -246,9 +259,9 @@ serve(async (req) => {
           events_created: eventsCreated,
           events_updated: 0,
           error_message: errorMessage ?? (result.status === "failed" ? result.trace.stopReason : null),
-          ai_input_tokens: trace.totalAiCalls ?? 0,
-          ai_output_tokens: 0,
-          duration_ms: Math.round((trace.budgetUsed ?? 0) * 1000),
+          ai_input_tokens: tokenSum,
+          ai_output_tokens: null,
+          duration_ms: wallMs,
           strategy_trace: result.trace,
           cost_usd: trace.budgetUsed ?? 0,
           fetches: trace.totalFetches ?? 0,

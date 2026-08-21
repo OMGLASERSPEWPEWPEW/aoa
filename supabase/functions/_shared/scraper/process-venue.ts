@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { generateSlug } from "./slug-generator.ts";
 import { executeStrategyTree } from "./strategy-agent.ts";
 import type { VenueTarget, ScrapeResult, StrategyProfile, Program } from "./types.ts";
-import { resolveCoordinates, isBadCoordinate, isPlausibleStreetAddress } from "../geocoder.ts";
+import { resolveCoordinates, isBadCoordinate, isPlausibleStreetAddress, isOutsideMetro } from "../geocoder.ts";
 import { logUsage } from "../logUsage.ts";
 import { runPlayMatcherBatch } from "./play-matcher.ts";
 
@@ -279,7 +279,7 @@ export async function processClassPrograms(
 
     if (venue && shouldUpdate) {
       const geo = await resolveCoordinates(schoolAddress);
-      if (geo && !isBadCoordinate(geo.lat, geo.lng)) {
+      if (geo && !isBadCoordinate(geo.lat, geo.lng) && !isOutsideMetro(geo.lat, geo.lng)) {
         const prevSource = venue.geocode_source;
         await supabase
           .from("venues")

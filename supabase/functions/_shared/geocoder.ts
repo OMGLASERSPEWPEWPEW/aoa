@@ -20,6 +20,28 @@ const UNIT_TOKEN_RE =
 
 let mapboxFirstCall = true;
 
+// --- Metro guard ---
+
+const METRO_CENTERS: Record<string, { lat: number; lng: number; radiusKm: number }> = {
+  chicago: { lat: 41.8781, lng: -87.6298, radiusKm: 40 },
+};
+
+export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function isOutsideMetro(lat: number, lng: number, city = "Chicago"): boolean {
+  const m = METRO_CENTERS[city.toLowerCase()];
+  if (!m) return false;
+  return haversineKm(lat, lng, m.lat, m.lng) > m.radiusKm;
+}
+
 // --- Guard ---
 
 export function isBadCoordinate(lat: number, lng: number): boolean {
@@ -50,7 +72,7 @@ export async function resolveCoordinates(
 
   for (const attempt of attempts) {
     const r = await attempt();
-    if (r && !isBadCoordinate(r.lat, r.lng)) return r;
+    if (r && !isBadCoordinate(r.lat, r.lng) && !isOutsideMetro(r.lat, r.lng, city)) return r;
   }
   return null;
 }
@@ -64,11 +86,11 @@ export async function geocodeBusinessByName(
 ): Promise<(GeoResult & { address: string | null }) | null> {
   if (GOOGLE_PLACES_API_KEY) {
     const g = await placesTextSearch(name, city, state);
-    if (g && !isBadCoordinate(g.lat, g.lng)) return g;
+    if (g && !isBadCoordinate(g.lat, g.lng) && !isOutsideMetro(g.lat, g.lng, city)) return g;
   }
   if (MAPBOX_TOKEN) {
     const m = await geocodeMapboxPoi(`${name} ${city} ${state}`);
-    if (m && !isBadCoordinate(m.lat, m.lng)) {
+    if (m && !isBadCoordinate(m.lat, m.lng) && !isOutsideMetro(m.lat, m.lng, city)) {
       if (nameOverlap(name, m.formatted ?? "") >= 0.5) {
         return { ...m, address: m.formatted ?? null };
       }

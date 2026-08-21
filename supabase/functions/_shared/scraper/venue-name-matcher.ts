@@ -203,3 +203,78 @@ Return valid JSON: { "verdicts": [{ "pair": 1, "same": true, "confidence": 0.95 
 
   return results;
 }
+
+// --- Discovery-specific matching ---
+
+const STRIP_TOKENS = new Set([
+  "theater", "theatre", "studio", "school", "center", "centre",
+  "chicago", "improv", "comedy", "acting", "the", "a", "an",
+]);
+
+export function normalizeForDiscovery(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .split(/\s+/)
+    .filter(w => w.length > 0 && !STRIP_TOKENS.has(w))
+    .join(" ")
+    .trim();
+}
+
+function discoveryTokens(name: string): Set<string> {
+  const n = normalizeForDiscovery(name);
+  return new Set(n.split(" ").filter(w => w.length > 1));
+}
+
+export function tokenJaccard(a: string, b: string): number {
+  const setA = discoveryTokens(a);
+  const setB = discoveryTokens(b);
+  if (setA.size === 0 || setB.size === 0) return 0;
+  let intersection = 0;
+  for (const w of setA) if (setB.has(w)) intersection++;
+  const union = new Set([...setA, ...setB]).size;
+  return union === 0 ? 0 : intersection / union;
+}
+
+export function levenshteinRatio(a: string, b: string): number {
+  const na = normalizeForDiscovery(a);
+  const nb = normalizeForDiscovery(b);
+  if (na === nb) return 1;
+  const maxLen = Math.max(na.length, nb.length);
+  if (maxLen === 0) return 1;
+  const matrix: number[][] = [];
+  for (let i = 0; i <= na.length; i++) {
+    matrix[i] = [i];
+    for (let j = 1; j <= nb.length; j++) {
+      if (i === 0) { matrix[0][j] = j; continue; }
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + (na[i - 1] === nb[j - 1] ? 0 : 1),
+      );
+    }
+  }
+  return 1 - matrix[na.length][nb.length] / maxLen;
+}
+
+export interface DiscoveryMatchResult {
+  matched: boolean;
+  venueId?: string;
+  matchedName?: string;
+}
+
+export function discoveryMatch(
+  candidateName: string,
+  existingVenues: Array<{ id: string; name: string; aliases: string[] }>,
+): DiscoveryMatchResult {
+  for (const venue of existingVenues) {
+    const namesToCheck = [venue.name, ...venue.aliases];
+    for (const existing of namesToCheck) {
+      if (tokenJaccard(candidateName, existing) >= 0.6 ||
+          levenshteinRatio(candidateName, existing) >= 0.85) {
+        return { matched: true, venueId: venue.id, matchedName: existing };
+      }
+    }
+  }
+  return { matched: false };
+}
