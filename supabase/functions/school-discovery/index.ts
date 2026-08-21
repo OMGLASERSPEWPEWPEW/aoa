@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { resolveCoordinates, geocodeBusinessByName, isBadCoordinate, isPlausibleStreetAddress, isOutsideMetro } from "../_shared/geocoder.ts";
 import { repairJson } from "../_shared/scraper/json-repair.ts";
 import { discoveryMatch } from "../_shared/scraper/venue-name-matcher.ts";
+import { isBlockedDomain } from "../_shared/curator/blocklist.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -390,6 +391,7 @@ interface ReconciliationReport {
   already_known: number;
   previously_rejected: number;
   blocked: number;
+  blocked_admin: number;
 }
 
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY") ?? null;
@@ -433,7 +435,7 @@ async function identityCheck(
 
 async function reconcileAndInsert(results: DiscoveryResult[], runId: string): Promise<ReconciliationReport> {
   const report: ReconciliationReport = {
-    inserted: [], alias_matched: [], rejected: [], already_known: 0, previously_rejected: 0, blocked: 0,
+    inserted: [], alias_matched: [], rejected: [], already_known: 0, previously_rejected: 0, blocked: 0, blocked_admin: 0,
   };
 
   // Load registry state
@@ -459,6 +461,13 @@ async function reconcileAndInsert(results: DiscoveryResult[], runId: string): Pr
     if (rejectedDomains.has(result.domain) || rejectedUrls.has(result.link)) {
       report.previously_rejected++;
       await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "previously_rejected", reason: "Domain/URL in rejection memory" });
+      continue;
+    }
+
+    // Step 1.5: ADMIN BLOCKLIST — checked before aggregator so admin blocks take priority
+    if (await isBlockedDomain(supabase, result.link)) {
+      report.blocked_admin++;
+      await logDiscoveryResult({ run_id: runId, query: result.query, raw_url: result.link, raw_title: result.title, domain: result.domain, disposition: "blocked_admin", reason: "Domain in admin blocklist" });
       continue;
     }
 
@@ -705,7 +714,7 @@ serve(async (req) => {
   const { results: serpResults, queriesRun } = await searchForSchools();
   const report = await reconcileAndInsert(serpResults, runId);
 
-  console.log(`[school-discovery] Run ${runId}: ${queriesRun} queries, ${serpResults.length} raw results, ${report.blocked} blocked, ${report.already_known} known, ${report.inserted.length} inserted, ${report.alias_matched.length} aliases, ${report.rejected.length} rejected, ${report.previously_rejected} remembered`);
+  console.log(`[school-discovery] Run ${runId}: ${queriesRun} queries, ${serpResults.length} raw results, ${report.blocked} blocked, ${report.blocked_admin} admin-blocked, ${report.already_known} known, ${report.inserted.length} inserted, ${report.alias_matched.length} aliases, ${report.rejected.length} rejected, ${report.previously_rejected} remembered`);
 
   return new Response(
     JSON.stringify({

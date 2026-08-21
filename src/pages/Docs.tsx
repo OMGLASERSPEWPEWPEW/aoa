@@ -4,13 +4,18 @@ import { Link } from 'react-router-dom'
 import { useCostDashboard } from '../hooks/useCostDashboard'
 import { useVenueCoverage } from '../hooks/useVenueCoverage'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'
-import type { QueueItem } from '../lib/types'
+import type { QueueItem, AuditVenue } from '../lib/types'
 import { useVenueAudit } from '../hooks/useVenueAudit'
 import { useScrape } from '../contexts/ScrapeContext'
+import { useBlockSource } from '../hooks/useBlockSource'
+import { useBlockedSources } from '../hooks/useBlockedSources'
+import { normalizeDomain } from '../lib/blocklist'
 import { CoverageMetricsCards } from '../components/admin/CoverageMetricsCards'
 import { VenueAuditTable } from '../components/admin/VenueAuditTable'
 import { DiscoveryQueueSection } from '../components/admin/DiscoveryQueueSection'
 import { VenuePromoteModal } from '../components/admin/VenuePromoteModal'
+import { BlockSheet } from '../components/admin/BlockSheet'
+import { BlockedList } from '../components/admin/BlockedList'
 
 const tabs = ['Design', 'AI Prompts', 'Costs', 'Coverage'] as const
 type Tab = (typeof tabs)[number]
@@ -395,7 +400,11 @@ function CoverageTab() {
   const [discoveryRunning, setDiscoveryRunning] = useState(false)
   const [discoveryResult, setDiscoveryResult] = useState<{ inserted: number; known: number; blocked: number; queries_run: number; warning?: string; schools?: Array<{ name: string; url: string; domain: string }> } | null>(null)
   const [unlinkedCount, setUnlinkedCount] = useState<number | null>(null)
-  const [classMetrics, setClassMetrics] = useState<{ class_venue_count: number; class_event_count: number; class_with_instructor: number; class_with_level: number } | null>(null)
+  const [classMetrics, setClassMetrics] = useState<{ school_count: number; session_count: number; with_teacher: number; with_level: number } | null>(null)
+  const { block, unblock } = useBlockSource()
+  const { items: blockedItems } = useBlockedSources()
+  const [blockTarget, setBlockTarget] = useState<AuditVenue | null>(null)
+  const [showBlockedList, setShowBlockedList] = useState(false)
 
   useEffect(() => {
     supabase
@@ -652,10 +661,10 @@ function CoverageTab() {
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
             {[
-              { value: classMetrics.class_venue_count, label: 'SCHOOLS' },
-              { value: classMetrics.class_event_count, label: 'CLASSES' },
-              { value: classMetrics.class_with_instructor, label: 'W/ INSTRUCTOR' },
-              { value: classMetrics.class_with_level, label: 'W/ LEVEL' },
+              { value: classMetrics.school_count, label: 'SCHOOLS' },
+              { value: classMetrics.session_count, label: 'CLASSES' },
+              { value: classMetrics.with_teacher, label: 'W/ INSTRUCTOR' },
+              { value: classMetrics.with_level, label: 'W/ LEVEL' },
             ].map(s => (
               <div key={s.label} style={{ textAlign: 'center' }}>
                 <div style={{ ...mono, fontSize: 18, color: 'var(--ink)' }}>{s.value}</div>
@@ -666,6 +675,22 @@ function CoverageTab() {
         </div>
       )}
 
+      {/* SCAFFOLD: BLOCKED count — removed by acr-6a-tiles-audit */}
+      {blockedItems.length > 0 && (
+        <button
+          onClick={() => setShowBlockedList(true)}
+          style={{
+            ...mono, fontSize: 9, letterSpacing: '0.08em',
+            padding: '4px 10px', marginBottom: 8,
+            background: 'var(--danger-bg)', color: 'var(--danger)',
+            border: '1px solid var(--danger)', borderRadius: 3, cursor: 'pointer',
+            textTransform: 'uppercase',
+          }}
+        >
+          BLOCKED ({blockedItems.length})
+        </button>
+      )}
+
       {!audit.loading && (
         <VenueAuditTable
           venues={audit.venues}
@@ -673,6 +698,7 @@ function CoverageTab() {
           setSort={audit.setSort}
           filters={audit.filters}
           setFilters={audit.setFilters}
+          onBlock={setBlockTarget}
         />
       )}
 
@@ -694,6 +720,66 @@ function CoverageTab() {
             refetchMetrics()
           }}
         />
+      )}
+
+      {blockTarget && (
+        <BlockSheet
+          target={{
+            entityType: 'venue',
+            id: blockTarget.id,
+            name: blockTarget.name,
+            domain: normalizeDomain(blockTarget.website_url) ?? blockTarget.source ?? '',
+            affectedEvents: blockTarget.event_count,
+            affectedClasses: 0,
+          }}
+          onConfirm={async (scope, reason, note) => {
+            await block({
+              entity_type: 'venue',
+              entity_id: blockTarget.id,
+              name: blockTarget.name,
+              url: blockTarget.website_url ?? '',
+              scope,
+              reason,
+              note: note ?? undefined,
+            })
+            setBlockTarget(null)
+          }}
+          onCancel={() => setBlockTarget(null)}
+        />
+      )}
+
+      {showBlockedList && (
+        <>
+          <div
+            onClick={() => setShowBlockedList(false)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+              zIndex: 1000,
+            }}
+          />
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0,
+            background: 'var(--bg)', borderRadius: '16px 16px 0 0',
+            borderTop: '1px solid var(--rule)',
+            boxShadow: '0 -14px 44px rgba(0,0,0,0.18)',
+            zIndex: 1001, padding: '16px 20px 24px',
+            maxHeight: '70vh', overflowY: 'auto',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <div style={{ width: 38, height: 4, borderRadius: 2, background: 'var(--rule)' }} />
+            </div>
+            <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--danger)', textTransform: 'uppercase', marginBottom: 12 }}>
+              Blocked sources ({blockedItems.length})
+            </div>
+            <BlockedList items={blockedItems} onUnblock={async (id) => { await unblock(id) }} />
+            <button
+              onClick={() => setShowBlockedList(false)}
+              style={{ ...mono, fontSize: 10, marginTop: 16, padding: '10px 20px', background: 'none', border: '1px solid var(--rule)', borderRadius: 4, color: 'var(--ink-dim)', cursor: 'pointer', width: '100%' }}
+            >
+              CLOSE
+            </button>
+          </div>
+        </>
       )}
     </>
   )

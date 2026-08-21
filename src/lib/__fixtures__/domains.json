@@ -1,0 +1,15 @@
+[
+  ["https://WWW.ClassPass.com/chicago", "classpass.com"],
+  ["http://example.com/page/stuff?q=1", "example.com"],
+  ["https://chicago.eventbrite.com", "chicago.eventbrite.com"],
+  ["HTTPS://WWW.SECONDCITY.COM/", "secondcity.com"],
+  ["http://example.org:8080/path", "example.org"],
+  ["www.ioimprov.com", "ioimprov.com"],
+  ["annoyanceproductions.com", "annoyanceproductions.com"],
+  ["https://", null],
+  ["", null],
+  [null, null],
+  ["not a url at all", "not a url at all"],
+  ["https://www.theatreinchicago.com/shows/all", "theatreinchicago.com"],
+  ["HTTP://WWW.Example.COM:443/foo/bar/baz", "example.com"]
+]

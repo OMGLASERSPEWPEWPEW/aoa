@@ -4,6 +4,7 @@ import { executeClassStrategy } from "../_shared/scraper/strategy-agent.ts";
 import { processClassPrograms } from "../_shared/scraper/process-venue.ts";
 import type { VenueTarget, SiteProfileRow } from "../_shared/scraper/types.ts";
 import { extractRegistrableDomain } from "../_shared/scraper/politeness.ts";
+import { isEntityBlocked } from "../_shared/curator/blocklist.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -43,16 +44,22 @@ async function getNextSchool(supabase: ReturnType<typeof createClient>): Promise
       .eq("id", running[0].venue_id)
       .single();
     if (venue) {
-      const { count } = await supabase
-        .from("venues")
-        .select("id", { count: "exact", head: true })
-        .eq("venue_type", "school")
-        .not("calendar_url", "is", null)
-        .or(`class_scraped_at.is.null,class_scraped_at.lt.${staleThreshold}`);
-      return { school: venue as VenueTarget, remaining: (count ?? 0) + 1 };
+      // Check if this running venue is blocked
+      const blocked = await isEntityBlocked(supabase, "venue", venue.id, venue.website_url ?? venue.calendar_url);
+      if (!blocked) {
+        const { count } = await supabase
+          .from("venues")
+          .select("id", { count: "exact", head: true })
+          .eq("venue_type", "school")
+          .not("calendar_url", "is", null)
+          .or(`class_scraped_at.is.null,class_scraped_at.lt.${staleThreshold}`);
+        return { school: venue as VenueTarget, remaining: (count ?? 0) + 1 };
+      }
+      console.log(`[class-scrape-batch] Skipping blocked running venue: ${venue.name}`);
     }
   }
 
+  // Fetch a few extra candidates to account for blocked ones
   const { data } = await supabase
     .from("venues")
     .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
@@ -60,9 +67,17 @@ async function getNextSchool(supabase: ReturnType<typeof createClient>): Promise
     .not("calendar_url", "is", null)
     .or(`class_scraped_at.is.null,class_scraped_at.lt.${staleThreshold}`)
     .order("class_scraped_at", { ascending: true, nullsFirst: true })
-    .limit(1);
+    .limit(5);
 
-  const school = (data?.[0] as VenueTarget | undefined) ?? null;
+  let school: VenueTarget | null = null;
+  for (const candidate of (data ?? []) as VenueTarget[]) {
+    const blocked = await isEntityBlocked(supabase, "venue", candidate.id, candidate.website_url ?? candidate.calendar_url);
+    if (!blocked) {
+      school = candidate;
+      break;
+    }
+    console.log(`[class-scrape-batch] Skipping blocked school: ${candidate.name}`);
+  }
 
   const { count } = await supabase
     .from("venues")

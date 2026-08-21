@@ -228,6 +228,7 @@ export interface AuditVenue {
   has_photo: boolean
   event_count: number
   source: string
+  website_url: string | null
 }
 
 export interface CostByModel {
@@ -395,4 +396,46 @@ export interface SchoolWithSession extends School {
 export interface ClassMapData {
   schools: SchoolWithSession[]
   userInterests: ClassInterest[]
+}
+
+// Admin: Blocklist types
+
+export type BlockScope = 'domain' | 'entry'
+export type BlockReason = 'aggregator' | 'closed' | 'duplicate' | 'not_chicago' | 'other'
+export type BlockableEntity = 'venue' | 'school'
+
+export interface BlockedSource {
+  id: string
+  domain: string
+  scope: BlockScope
+  entity_type: BlockableEntity
+  entity_id: string | null
+  name_snapshot: string | null
+  reason: BlockReason
+  note: string | null
+  blocked_by: string | null
+  created_at: string
+}
+
+export interface BlockRequest {
+  entity_type: BlockableEntity
+  entity_id: string
+  name: string
+  url: string
+  scope: BlockScope
+  reason: BlockReason
+  note?: string
+}
+
+export interface ClassCoverageMetrics {
+  school_count: number
+  schools_never_curated: number
+  session_count: number
+  sessions_enrolling: number
+  with_start_date: number
+  with_price: number
+  with_level: number
+  with_teacher: number
+  by_discipline: Record<string, number>
+  last_curated_at: string | null
 }

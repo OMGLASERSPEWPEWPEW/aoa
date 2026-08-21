@@ -26,6 +26,7 @@
   /* Semantic */
   --live: oklch(0.55 0.16 145);
   --access: oklch(0.50 0.13 150);
+  --access-bg: oklch(0.92 0.04 150);
 
   /* Danger */
   --danger: oklch(0.50 0.19 35);
@@ -62,6 +63,7 @@
   /* Semantic */
   --live: oklch(0.74 0.16 145);
   --access: oklch(0.68 0.13 150);
+  --access-bg: oklch(0.20 0.04 150);
 
   /* Danger */
   --danger: oklch(0.66 0.19 35);

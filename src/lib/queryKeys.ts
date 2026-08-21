@@ -22,6 +22,24 @@ export const queryKeys = {
     withCoords: ['venues', 'with-coords'] as const,
     audit: ['venues', 'audit'] as const,
     coverage: ['venues', 'coverage'] as const,
+    detail: (id: string) => ['venues', id] as const,
+  },
+  schools: {
+    all: ['schools'] as const,
+    audit: ['schools', 'audit'] as const,
+    coverage: ['schools', 'coverage'] as const,
+    detail: (id: string) => ['schools', id] as const,
+  },
+  blocked: {
+    all: ['blocked'] as const,
+    count: ['blocked', 'count'] as const,
+  },
+  overrides: {
+    forEntity: (type: string, id: string) => ['overrides', type, id] as const,
+  },
+  suggestions: {
+    forEntity: (type: string, id: string) => ['suggestions', type, id] as const,
+    openCount: ['suggestions', 'open-count'] as const,
   },
   watchlist: {
     all: (userId: string) => ['watchlist', userId] as const,

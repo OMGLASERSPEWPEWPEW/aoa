@@ -8,9 +8,10 @@ interface Props {
   setSort: (s: string) => void
   filters: { missingCalendar: boolean; missingPhoto: boolean; zeroEvents: boolean }
   setFilters: (f: Partial<Props['filters']>) => void
+  onBlock?: (venue: AuditVenue) => void // SCAFFOLD: removed by acr-6a-tiles-audit
 }
 
-export function VenueAuditTable({ venues, sort, setSort, filters, setFilters }: Props) {
+export function VenueAuditTable({ venues, sort, setSort, filters, setFilters, onBlock }: Props) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -70,6 +71,8 @@ export function VenueAuditTable({ venues, sort, setSort, filters, setFilters }: 
               ))}
               <th scope="col" style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', padding: '6px 4px', textAlign: 'center' }}>Cal</th>
               <th scope="col" style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', padding: '6px 4px', textAlign: 'center' }}>Pic</th>
+              {/* SCAFFOLD: removed by acr-6a-tiles-audit */}
+              {onBlock && <th scope="col" style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', padding: '6px 4px' }} />}
             </tr>
           </thead>
           <tbody>
@@ -85,6 +88,23 @@ export function VenueAuditTable({ venues, sort, setSort, filters, setFilters }: 
                 <td style={{ ...mono, padding: '6px 8px', fontSize: 10, color: 'var(--ink-dim)' }}>{v.source}</td>
                 <td style={{ textAlign: 'center', padding: '6px 4px' }}>{v.has_calendar_url ? '✓' : '—'}</td>
                 <td style={{ textAlign: 'center', padding: '6px 4px' }}>{v.has_photo ? '✓' : '—'}</td>
+                {/* SCAFFOLD: removed by acr-6a-tiles-audit */}
+                {onBlock && (
+                  <td style={{ textAlign: 'center', padding: '6px 4px' }}>
+                    <button
+                      onClick={() => onBlock(v)}
+                      title="Block this source"
+                      style={{
+                        ...mono, fontSize: 12, width: 44, height: 44,
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'var(--danger)', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      ⊘
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

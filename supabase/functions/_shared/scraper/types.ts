@@ -310,6 +310,19 @@ export interface DiscoveryRunSummary {
   error_message: string | null;
 }
 
+export interface ClassCoverageMetrics {
+  school_count: number;
+  schools_never_curated: number;
+  session_count: number;
+  sessions_enrolling: number;
+  with_start_date: number;
+  with_price: number;
+  with_level: number;
+  with_teacher: number;
+  by_discipline: Record<string, number>;
+  last_curated_at: string | null;
+}
+
 export interface VenueCoverageMetrics {
   total_aoa_venues: number;
   total_known_chicago: number;

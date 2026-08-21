@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { processVenue } from "../_shared/scraper/process-venue.ts";
 import type { VenueTarget } from "../_shared/scraper/types.ts";
+import { isEntityBlocked } from "../_shared/curator/blocklist.ts";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5204",
@@ -44,7 +45,7 @@ async function getNextVenue(supabase: ReturnType<typeof createClient>): Promise<
       .in("id", gapVenueIds)
       .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order("scraped_at", { ascending: true, nullsFirst: true })
-      .limit(BATCH_SIZE);
+      .limit(BATCH_SIZE * 3);  // fetch extra to account for blocked venues
     venues = (data as VenueTarget[]) ?? null;
   }
 
@@ -55,8 +56,23 @@ async function getNextVenue(supabase: ReturnType<typeof createClient>): Promise<
       .not("calendar_url", "is", null)
       .or("scraped_at.is.null,scraped_at.lt." + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order("scraped_at", { ascending: true, nullsFirst: true })
-      .limit(BATCH_SIZE);
+      .limit(BATCH_SIZE * 3);  // fetch extra to account for blocked venues
     venues = (data as VenueTarget[]) ?? null;
+  }
+
+  // Filter out blocked venues
+  if (venues && venues.length > 0) {
+    const filtered: VenueTarget[] = [];
+    for (const v of venues) {
+      if (filtered.length >= BATCH_SIZE) break;
+      const blocked = await isEntityBlocked(supabase, "venue", v.id, v.website_url ?? v.calendar_url);
+      if (!blocked) {
+        filtered.push(v);
+      } else {
+        console.log(`[event-scrape-batch] Skipping blocked venue: ${v.name}`);
+      }
+    }
+    venues = filtered;
   }
 
   const { data: remainingGaps } = await supabase

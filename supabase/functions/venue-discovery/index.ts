@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { parseChicagoPlays } from "./chicagoplays-parser.ts";
 import { deduplicateQueue } from "./dedup.ts";
+import { isBlockedDomain } from "../_shared/curator/blocklist.ts";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5204",
@@ -91,6 +92,7 @@ serve(async (req) => {
   let venuesFound = 0;
   let venuesNew = 0;
   let venuesMatched = 0;
+  let venuesBlockedAdmin = 0;
   let fetchStatus = "success";
   let alertAdmin = false;
   let errorMessage: string | null = null;
@@ -126,6 +128,13 @@ serve(async (req) => {
       }
 
       for (const venue of discovered) {
+        // Blocklist guard: skip venues whose website domain is admin-blocked
+        if (venue.raw_website_url && await isBlockedDomain(supabase, venue.raw_website_url)) {
+          venuesBlockedAdmin++;
+          console.log(`[venue-discovery] Blocked by admin blocklist: ${venue.raw_name} (${venue.raw_website_url})`);
+          continue;
+        }
+
         await supabase.from("venue_discovery_queue").upsert(
           {
             source_id: source.id,
@@ -173,7 +182,13 @@ serve(async (req) => {
   }).eq("run_id", runId);
 
   return new Response(
-    JSON.stringify({ venues_found: venuesFound, venues_new: venuesNew, venues_matched: venuesMatched, error: errorMessage }),
+    JSON.stringify({
+      venues_found: venuesFound,
+      venues_new: venuesNew,
+      venues_matched: venuesMatched,
+      venues_blocked_admin: venuesBlockedAdmin,
+      error: errorMessage,
+    }),
     { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
   );
 });

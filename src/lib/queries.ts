@@ -303,6 +303,7 @@ export interface VenueAuditRow {
   calendar_url: string | null
   photo_url: string | null
   source: string | null
+  website_url: string | null
 }
 
 export interface EventCountRow {
@@ -312,7 +313,7 @@ export interface EventCountRow {
 export async function fetchVenueAuditRows(): Promise<VenueAuditRow[]> {
   const { data } = await supabase
     .from('venues')
-    .select('id, name, neighborhood, venue_type, calendar_url, photo_url, source')
+    .select('id, name, neighborhood, venue_type, calendar_url, photo_url, source, website_url')
   return (data ?? []) as VenueAuditRow[]
 }
 
@@ -337,6 +338,7 @@ export function buildAuditVenues(venueRows: VenueAuditRow[], eventCounts: EventC
     has_photo: !!v.photo_url,
     event_count: countMap.get(v.id) ?? 0,
     source: v.source ?? 'manual',
+    website_url: v.website_url ?? null,
   }))
 }
 
