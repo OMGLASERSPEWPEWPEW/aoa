@@ -19,9 +19,8 @@ describe('HouseChips', () => {
   it('current chip has gold color', () => {
     render(<HouseChips currentRank={3} />)
     const chips = screen.getAllByTestId('house-chip')
-    expect(chips[3].style.color).toContain('oklch')
-    expect(chips[3].style.color).toContain('0.14')
-    expect(chips[3].style.backgroundColor).toContain('oklch')
+    expect(chips[3].style.color).toBe('var(--accent)')
+    expect(chips[3].style.backgroundColor).toBe('var(--accent-bg)')
   })
 
   it('future chips have dashed border', () => {
@@ -35,7 +34,7 @@ describe('HouseChips', () => {
   it('rank 0 has no achieved chips', () => {
     render(<HouseChips currentRank={0} />)
     const chips = screen.getAllByTestId('house-chip')
-    expect(chips[0].style.color).toContain('oklch')
+    expect(chips[0].style.color).toBe('var(--accent)')
     expect(chips[1].style.border).toContain('dashed')
   })
 })

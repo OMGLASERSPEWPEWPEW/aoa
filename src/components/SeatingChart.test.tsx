@@ -20,7 +20,7 @@ describe('SeatingChart', () => {
     // Row 3, seat index 3 → global index = 3*8 + 3 = 27
     const litSeat = seats[27]
     expect(litSeat.style.width).toBe('11px')
-    expect(litSeat.style.boxShadow).toContain('oklch')
+    expect(litSeat.style.boxShadow).toContain('var(--accent)')
   })
 
   it('lights seat at row 0 for rank 6', () => {
@@ -29,7 +29,7 @@ describe('SeatingChart', () => {
     // Row 0, seat index 3 → global index = 0*8 + 3 = 3
     const litSeat = seats[3]
     expect(litSeat.style.width).toBe('11px')
-    expect(litSeat.style.boxShadow).toContain('oklch')
+    expect(litSeat.style.boxShadow).toContain('var(--accent)')
   })
 
   it('lit seat moves forward as rank increases', () => {
