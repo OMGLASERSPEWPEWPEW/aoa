@@ -103,3 +103,19 @@ export function extractTitle(html: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   return m ? m[1].trim() : "";
 }
+
+export function needsRender(page: {
+  cleanedLength: number;
+  pageKind: string;
+  programsExtracted: number;
+  sameDomainLinkCount: number;
+  boilerplateDroppedRatio: number;
+}): boolean {
+  if (page.cleanedLength < 300) return true;
+  const contentKind = ["catalog_index", "program_detail", "schedule_calendar"]
+    .includes(page.pageKind);
+  if (contentKind && page.programsExtracted === 0
+      && page.sameDomainLinkCount >= 8) return true;
+  if (page.boilerplateDroppedRatio > 0.9) return true;
+  return false;
+}

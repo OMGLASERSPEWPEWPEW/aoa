@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { executeClassStrategy } from "../_shared/scraper/strategy-agent.ts";
 import { processClassPrograms } from "../_shared/scraper/process-venue.ts";
-import type { VenueTarget } from "../_shared/scraper/types.ts";
+import type { VenueTarget, SiteProfileRow } from "../_shared/scraper/types.ts";
+import { extractRegistrableDomain } from "../_shared/scraper/politeness.ts";
 
 const SCRAPER_SECRET = Deno.env.get("SCRAPER_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -197,7 +198,14 @@ serve(async (req) => {
     let result: Awaited<ReturnType<typeof executeClassStrategy>> | null = null;
 
     try {
-      result = await executeClassStrategy(school, schoolName, "Chicago");
+      const profileDomain = extractRegistrableDomain(school.calendar_url);
+      const { data: siteProfile } = await supabase
+        .from("site_profiles")
+        .select("*")
+        .eq("domain", profileDomain)
+        .maybeSingle();
+
+      result = await executeClassStrategy(school, schoolName, "Chicago", siteProfile as SiteProfileRow | null);
 
       if (result.status === "complete" || result.status === "failed" || result.status === "escalated") {
         if (result.programs.length > 0 && resolvedSchoolId) {

@@ -185,6 +185,38 @@ export interface StrategyTrace {
   completenessBeforeFollows: number;
   completenessAfterFollows: number;
   stopReason: string;
+  classifierCounts?: Record<string, number>;
+  boilerplateDroppedBlocks?: number;
+  fetchErrors?: { blocked: number; timeout: number; dead: number; other: number };
+  invocations?: number;
+  programsFound?: number;
+  addressFound?: string | null;
+  out_of_city?: boolean;
+  jinaFetches?: number;
+  jinaContentPagesEmpty?: number;
+  tier?: 0 | 1 | 2;
+  profileUsed?: boolean;
+  profileVersion?: number;
+}
+
+export interface SiteProfileRow {
+  id: string;
+  domain: string;
+  venue_id: string | null;
+  platform: string | null;
+  tier_required: number;
+  render_needed: boolean;
+  entry_points: Array<{ url: string; page_kind: string; programs_yielded: number }>;
+  url_patterns: string[];
+  dead_end_patterns: string[];
+  robots: string[] | null;
+  address: string | null;
+  last_success_at: string | null;
+  last_completeness: number | null;
+  consecutive_failures: number;
+  profile_version: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface StrategyProfile {

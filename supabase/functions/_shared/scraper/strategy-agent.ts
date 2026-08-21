@@ -11,7 +11,7 @@ import { resolveVenueUrl } from "./url-resolver.ts";
 import { runRecon, type ReconResult } from "./recon.ts";
 import { extractOgImage } from "./og-image-extractor.ts";
 import { AOA_UA, enforceRateLimit, extractRegistrableDomain, classifyFetchError } from "./politeness.ts";
-import { classifyPage, extractHeadings, extractTitle, CLASSIFIER_ROUTING } from "./page-classifier.ts";
+import { classifyPage, extractHeadings, extractTitle, CLASSIFIER_ROUTING, needsRender } from "./page-classifier.ts";
 import { stripBoilerplate } from "./boilerplate.ts";
 import type {
   VenueTarget,
@@ -24,6 +24,7 @@ import type {
   StrategyProfile,
   Program,
   ClassExtractionResult,
+  SiteProfileRow,
 } from "./types.ts";
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
@@ -888,6 +889,53 @@ async function fetchWithUA(url: string, timeoutMs = FETCH_TIMEOUT): Promise<{ ra
   }
 }
 
+async function fetchViaJina(url: string, budget: CostBudget): Promise<string | null> {
+  if (!budget.canAffordFetch()) return null;
+  const jinaUrl = `https://r.jina.ai/${encodeURIComponent(url)}`;
+  const { raw, ok } = await fetchWithUA(jinaUrl, 30_000);
+  budget.recordFetch();
+  return ok && raw.length > 0 ? raw : null;
+}
+
+function isFreshProfile(p: SiteProfileRow): boolean {
+  if (!p.last_success_at) return false;
+  const age = Date.now() - new Date(p.last_success_at).getTime();
+  return age < 14 * 86400_000 && p.consecutive_failures === 0;
+}
+
+function computeDeadEndPatterns(steps: StrategyStep[]): string[] {
+  const deadKinds = ["youth_only", "blog_or_news", "policy_or_admin", "faculty"];
+  const deadPaths = steps
+    .filter(s => deadKinds.includes(s.fieldsFilledIn?.[0] ?? ""))
+    .map(s => { try { return new URL(s.url).pathname; } catch { return null; } })
+    .filter((p): p is string => p !== null);
+
+  const prefixCounts: Record<string, number> = {};
+  for (const path of deadPaths) {
+    const segments = path.split("/").filter(Boolean);
+    if (segments.length > 0) {
+      const prefix = "/" + segments[0] + "/";
+      prefixCounts[prefix] = (prefixCounts[prefix] ?? 0) + 1;
+    }
+  }
+  return Object.entries(prefixCounts)
+    .filter(([, count]) => count >= 2)
+    .map(([prefix]) => prefix);
+}
+
+function generalizeUrlPatterns(urls: string[]): string[] {
+  return [...new Set(urls.map(url => {
+    try {
+      const path = new URL(url).pathname;
+      const segments = path.split("/").filter(Boolean);
+      if (segments.length >= 2) {
+        return "/" + segments.slice(0, -1).join("/") + "/*";
+      }
+      return path;
+    } catch { return "/"; }
+  }))];
+}
+
 function getClassAiConfig(): { key: string; url: string; model: string } | null {
   const openai = OPENAI_API_KEY || Deno.env.get("OPENAI_API_KEY");
   if (openai) return { key: openai, url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" };
@@ -947,6 +995,7 @@ export async function executeClassStrategy(
   venue: VenueTarget,
   schoolName: string,
   city: string,
+  siteProfile?: SiteProfileRow | null,
 ): Promise<ClassStrategyResult> {
   const sb = createClient(SUPABASE_URL_FOR_STATE, SERVICE_ROLE_FOR_STATE);
   const seedUrl = venue.calendar_url;
@@ -1005,6 +1054,13 @@ export async function executeClassStrategy(
   let boilerplateDroppedTotal = 0;
   const fetchErrors = { blocked: 0, timeout: 0, dead: 0, other: 0 };
   let ogImage: string | null = null;
+  let jinaFetchCount = 0;
+  let jinaEmptyCount = 0;
+  let jinaUpgraded = false;
+  const warmStart = !!(siteProfile && isFreshProfile(siteProfile));
+  const preferJina = warmStart && siteProfile!.render_needed;
+  let recon: ReconResult | null = null;
+  const warmDeadEnds: string[] = warmStart ? (siteProfile!.dead_end_patterns ?? []) : [];
 
   if (!isResume) {
     const seedStep = Date.now();
@@ -1022,44 +1078,72 @@ export async function executeClassStrategy(
     }
 
     visited.add(canonicalizeUrl(seedUrl));
-    const seedCleaned = htmlToMarkdown(seedRaw, seedUrl);
+    let seedCleaned = htmlToMarkdown(seedRaw, seedUrl);
 
     const rawOg = extractOgImage(seedRaw, seedUrl);
     if (rawOg && rawOg.startsWith("https://") && !rawOg.endsWith(".svg") && rawOg.length <= 500) {
       ogImage = rawOg;
     }
 
-    const recon = await runRecon({ name: schoolName, city }, seedUrl, seedRaw, seedCleaned, budget);
+    let reconPlatform = siteProfile?.platform ?? null;
 
-    if (recon.identity === "mismatch" && recon.identityConfidence >= 0.7) {
-      state.status = "failed";
-      state.stop_reason = "identity_mismatch";
-      await sb.from("crawl_state").insert(state);
-      return {
-        status: "failed", programs: [], schoolAddress: null,
-        trace: buildTrace(steps, budget, [], 0, 0), invocations: 1, photoUrl: ogImage,
-      };
+    if (warmStart) {
+      // Warm start: skip full recon, seed frontier from profile entry_points
+      console.log(`[sv4] Warm start for ${domain} (profile v${siteProfile!.profile_version})`);
+      const entrySeeds = (siteProfile!.entry_points ?? [])
+        .map((ep) => ({ url: ep.url, anchor: ep.page_kind, score: 100 }));
+
+      const rawLinks = extractCandidateLinks(seedRaw, seedUrl, [], "class");
+      const mdLinks = rawLinks.map((l) => ({ url: l.url, anchor: l.anchorText }));
+      const filtered = hardFilterLinks(
+        mdLinks, visited, scoreCache, new URL(seedUrl).origin,
+        [], siteProfile!.robots ?? [], warmDeadEnds,
+      );
+
+      const llmScores = await scoreLinksLLM(filtered, schoolName, city, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
+      for (const [url, score] of llmScores) scoreCache.set(url, score);
+
+      const scoredLinks = filtered
+        .map((l) => ({ ...l, score: llmScores.get(canonicalizeUrl(l.url)) ?? 20 }))
+        .filter((l) => l.score >= 25);
+
+      state.frontier = [...entrySeeds, ...scoredLinks]
+        .sort((a, b) => b.score - a.score);
+    } else {
+      // Cold start: full recon
+      recon = await runRecon({ name: schoolName, city }, seedUrl, seedRaw, seedCleaned, budget);
+      reconPlatform = recon.platform;
+
+      if (recon.identity === "mismatch" && recon.identityConfidence >= 0.7) {
+        state.status = "failed";
+        state.stop_reason = "identity_mismatch";
+        await sb.from("crawl_state").insert(state);
+        return {
+          status: "failed", programs: [], schoolAddress: null,
+          trace: buildTrace(steps, budget, [], 0, 0), invocations: 1, photoUrl: ogImage,
+        };
+      }
+
+      const catalogSeeds = recon.catalogUrls.map((url) => ({ url, anchor: "catalog", score: 100 }));
+      const sitemapSeeds = recon.sitemapUrls.slice(0, 20).map((url) => ({ url, anchor: "sitemap", score: 80 }));
+
+      const rawLinks = extractCandidateLinks(seedRaw, seedUrl, [], "class");
+      const mdLinks = rawLinks.map((l) => ({ url: l.url, anchor: l.anchorText }));
+      const filtered = hardFilterLinks(
+        mdLinks, visited, scoreCache, new URL(seedUrl).origin,
+        recon.allowedExternalHosts, recon.robotsDisallow, [],
+      );
+
+      const llmScores = await scoreLinksLLM(filtered, schoolName, city, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
+      for (const [url, score] of llmScores) scoreCache.set(url, score);
+
+      const scoredLinks = filtered
+        .map((l) => ({ ...l, score: llmScores.get(canonicalizeUrl(l.url)) ?? 20 }))
+        .filter((l) => l.score >= 25);
+
+      state.frontier = [...catalogSeeds, ...sitemapSeeds, ...scoredLinks]
+        .sort((a, b) => b.score - a.score);
     }
-
-    const catalogSeeds = recon.catalogUrls.map((url) => ({ url, anchor: "catalog", score: 100 }));
-    const sitemapSeeds = recon.sitemapUrls.slice(0, 20).map((url) => ({ url, anchor: "sitemap", score: 80 }));
-
-    const rawLinks = extractCandidateLinks(seedRaw, seedUrl, [], "class");
-    const mdLinks = rawLinks.map((l) => ({ url: l.url, anchor: l.anchorText }));
-    const filtered = hardFilterLinks(
-      mdLinks, visited, scoreCache, new URL(seedUrl).origin,
-      recon.allowedExternalHosts, recon.robotsDisallow, [],
-    );
-
-    const llmScores = await scoreLinksLLM(filtered, schoolName, city, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
-    for (const [url, score] of llmScores) scoreCache.set(url, score);
-
-    const scoredLinks = filtered
-      .map((l) => ({ ...l, score: llmScores.get(canonicalizeUrl(l.url)) ?? 20 }))
-      .filter((l) => l.score >= 25);
-
-    state.frontier = [...catalogSeeds, ...sitemapSeeds, ...scoredLinks]
-      .sort((a, b) => b.score - a.score);
 
     const { stripped, updatedHashes, droppedCount } = stripBoilerplate(seedCleaned, blockHashes);
     blockHashes = updatedHashes;
@@ -1071,20 +1155,61 @@ export async function executeClassStrategy(
     classifierCounts[classResult.page_kind] = (classifierCounts[classResult.page_kind] ?? 0) + 1;
 
     const routing = CLASSIFIER_ROUTING[classResult.page_kind] ?? { runExtraction: false, harvestLinks: true };
+    let seedProgramsFound = 0;
     if (routing.runExtraction) {
       const extraction = await extractClassPrograms(stripped, seedUrl, schoolName, city, budget);
       if (extraction) {
         if (extraction.school_address && !schoolAddress) schoolAddress = extraction.school_address;
-        if (extraction.programs.length > 0) {
-          programs.push(...extraction.programs);
+        seedProgramsFound = extraction.programs.length;
+        if (seedProgramsFound > 0) programs.push(...extraction.programs);
+      }
+    }
+
+    // Jina fallback on seed: evidence-based trigger
+    const seedRawLinks = extractCandidateLinks(seedRaw, seedUrl, [], "class");
+    const seedSameDomainLinks = seedRawLinks.filter(l => {
+      try { return extractRegistrableDomain(l.url) === domain; } catch { return false; }
+    }).length;
+    const seedTotalBlocks = Math.max(1, seedCleaned.split(/\n{2,}/).filter(b => b.trim()).length);
+    const seedBoilerplateRatio = droppedCount / seedTotalBlocks;
+
+    if (seedProgramsFound === 0 && needsRender({
+      cleanedLength: stripped.length,
+      pageKind: classResult.page_kind,
+      programsExtracted: seedProgramsFound,
+      sameDomainLinkCount: seedSameDomainLinks,
+      boilerplateDroppedRatio: seedBoilerplateRatio,
+    }) && budget.canAffordFetch()) {
+      const jinaContent = await fetchViaJina(seedUrl, budget);
+      jinaFetchCount++;
+      if (jinaContent && jinaContent.length > stripped.length) {
+        // Jina returns markdown — skip htmlToMarkdown, go straight to boilerplate strip
+        const jinaStripped = stripBoilerplate(jinaContent, blockHashes);
+        blockHashes = jinaStripped.updatedHashes;
+        const jinaClass = await classifyPage(seedUrl, title, extractHeadings(jinaStripped.stripped), jinaStripped.stripped.slice(0, 1200), schoolName, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
+        const jinaRouting = CLASSIFIER_ROUTING[jinaClass.page_kind] ?? { runExtraction: false, harvestLinks: true };
+        if (jinaRouting.runExtraction) {
+          const jinaExtraction = await extractClassPrograms(jinaStripped.stripped, seedUrl, schoolName, city, budget);
+          if (jinaExtraction) {
+            if (jinaExtraction.school_address && !schoolAddress) schoolAddress = jinaExtraction.school_address;
+            if (jinaExtraction.programs.length > 0) {
+              programs.push(...jinaExtraction.programs);
+              seedProgramsFound += jinaExtraction.programs.length;
+              jinaUpgraded = true;
+            }
+          }
         }
+        if (!jinaUpgraded) jinaEmptyCount++;
+      } else {
+        jinaEmptyCount++;
       }
     }
 
     steps.push({
       step: "initial_extract", url: seedUrl, aiCalls: budget.aiCallsMade,
-      inputTokens: 0, outputTokens: 0, eventsAffected: programs.length,
-      fieldsFilledIn: ["recon", `platform:${recon.platform}`], durationMs: Date.now() - seedStep,
+      inputTokens: 0, outputTokens: 0, eventsAffected: seedProgramsFound,
+      fieldsFilledIn: warmStart ? ["warm_start", `platform:${reconPlatform}`] : ["recon", `platform:${reconPlatform}`],
+      durationMs: Date.now() - seedStep,
     });
   }
 
@@ -1099,28 +1224,40 @@ export async function executeClassStrategy(
 
     const pageStart = Date.now();
     let raw: string;
-    try {
-      const result = await fetchWithUA(next.url);
-      budget.recordFetch();
-      if (!result.ok) {
-        const errType = classifyFetchError(new Error(`HTTP error for ${next.url}`));
+    let usedJinaForFetch = false;
+
+    if (preferJina) {
+      // Warm start with render_needed: go straight through Jina
+      const jinaResult = await fetchViaJina(next.url, budget);
+      jinaFetchCount++;
+      if (!jinaResult) continue;
+      raw = jinaResult;
+      usedJinaForFetch = true;
+    } else {
+      try {
+        const result = await fetchWithUA(next.url);
+        budget.recordFetch();
+        if (!result.ok) {
+          const errType = classifyFetchError(new Error(`HTTP error for ${next.url}`));
+          fetchErrors[errType]++;
+          continue;
+        }
+        raw = result.raw;
+      } catch (e) {
+        budget.recordFetch();
+        const errType = classifyFetchError(e);
         fetchErrors[errType]++;
         continue;
       }
-      raw = result.raw;
-    } catch (e) {
-      budget.recordFetch();
-      const errType = classifyFetchError(e);
-      fetchErrors[errType]++;
-      continue;
     }
 
-    const cleaned = htmlToMarkdown(raw, next.url);
+    // Jina returns markdown — skip htmlToMarkdown; plain fetch returns HTML
+    const cleaned = usedJinaForFetch ? raw : htmlToMarkdown(raw, next.url);
     const { stripped, updatedHashes, droppedCount } = stripBoilerplate(cleaned, blockHashes);
     blockHashes = updatedHashes;
     boilerplateDroppedTotal += droppedCount;
 
-    const title = extractTitle(raw);
+    const title = usedJinaForFetch ? "" : extractTitle(raw);
     const headings = extractHeadings(stripped);
     const classification = await classifyPage(next.url, title, headings, stripped.slice(0, 1200), schoolName, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
     classifierCounts[classification.page_kind] = (classifierCounts[classification.page_kind] ?? 0) + 1;
@@ -1137,11 +1274,44 @@ export async function executeClassStrategy(
       }
     }
 
-    if (routing.harvestLinks) {
+    // Jina fallback: evidence-based trigger for pages fetched via plain HTTP
+    if (!usedJinaForFetch && programsFromPage === 0 && budget.canAffordFetch()) {
+      const pageSameDomainLinks = usedJinaForFetch ? 0 : extractCandidateLinks(raw, next.url, [], "class")
+        .filter(l => { try { return extractRegistrableDomain(l.url) === domain; } catch { return false; } }).length;
+      const pageTotalBlocks = Math.max(1, cleaned.split(/\n{2,}/).filter(b => b.trim()).length);
+      if (needsRender({
+        cleanedLength: stripped.length,
+        pageKind: classification.page_kind,
+        programsExtracted: programsFromPage,
+        sameDomainLinkCount: pageSameDomainLinks,
+        boilerplateDroppedRatio: droppedCount / pageTotalBlocks,
+      })) {
+        const jinaContent = await fetchViaJina(next.url, budget);
+        jinaFetchCount++;
+        if (jinaContent && jinaContent.length > stripped.length) {
+          const jinaStrip = stripBoilerplate(jinaContent, blockHashes);
+          blockHashes = jinaStrip.updatedHashes;
+          const jinaExtraction = await extractClassPrograms(jinaStrip.stripped, next.url, schoolName, city, budget);
+          if (jinaExtraction) {
+            if (jinaExtraction.school_address && !schoolAddress) schoolAddress = jinaExtraction.school_address;
+            if (jinaExtraction.programs.length > 0) {
+              programs.push(...jinaExtraction.programs);
+              programsFromPage += jinaExtraction.programs.length;
+              jinaUpgraded = true;
+            }
+          }
+          if (programsFromPage === 0) jinaEmptyCount++;
+        } else {
+          jinaEmptyCount++;
+        }
+      }
+    }
+
+    if (routing.harvestLinks && !usedJinaForFetch) {
       const pageLinks = extractCandidateLinks(raw, next.url, [], "class");
       const mdLinks = pageLinks.map((l) => ({ url: l.url, anchor: l.anchorText }));
       const filtered = hardFilterLinks(
-        mdLinks, visited, scoreCache, new URL(seedUrl).origin, [], [], [],
+        mdLinks, visited, scoreCache, new URL(seedUrl).origin, [], [], warmDeadEnds,
       );
       if (filtered.length > 0 && budget.canAffordAiCall()) {
         const newScores = await scoreLinksLLM(filtered, schoolName, city, budget, OPENAI_API_KEY || DEEPSEEK_API_KEY);
@@ -1235,18 +1405,60 @@ export async function executeClassStrategy(
     await sb.from("crawl_state").insert({ id: state.id, ...stateUpdate, created_at: new Date().toISOString() });
   }
 
+  // Write/update site_profiles on terminal statuses
+  if (finalStatus !== "in_progress") {
+    const entryPoints = steps
+      .filter(s => s.eventsAffected > 0)
+      .map(s => ({
+        url: s.url,
+        page_kind: s.fieldsFilledIn?.[0] ?? "unknown",
+        programs_yielded: s.eventsAffected,
+      }))
+      .slice(0, 10);
+
+    const deadEndPatterns = computeDeadEndPatterns(steps);
+    const urlPatterns = generalizeUrlPatterns(entryPoints.map(e => e.url));
+
+    try {
+      await sb.from("site_profiles").upsert({
+        domain,
+        venue_id: venue.id,
+        platform: recon?.platform ?? siteProfile?.platform ?? null,
+        tier_required: 1,
+        render_needed: jinaUpgraded || (siteProfile?.render_needed ?? false),
+        entry_points: entryPoints,
+        url_patterns: urlPatterns,
+        dead_end_patterns: deadEndPatterns,
+        robots: recon?.robotsDisallow ?? siteProfile?.robots ?? null,
+        address: schoolAddress,
+        last_success_at: programs.length > 0 ? new Date().toISOString() : (siteProfile?.last_success_at ?? null),
+        last_completeness: completeness,
+        consecutive_failures: programs.length > 0 ? 0 : ((siteProfile?.consecutive_failures ?? 0) + 1),
+        profile_version: ((siteProfile?.profile_version ?? 0) + 1),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "domain" });
+    } catch (e) {
+      console.warn(`[sv4] site_profiles upsert failed for ${domain}:`, e);
+    }
+  }
+
   const trace = buildTrace(
     steps, budget, [...visited], 0, completeness,
   );
-  (trace as any).classifierCounts = classifierCounts;
-  (trace as any).boilerplateDroppedBlocks = boilerplateDroppedTotal;
-  (trace as any).fetchErrors = fetchErrors;
-  (trace as any).invocations = invCount;
-  (trace as any).programsFound = programs.length;
-  (trace as any).addressFound = schoolAddress;
-  if (outOfCity) (trace as any).out_of_city = true;
+  trace.classifierCounts = classifierCounts;
+  trace.boilerplateDroppedBlocks = boilerplateDroppedTotal;
+  trace.fetchErrors = fetchErrors;
+  trace.invocations = invCount;
+  trace.programsFound = programs.length;
+  trace.addressFound = schoolAddress;
+  trace.jinaFetches = jinaFetchCount;
+  trace.jinaContentPagesEmpty = jinaEmptyCount;
+  trace.tier = 1;
+  trace.profileUsed = warmStart;
+  trace.profileVersion = siteProfile?.profile_version;
+  if (outOfCity) trace.out_of_city = true;
 
-  console.log(`[sv4] ${venue.name} tier=${state.tier} inv=${invCount} fetches=${totalUsed.fetches} programs=${programs.length} completeness=${completeness} stop=${stopReason}`);
+  console.log(`[sv4] ${venue.name} tier=${state.tier} inv=${invCount} fetches=${totalUsed.fetches} programs=${programs.length} completeness=${completeness} stop=${stopReason}${warmStart ? " (warm)" : ""}${jinaFetchCount > 0 ? ` jina=${jinaFetchCount}` : ""}`);
 
   return { status: finalStatus, programs, schoolAddress, trace, invocations: invCount, photoUrl: resolvedOgImage };
 }
