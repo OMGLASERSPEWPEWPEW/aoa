@@ -13,7 +13,7 @@ if ! echo "$COMMAND" | grep -q "git push"; then
   exit 0
 fi
 
-if [ "${SKIP_GATE:-0}" = "1" ]; then
+if [ "${SKIP_GATE:-0}" = "1" ] || echo "$COMMAND" | grep -q "SKIP_GATE=1"; then
   echo "$(date -Iseconds) $(pwd)" >> .claude/gate-skips.log
   echo '{"decision":"allow","reason":"⚠️ SKIP_GATE=1 — pre-push gate bypassed. Logged to .claude/gate-skips.log"}'
   exit 0
