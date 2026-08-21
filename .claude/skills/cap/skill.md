@@ -114,7 +114,8 @@ Before grouping commits, check if a version bump is needed:
 
 ```bash
 # Check if any code files changed (staged + unstaged + untracked)
-CODE_CHANGED=$(git status --short | grep -E '^\s*[MADRCU?]+\s+(src/|supabase/functions/|supabase/migrations/)' | head -1)
+# Excludes test files, fixtures, and attempts.jsonl from bump requirement
+CODE_CHANGED=$(git status --short | grep -E '^\s*[MADRCU?]+\s+(src/|supabase/functions/|supabase/migrations/)' | grep -vE '\.(test\.tsx?)\s*$|__fixtures__/|attempts\.jsonl' | head -1)
 ```
 
 If `CODE_CHANGED` is non-empty:
@@ -131,6 +132,20 @@ If `CODE_CHANGED` is non-empty:
    - If skip: proceed without bump (author's choice, but warn)
 
 If `CODE_CHANGED` is empty (docs/infra only), skip this phase.
+
+**Versioning exclusions:** Test files (`*.test.ts`, `*.test.tsx`), fixture directories (`__fixtures__/`), and `attempts.jsonl` are not user-facing — they do not count as code changes for version bump purposes. Filter them out of `CODE_CHANGED` before checking.
+
+### Phase 1.6: GRAPH CHECK
+
+After the version check, map changed files to graph nodes:
+
+1. Read all `docs/graphs/*.md` files that contain a `## File Index` table
+2. For each changed file, check if it appears in any graph's File Index
+3. For each hit:
+   - Check if the corresponding node's Build Phase checkbox is already ticked
+   - If unticked: prompt the author to mark it complete ("Node `{name}` in `{graph}` covers `{file}` — mark complete?")
+   - If the change happened outside any graph node: append one line to that graph's `## Section 7: Execution Notes` or `## Deviations` section noting the out-of-spec change
+4. `attempts.jsonl` travels with its node's source commit, never as a standalone docs commit
 
 ---
 

@@ -97,7 +97,7 @@ All projects now have my-hook.
 ## Rules
 
 1. **Never delete** existing hooks or skills in other projects — only add or update.
-2. **Overwrite without asking** when promoting (the user already said "promote" — that's the consent). This differs from `/install-hooks` which asks before overwriting.
+2. **Overwrite without asking** when promoting (the user already said "promote" — that's the consent). This differs from `sota-sync` which auto-installs at SessionStart.
 3. **Create `.claude/` structure** in projects that don't have it yet (`mkdir -p`).
 4. **Settings.json format**: Match the existing indentation. Create the file if it doesn't exist.
 5. **No duplicate registrations** in settings.json — check before adding.

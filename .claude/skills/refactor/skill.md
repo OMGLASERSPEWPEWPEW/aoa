@@ -268,7 +268,7 @@ End your response with:
 
 ## What This Skill Does NOT Do
 
-- **Add features** — that's `/new-feature` → `/implementation`
+- **Add features** — that's `/new-feature` (includes an Execute phase)
 - **Write tests from scratch** — that's `/create-tests` (this skill may suggest it as a prerequisite)
 - **Fix bugs** — bugs discovered are documented, not fixed
 - **Rewrite code** — a rewrite is not a refactor. If the code needs to be replaced entirely, that's a new implementation.

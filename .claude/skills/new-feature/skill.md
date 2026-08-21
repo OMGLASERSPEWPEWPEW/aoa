@@ -413,18 +413,50 @@ For **large** features (> 1 week effort):
 
 ---
 
-## What This Skill Does NOT Do
+---
 
-This skill produces documentation only. It does NOT:
+## Phase 8: Execute (Implementation)
 
-- Write application code, components, hooks, or functions
-- Write test files or test stubs
-- Run build or test commands
-- Make commits or deploy
-- Create placeholder/skeleton files
-- Decide to skip documentation because "it's simple enough"
+When the user invokes `/new-feature` with an explicit "and implement" instruction, or when they invoke it on a feature whose documentation package already exists, proceed to implementation.
 
-Implementation and testing happen in a separate session (or by a separate agent) using the documentation package as its spec. The value of this skill is that the documentation is so complete that the implementing agent has no room to cut corners.
+**You do NOT design during execution.** The architecture doc tells you what to build, where, and what patterns to follow. If something is ambiguous, flag it — don't invent.
+
+### 8.1 Read Everything First
+
+Read ALL documentation for this feature (PRD, architecture, QA doc, ADR, graph) before writing any code. You should be able to answer: what triggers this feature, what's the full data flow, how many files change, what existing code is being extended, what are the error states, what are the edge cases.
+
+### 8.2 Build the Work Plan
+
+From the architecture doc, extract the ordered list of changes. Default order:
+1. Database migration → 2. Shared types → 3. Backend (Edge Functions) → 4. Client libraries → 5. Hooks → 6. Components → 7. Pages → 8. Changelog + version bump
+
+### 8.3 Implement with Checkpoints
+
+**After every file you create or modify, run the build command.** Do not write 5 files and then build.
+
+Rules:
+- Follow the architecture doc literally (exact paths, signatures, patterns)
+- After adding a field to a type, search project-wide for all construction sites
+- No features beyond the PRD, no abstractions "for future use", no stubs
+- Every function must be complete — no `// TODO: implement`
+
+### 8.4 Verify
+
+1. **Build gate**: `npm run build` must exit 0
+2. **Test gate**: `npm test` must pass (existing + new)
+3. **QA checklist**: Every checkbox in `docs/qa/<feature>.md` must map to code you wrote
+4. **Browser verification**: For UI features — test golden path, one error state, one edge case
+5. **Deploy checklist**: Migrations applied, Edge Functions deployed, env vars documented
+
+### 8.5 Completion Criteria
+
+- [ ] Every file in the architecture doc created/modified
+- [ ] Build passes, all tests pass
+- [ ] Every QA checkbox covered
+- [ ] Browser verified (or explicitly noted as impossible)
+- [ ] No stubs or TODOs remain
+- [ ] No scope creep beyond PRD
+- [ ] Version bumped, changelog updated
 
 ---
 

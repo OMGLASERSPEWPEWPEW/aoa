@@ -70,17 +70,21 @@ Belt level stored on profiles.belt_level, history on user_progress.belt_history.
 - Phase 5: Progression + Polish (belt system, onboarding, notifications)
 - Phase 6: Launch (seed data, performance, deploy)
 
-## Agent Orchestration — MANDATORY
+## Agent Orchestration — Conditional Zephyr
 
-**Zephyr-First Protocol: NO EXCEPTIONS.**
+Zephyr (`.claude/agents/zephyr/agent.md`) is the Master Product Manager who orchestrates complex work.
 
-Zephyr (`.claude/agents/zephyr/agent.md`) is the Master Product Manager who orchestrates ALL work. Before doing ANYTHING — before responding, before reading files, before running commands:
+**Zephyr-first is MANDATORY for:**
+- Multi-file features, new components, or significant refactors
+- Planning and prioritization decisions
+- Anything touching schema, auth, RLS, or migrations
+- Work spanning multiple agents or domains
 
-1. **Invoke Zephyr** via `Task` tool (`subagent_type=zephyr`) as your FIRST action
-2. **Zephyr triages** every request — he decides what's trivial, not you
-3. **Zephyr either** responds directly (simple asks) or delegates to specialists (complex work)
-
-**You do NOT skip Zephyr.** Not for "quick questions." Not for "simple fixes." Not for anything.
+**Direct execution is permitted for:**
+- Single-file edits, bug fixes in one file
+- Factual questions about the codebase
+- Ops commands (`/cap`, `/rs`, `/docs-check`, etc.)
+- Config and documentation changes
 
 ## Proactive Agent Behavior
 
@@ -169,26 +173,33 @@ Agents organized in `.claude/agents/divisions.json`:
 
 | Skill | Description |
 |-------|-------------|
-| `/standup` | Daily standup meeting between agents |
-| `/evolution` | Collective agent self-improvement |
+| `/evolution` | Collective agent self-improvement + retro + diagnostic audit |
 | `/promote` | Naming ceremony for exceptional agents |
-| `/new-feature` | Guided feature development workflow |
+| `/new-feature` | Guided feature development workflow (includes Execute phase) |
 | `/new-app` | End-to-end new app creation with graph engineering |
 | `/docs-check` | Pre-push documentation review |
-| `/retro` | Session retrospective |
 | `/escalate` | Multi-model bug diagnosis |
-| `/observe` | Diagnostic evolution |
-| `/cap` | Screenshot and annotate UI |
-| `/clio` | Language precision check |
+| `/cap` | Commit and push with version check + graph check |
 | `/create-tests` | Incremental test generation and coverage reporting |
-| `/implementation` | Implement features from /new-feature docs |
 | `/promote-hook` | Promote hooks/skills to patterns library + all projects |
 | `/refactor` | Structured refactoring with test checkpoints |
 | `/security-review` | Security audit — trust boundaries, data flows |
-| `/search-knowledge` | Cross-project search for patterns and prior solutions |
 | `/rs` | Restart dev server |
 | `/new-design` | AI graph engineer — audits codebase against design handoff, produces executable graph doc with loop specs |
 | `/iterate` | Batch bug/feature/change resolution with graphs, tests, and paper trail |
 | `/swarm` | Parallel multi-task dispatch — decomposes prompt, fans out agents, synthesizes results |
+| `/mind-meld` | Cross-project agent knowledge sharing |
+| `/teach-tool` | Montessori-style Claude Code feature lessons |
 
 **Skills are NEVER auto-triggered.** They must be explicitly invoked by the user with `/<skill-name>`.
+
+## Hooks
+
+### Pre-push gate (`pre-push-gate.sh`)
+Blocks `git push` if typecheck or tests fail. Runs only the checks whose config exists (graceful degradation for sibling projects). Escape hatch: `SKIP_GATE=1` allows push with a logged warning to `.claude/gate-skips.log`.
+
+### Status digest (`status-digest.sh`)
+Single Stop hook emitting one ≤160-char status line: `[ctx 🟢 41% | $0.83 | docs?]`. Replaces three separate hooks (context-window, cost-tracker, docs-review-reminder).
+
+### Resurrection rule
+Hook removals require a matching edit to `~/Development/patterns/ClaudeHooks/manifest.json`. Without it, `sota-sync.sh` will reinstall the hook at next SessionStart.

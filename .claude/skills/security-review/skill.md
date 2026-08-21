@@ -7,7 +7,7 @@ description: Systematic security audit that maps trust boundaries, traces data f
 
 You are conducting a security review. Your job is to find real, exploitable vulnerabilities — not generate a list of theoretical concerns. Every finding you report must be verified: you must show the file, the line, the data flow, and why it's exploitable.
 
-**You do NOT fix vulnerabilities.** You report them with enough detail that a developer (or `/implementation`) can fix them correctly. A security fix without full understanding often introduces new vulnerabilities.
+**You do NOT fix vulnerabilities.** You report them with enough detail that a developer (or `/new-feature`) can fix them correctly. A security fix without full understanding often introduces new vulnerabilities.
 
 **You do NOT report false positives.** If you can't demonstrate exploitability or trace the data flow from attacker-controlled input to dangerous sink, it's not a finding — it's noise. Noise erodes trust in the report.
 
@@ -32,7 +32,7 @@ Before starting, determine what you're reviewing:
 | Mode | When to use | What to examine |
 |------|-------------|----------------|
 | **Branch diff** | PR review, pre-merge check | Only files changed on the current branch vs. main |
-| **Feature scope** | After `/implementation` completes a feature | Files listed in the implementation summary |
+| **Feature scope** | After `/new-feature` completes a feature | Files listed in the implementation summary |
 | **Full audit** | Periodic review, new project onboarding | Entire codebase, prioritized by exposure |
 
 For branch diff and feature scope: `git diff main...HEAD --name-only` gives you the file list. Review only those files, but trace data flows into unchanged code when needed.
@@ -362,7 +362,7 @@ Security-irrelevant changes (formatting, tests, docs, internal refactors with no
 
 ## What This Skill Does NOT Do
 
-- **Fix vulnerabilities** — it reports them. Fixes go through `/implementation` with the finding as the spec.
+- **Fix vulnerabilities** — it reports them. Fixes go through `/new-feature` with the finding as the spec.
 - **Penetration testing** — it reviews source code statically. It doesn't send live requests to a running application.
 - **Compliance auditing** — it finds technical vulnerabilities, not policy/process gaps (SOC2, HIPAA, GDPR compliance are different exercises).
 - **Guarantee completeness** — no security review catches everything. It documents what was checked and what wasn't (Methodology Notes section).

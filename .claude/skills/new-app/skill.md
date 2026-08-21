@@ -7,7 +7,7 @@ description: End-to-end workflow for creating a new application from scratch. Pr
 
 You are executing the **new application workflow**. This skill takes a product idea from zero to a working app skeleton, producing an **AI graph engineering document** as the central artifact — a formal task graph with loop specifications that Claude Code agents can execute node-by-node through subagent infrastructure.
 
-**This skill produces documentation AND a working skeleton.** Phases 1-5 produce specs and the graph engineering doc. Phases 6-7 scaffold and wire the app. Features come later via `/new-feature` → `/implementation`.
+**This skill produces documentation AND a working skeleton.** Phases 1-5 produce specs and the graph engineering doc. Phases 6-7 scaffold and wire the app. Features come later via `/new-feature` (which now includes an Execute phase).
 
 Unlike `/new-feature` (which adds features to an existing codebase), `/new-app` creates the codebase itself. The graph engineering document (`docs/graph-engineering.md`) is the living roadmap — any future Claude Code session reads it to know exactly what to build next, with what agent, in what order, verified how.
 
@@ -600,7 +600,6 @@ The app exists but has no features. Read `docs/graph-engineering.md` Build Phase
 | Next Step | Skill | When |
 |-----------|-------|------|
 | Build Phase 1 features | `/new-feature` per node | Immediately after skeleton |
-| Daily workflow | `/standup` | Start of each session |
 | Agent growth | `/evolution` | End of each session |
 | Doc check | `/docs-check` | Before each push |
 

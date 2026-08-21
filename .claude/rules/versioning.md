@@ -4,6 +4,8 @@
 
 Any commit that changes files in `src/`, `supabase/functions/`, or `supabase/migrations/` requires a version bump. Documentation-only and infra-only changes (`.claude/`, `docs/`) do not.
 
+**Excluded from bump requirement:** Test files (`*.test.ts`, `*.test.tsx`), fixture directories (`__fixtures__/`), and `attempts.jsonl` are not user-facing capability — they do not trigger a version bump even when under `src/` or `supabase/functions/`.
+
 ## How to Bump (Semver)
 
 - **Patch** (0.x.Y → 0.x.Y+1): bug fixes, small tweaks, CSS changes, no new user-facing capabilities

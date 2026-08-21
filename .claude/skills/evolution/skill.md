@@ -63,16 +63,35 @@ Agents are organized into divisions. Each division groups agents by domain. Map 
 
 ## Agent Roster
 
-Customize this list with your project's agents. Only agents listed here are eligible for evolution.
+Generated from `divisions.json`. Only agents listed here are eligible for evolution.
 
 | Agent | Division | Journal Path |
 |-------|----------|-------------|
-| `orchestrator` | Command | `.claude/agents/orchestrator/journal.md` |
+| `zephyr` | Command | `.claude/agents/zephyr/journal.md` |
+| `prd-specialist` | Command | `.claude/agents/prd-specialist/journal.md` |
 | `frontend-developer` | Engineering | `.claude/agents/frontend-developer/journal.md` |
-| `backend-architect` | Engineering | `.claude/agents/backend-architect/journal.md` |
-| `code-reviewer` | Quality | `.claude/agents/code-reviewer/journal.md` |
+| `Frontinus-backend-architect` | Engineering | `.claude/agents/Frontinus-backend-architect/journal.md` |
+| `Sashiko-code-architect` | Engineering | `.claude/agents/Sashiko-code-architect/journal.md` |
+| `devops-engineer` | Engineering | `.claude/agents/devops-engineer/journal.md` |
+| `Argus-code-reviewer` | Quality | `.claude/agents/Argus-code-reviewer/journal.md` |
 | `test-engineer` | Quality | `.claude/agents/test-engineer/journal.md` |
+| `security-engineer` | Quality | `.claude/agents/security-engineer/journal.md` |
+| `debugger` | Quality | `.claude/agents/debugger/journal.md` |
+| `performance-engineer` | Quality | `.claude/agents/performance-engineer/journal.md` |
 | `ui-designer` | Design | `.claude/agents/ui-designer/journal.md` |
+| `ux-researcher` | Design | `.claude/agents/ux-researcher/journal.md` |
+| `Dorsaidh-mobile-ux-optimizer` | Design | `.claude/agents/Dorsaidh-mobile-ux-optimizer/journal.md` |
+| `accessibility-specialist` | Design | `.claude/agents/accessibility-specialist/journal.md` |
+| `marketing` | Growth | `.claude/agents/marketing/journal.md` |
+| `Theia-branding` | Growth | `.claude/agents/Theia-branding/journal.md` |
+| `public-relations` | Growth | `.claude/agents/public-relations/journal.md` |
+| `git-manager` | Operations | `.claude/agents/git-manager/journal.md` |
+| `technical-writer` | Operations | `.claude/agents/technical-writer/journal.md` |
+| `montessori-guide` | Operations | `.claude/agents/montessori-guide/journal.md` |
+| `legal-advisor` | Operations | `.claude/agents/legal-advisor/journal.md` |
+| `analytics-engineer` | Intelligence | `.claude/agents/analytics-engineer/journal.md` |
+| `Hestia-emotional-safety-advocate` | Empathy | `.claude/agents/Hestia-emotional-safety-advocate/journal.md` |
+| `sensitivity-reader` | Empathy | `.claude/agents/sensitivity-reader/journal.md` |
 
 <!-- === AGENT ROSTER END === -->
 
@@ -83,6 +102,20 @@ Customize this list with your project's agents. Only agents listed here are elig
 |                    EVOLUTION PROTOCOL (Batched)                         |
 +-----------------------------------------------------------------------+
 |                                                                        |
+|  Phase 0a: RETRO — operational retrospective                           |
+|  +-> Scan conversation for errors, retries, wrong assumptions          |
+|  +-> Classify by category (Permissions, Schema, CLI, Config, etc.)     |
+|  +-> Extract Wrong/Right/Why rules                                     |
+|  +-> Persist to .claude/runbooks/ or MEMORY.md                         |
+|  +-> Summarize: errors found, rules written, waste estimate            |
+|                        |                                               |
+|  Phase 0b: OBSERVE — diagnostic audit                                  |
+|  +-> Survey current diagnostic coverage (categories, interceptions)    |
+|  +-> Audit pain points from git history + agent journals               |
+|  +-> Agent consultations: 2-3 proposals per relevant agent             |
+|  +-> Orchestrator synthesizes priority stack                           |
+|  +-> Deliver report, ask user which proposals to implement             |
+|                        |                                               |
 |  Phase 1: GATHER CONTEXT (main context)                                |
 |  +-> git log, diff, extract themes                                     |
 |                        |                                               |
@@ -108,6 +141,55 @@ Customize this list with your project's agents. Only agents listed here are elig
 |                                                                        |
 +-----------------------------------------------------------------------+
 ```
+
+## Phase 0a: Retro (Operational Retrospective)
+
+Scan the current conversation for wasted effort before reflecting on growth. This captures operational mistakes that need to become durable knowledge.
+
+### Scan
+Read the conversation for: tool call failures (2+ retries), wrong assumptions about APIs/schemas/CLI, permission errors, stale knowledge, and brute-force guess-and-check sequences. Only flag instances hitting the retry threshold (default: 2).
+
+### Classify
+Group by category: Permissions, Schema/API, CLI, Config, Wrong Tool, Stale State. Create new categories as needed.
+
+### Extract
+For each category with 1+ entries, write a rule:
+```
+### Rule: [Short title]
+**Wrong**: [What was done incorrectly]
+**Right**: [The correct approach]
+**Why**: [Root cause — one sentence]
+```
+
+### Persist
+- Operational procedures (psql, deployment, Vault, cron) → `.claude/runbooks/<topic>.md`
+- Tool/API/library behavior → `MEMORY.md`
+- Universal project conventions → Propose to user for `CLAUDE.md` (do NOT auto-write)
+
+Always check for duplicates before writing. Update existing entries rather than creating new ones.
+
+### Summarize
+Report: errors found, retry count, rules written, proposed CLAUDE.md changes, waste estimate.
+
+If the conversation had no errors above threshold, skip to Phase 0b with "Clean session — no retro items."
+
+## Phase 0b: Observe (Diagnostic Audit)
+
+Audit the project's diagnostic telemetry coverage and propose improvements. Only run when diagnostics feel thin or after a painful debugging session — skip if the session didn't involve debugging.
+
+### Survey
+Read the diagnostics module, find all log/warn/error calls, build a Coverage Map of what's captured vs. what's missing.
+
+### Pain Points
+Check git history, agent journals, and conversation logs for moments where better diagnostics would have helped.
+
+### Agent Consultations
+For each relevant agent (devops-engineer, debugger, frontend-developer, performance-engineer, security-engineer, backend-architect), request 2-3 concrete proposals: what to capture, why, how to implement, category name.
+
+### Synthesis
+Orchestrator produces a priority stack: Impact × Effort → Ship now / Next session / Backlog. Ask user which to implement.
+
+---
 
 ## Phase 1: Gather Context
 
@@ -443,10 +525,11 @@ Invoke `/evolution` when:
 
 | Skill | Relationship |
 |-------|-------------|
-| `/standup` | Evolution looks backward (learning). Standup looks forward (doing). Evolution's "Questions for Tomorrow" feed standup nominations. |
 | `/promote` | Evolution journals provide evidence for promotion decisions. |
 | `/docs-check` | If evolution reveals documentation gaps, invoke docs-check. |
-| `/mind-meld` | Mind-meld shares agent identity wisdom. Ripple (built into evolution) shares feature-level improvements. They complement — mind-meld for who agents are, ripple for what the code does. |
+| `/mind-meld` | Mind-meld shares agent identity wisdom. Ripple (built into evolution) shares feature-level improvements. |
+| `/escalate` | If retro reveals a recurring bug that survived 3+ fix attempts, escalate it. |
+| `/create-tests` | If observe reveals untested diagnostic categories, create-tests can fill the gap. |
 
 ---
 
