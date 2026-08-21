@@ -17,6 +17,7 @@ export const CLASSIFIER_ROUTING: Record<string, { runExtraction: boolean; harves
   faculty: { runExtraction: false, harvestLinks: false },
   youth_only: { runExtraction: false, harvestLinks: false },
   blog_or_news: { runExtraction: false, harvestLinks: false },
+  production_or_festival: { runExtraction: false, harvestLinks: false },
   policy_or_admin: { runExtraction: false, harvestLinks: false },
   other: { runExtraction: false, harvestLinks: true },
 };
@@ -50,6 +51,7 @@ Classify as exactly one page_kind:
 "faculty"             - instructor bios
 "youth_only"          - exclusively kids/teens/camps content
 "blog_or_news"        - articles, tips, alumni news, testimonials
+"production_or_festival" - a theatrical production, play, festival, showcase, or show page: cast lists, 'directed by', performance dates, ticket links
 "policy_or_admin"     - policies, FAQs, rentals, donations, contact, about
 "other"
 

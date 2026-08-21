@@ -277,7 +277,8 @@ DETAILS (dates, times, prices, instructors) or an index of such pages.
 80-95 = specific adult program or class-detail page, registration page with dates
 40-60 = adult class category/landing page (links onward to details)
 0-10 = kids/teens/youth/camps, blog, news, faculty bios, testimonials, about,
-       policies, donations, rentals, gift certificates, login/account, contact
+       policies, donations, rentals, gift certificates, login/account, contact,
+       productions, shows, festival pages, season announcements, playbills
 
 Links (JSON): ${JSON.stringify(batch)}
 

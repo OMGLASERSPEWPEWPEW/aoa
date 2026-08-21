@@ -125,6 +125,7 @@ Rules:
 - A page describing one program with several day/time blocks = ONE program with MULTIPLE sections.
 - Include youth offerings only if the page mixes them with adult ones; set audience.
 - If the page lists classes but shows no dates, still emit the programs (sections may be empty or dateless).
+- Theatrical productions, plays, festivals, showcases, and performances are NOT classes. If the page describes something people watch rather than something people enroll in and attend weekly, extract nothing from it.
 - price_min and price_max must be numbers or null. Never guess prices.
 Respond with only the JSON object.`;
 }
