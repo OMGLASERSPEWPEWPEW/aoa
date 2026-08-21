@@ -4,6 +4,22 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.21.1',
+    date: '2026-08-21',
+    title: 'Geocoding v2 — provider chain + centroid guard',
+    summary: 'Fixed 7 geocoding bugs causing schools to pile up at Chicago centroid. Mapbox provider chain, hardened Nominatim, Perplexity elevation.',
+    details: [
+      'Fix: Nominatim centroid trap — addresstype rejection prevents city-level matches from being stamped as success (B1)',
+      'Fix: Website regex now strips HTML tags before matching — <br> between address parts no longer breaks extraction (B2)',
+      'Fix: Perplexity answers parsed leniently via JSON — no longer discarded by strict regex re-filtering (B3)',
+      'Fix: Suite/unit tokens stripped from Nominatim queries — "Suite 2E" no longer causes geocode failures (B4)',
+      'Fix: Backfill selection is now coordinate-targeted — healthy legacy rows can never be swept in and overwritten (B5)',
+      'New: Mapbox geocoding provider added to resolver chain (Google → Mapbox → Nominatim hardened)',
+      'New: isBadCoordinate centroid guard applied at every database write site',
+      'New: Backfill supports targeted re-runs via names filter',
+    ],
+  },
+  {
     version: '0.21.0',
     date: '2026-08-20',
     title: 'Scraper v4 — tiered escalation with resumable BFS',
