@@ -479,9 +479,50 @@ CLAUDE.md (Key Files + Database, at acr-docs-qa) · Feature doc **NEW** `docs/fe
 
 **Deployed:** v0.25.0 via `vercel --prod` (auto-deploy broken for this project).
 
-**Remaining:** Phase 5 (provenance + detail pages), Phase 6 (suggestions UI), Phase 7 (copy + teardown), Phase 8 (docs closure).
+**Phase 5 — Provenance + Detail Pages:** ✅ Complete.
+- `acr-mig-overrides-suggestions`: Migrations `20260823000006` (field_overrides) and `20260823000007` (curator_suggestions) applied. Both tables admin-only RLS.
+- `acr-curator-guard`: `_shared/curator/overrides.ts` created with `heldFields()`, `filterWritable()`, `fileSuggestion()`, `guardedUpdate()`. All write sites rewired:
+  - ✅ event-scraper: event update + venue photo enrichment
+  - ✅ class-scrape-batch: venue/school photo writes
+  - ✅ school-discovery: URL replacement + geocode backfill
+  - ✅ tic-crossref: event enrichment
+  - ✅ process-venue: calendar_url self-heal + event update + class session updates + geocode writes
+  - ✅ play-matcher: exact, fuzzy, AI play_id writes
+  - ✅ school-discovery inserts: exemption-commented per ADR-0012 D-5
+- `acr-mig-admin-rpcs`: Migration `20260823000008` applied. `apply_field_override`, `release_field_override`, `accept_suggestion`, `dismiss_suggestion` RPCs.
+- **Security fix:** Migration `20260823000009` — `is_admin()` returns COALESCE(…, false) instead of NULL for unauthenticated users. All RPCs use `IS NOT TRUE` guard.
+- `acr-field-registry`: `fieldMeta.ts` (VENUE_FIELDS 12 fields, SCHOOL_FIELDS 11 fields) + `fieldState.ts` with 10 passing tests.
+- `acr-detail-pages`: `AdminVenueDetail.tsx`, `AdminSchoolDetail.tsx`, `AdminField.tsx`, `ProvenanceStrip.tsx`, `useEntityDetail.ts`, `useFieldOverrides.ts` created. Routes added to App.tsx. School AuditRow onOpen navigates to detail.
+- **Deviation:** Graph specifies v0.27.0 for Phase 5 but shipped as v0.26.0 (sequential after v0.25.0).
+- Commit: pending
 
-*(Executor appends below: write-site census table, copy-sweep grep output, screenshots refs, additional deviations, attempts summaries.)*
+**Remaining:** Phase 6 (suggestions UI), Phase 7 (copy + teardown), Phase 8 (docs closure).
+
+### Write-Site Census (Phase 5)
+
+| Site | File | Entity | Guard | Notes |
+|---|---|---|---|---|
+| Event update | event-scraper/index.ts:352 | event | ✅ guardedUpdate | highest-traffic writer |
+| Venue photo enrichment | event-scraper/index.ts:419 | venue | ✅ guardedUpdate | og:image extraction |
+| Class venue photo | class-scrape-batch/index.ts:240 | venue | ✅ guardedUpdate | null-only guard preserved |
+| Class school photo | class-scrape-batch/index.ts:243 | school | ✅ guardedUpdate | null-only guard preserved |
+| URL replacement | school-discovery/index.ts:541 | venue,school | ✅ guardedUpdate | name-match URL update |
+| Geocode backfill | school-discovery/index.ts:649 | venue,school | ✅ guardedUpdate | lat/lng/address |
+| TIC crossref | tic-crossref/index.ts:193 | event | ✅ guardedUpdate | date enrichment |
+| Calendar self-heal | process-venue.ts:42 | venue | ✅ guardedUpdate | FR-33 recovery |
+| Event upsert | process-venue.ts:121 | event | ✅ guardedUpdate | strategy-agent results |
+| Class session update | process-venue.ts:237 | class_session | ✅ guardedUpdate | direct + program |
+| Geocode from LLM | process-venue.ts:286 | venue,school | ✅ guardedUpdate | address extraction |
+| Play exact match | play-matcher.ts:554 | event | ✅ guardedUpdate | play_id |
+| Play fuzzy match | play-matcher.ts:565 | event | ✅ guardedUpdate | play_id |
+| Play AI match | play-matcher.ts:618 | event | ✅ guardedUpdate | play_id |
+| Discovery insert | school-discovery/index.ts:563 | venue,school | ⊘ exempt | inserts precede overrides |
+| Venue promotion | venue-enrich/index.ts:118 | venue | ⊘ exempt | insert, not update |
+| Geocode status | school-discovery/index.ts:682 | venue | ⊘ exempt | metadata only |
+| Status promotion | class-scrape-batch/index.ts:257 | venue,school | ⊘ exempt | candidate→active |
+| Scrape timestamps | various | venue | ⊘ exempt | metadata only |
+
+*(Executor appends below: copy-sweep grep output, screenshots refs, additional deviations, attempts summaries.)*
 
 ---
 
