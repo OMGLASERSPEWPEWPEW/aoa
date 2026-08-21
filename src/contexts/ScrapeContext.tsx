@@ -406,7 +406,7 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       setClassDashboardOpen(true)
 
       // Fire the start request (don't await — it processes the first school and takes 60-90s)
-      const startPromise = fetchWithRetry(`${baseUrl}/functions/v1/class-discovery`, {
+      const startPromise = fetchWithRetry(`${baseUrl}/functions/v1/class-scrape-batch`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ action: 'start' }),

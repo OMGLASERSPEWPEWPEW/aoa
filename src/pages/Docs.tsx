@@ -520,7 +520,7 @@ function CoverageTab() {
               const timer = setTimeout(() => controller.abort(), 120_000)
               let res: Response
               try {
-                res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
+                res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/school-discovery`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
                   body: JSON.stringify({ action: 'discover' }),
@@ -532,7 +532,7 @@ function CoverageTab() {
                 const controller2 = new AbortController()
                 const timer2 = setTimeout(() => controller2.abort(), 120_000)
                 try {
-                  res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-discovery`, {
+                  res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/school-discovery`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
                     body: JSON.stringify({ action: 'discover' }),
