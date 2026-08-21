@@ -55,18 +55,24 @@ export interface ModelResult {
 
 export interface RecentSchoolEntry {
   name: string
+  venueId?: string
   status: string
+  invocations?: number
   eventsFound: number
   eventsCreated: number
+  programsExtracted?: number
   durationMs?: number
   errorMessage?: string | null
   calendarUrl?: string
   websiteUrl?: string | null
+  address?: string | null
   trace?: {
     stopReason: string | null
     aiCalls: number | null
     fetches: number | null
     durationMs: number
+    costUsd: number | null
+    programsExtracted: number | null
     modelResults: ModelResult[] | null
   } | null
 }
@@ -81,6 +87,7 @@ export interface ClassDiscoveryProgress {
   eventsUpdated: number
   errors: number
   newSchoolsQueued: number
+  totalCostUsd: number
   recentSchools: RecentSchoolEntry[]
   error?: string
 }
@@ -129,7 +136,7 @@ async function fetchWithRetry(url: string, init: RequestInit, timeoutMs = 55_000
 export function ScrapeProvider({ children }: { children: ReactNode }) {
   const [discovery, setDiscovery] = useState<DiscoveryProgress>({ phase: 'idle', found: 0, enriched: 0, promoted: 0, total: 0 })
   const [scraper, setScraper] = useState<ScraperProgress>({ phase: 'idle', scraped: 0, events: 0, total: 0, recentVenues: [] })
-  const [classDiscovery, setClassDiscovery] = useState<ClassDiscoveryProgress>({ phase: 'idle', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, recentSchools: [] })
+  const [classDiscovery, setClassDiscovery] = useState<ClassDiscoveryProgress>({ phase: 'idle', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, totalCostUsd: 0, recentSchools: [] })
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [classDashboardOpen, setClassDashboardOpen] = useState(false)
   const eventPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -216,6 +223,7 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
         eventsUpdated: job.events_updated ?? 0,
         errors: job.errors_count ?? 0,
         newSchoolsQueued: job.new_schools_queued ?? 0,
+        totalCostUsd: (job as any).total_cost_usd ?? 0,
         recentSchools,
         error: job.error ?? undefined,
       }
@@ -282,6 +290,7 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
           eventsUpdated: runningClassJob.events_updated ?? 0,
           errors: runningClassJob.errors_count ?? 0,
           newSchoolsQueued: runningClassJob.new_schools_queued ?? 0,
+          totalCostUsd: (runningClassJob as any).total_cost_usd ?? 0,
           recentSchools: (runningClassJob.recent_schools as RecentSchoolEntry[]) ?? [],
         })
         pollClassJob(runningClassJob.id)
@@ -402,7 +411,7 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       const baseUrl = import.meta.env.VITE_SUPABASE_URL
       const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
 
-      setClassDiscovery({ phase: 'scraping', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, recentSchools: [] })
+      setClassDiscovery({ phase: 'scraping', schoolsScraped: 0, totalSchools: 0, currentSchool: null, eventsFound: 0, eventsCreated: 0, eventsUpdated: 0, errors: 0, newSchoolsQueued: 0, totalCostUsd: 0, recentSchools: [] })
       setClassDashboardOpen(true)
 
       // Fire the start request (don't await — it processes the first school and takes 60-90s)

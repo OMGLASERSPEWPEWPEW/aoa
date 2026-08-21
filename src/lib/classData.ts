@@ -40,7 +40,7 @@ export async function fetchClassMapData(userId: string | null): Promise<ClassMap
       ? allTeachers.filter(t => t.session_id === nextSession.id)
       : []
 
-    return { ...school, next_session: nextSession, teachers: sessionTeachers }
+    return { ...school, next_session: nextSession, sessions: schoolSessions, teachers: sessionTeachers }
   })
 
   let userInterests: ClassInterest[] = []

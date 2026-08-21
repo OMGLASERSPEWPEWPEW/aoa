@@ -342,6 +342,7 @@ export interface School {
   sliding_scale: boolean
   url: string | null
   photo_url: string | null
+  address: string | null
   created_at: string
 }
 
@@ -386,6 +387,7 @@ export interface ClassInterest {
 
 export interface SchoolWithSession extends School {
   next_session: ClassSession | null
+  sessions: ClassSession[]
   teachers: ClassTeacher[]
 }
 

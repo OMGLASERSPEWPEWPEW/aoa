@@ -105,6 +105,7 @@ function SchoolRow({ s }: { s: RecentSchoolEntry }) {
             : isError
               ? s.status.toUpperCase().replace('_', ' ')
               : `${s.eventsCreated} new ${s.eventsFound} found`}
+          {s.invocations && s.invocations > 1 ? ` · INV ${s.invocations}` : ''}
         </div>
       </div>
 
@@ -116,7 +117,10 @@ function SchoolRow({ s }: { s: RecentSchoolEntry }) {
 
       {s.trace && (
         <div style={{ ...mono, fontSize: 8, color: 'var(--ink-faint)', marginTop: 2 }}>
-          {s.trace.aiCalls} AI calls · {s.trace.fetches} pages · {formatDuration(s.trace.durationMs)} · {s.trace.stopReason ?? ''}
+          {s.trace.programsExtracted != null ? `${s.trace.programsExtracted} programs · ` : ''}
+          {s.trace.aiCalls} AI calls · {s.trace.fetches} pages · {formatDuration(s.trace.durationMs)}
+          {s.trace.costUsd != null ? ` · $${s.trace.costUsd.toFixed(3)}` : ''}
+          {s.trace.stopReason ? ` · ${s.trace.stopReason}` : ''}
         </div>
       )}
 
@@ -130,6 +134,11 @@ function SchoolRow({ s }: { s: RecentSchoolEntry }) {
 
       {expanded && (
         <div style={{ marginTop: 6, paddingLeft: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {s.address && (
+            <div style={{ ...mono, fontSize: 8, color: 'var(--ink-faint)' }}>
+              ⌖ {s.address}
+            </div>
+          )}
           {s.calendarUrl && (
             <a href={s.calendarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
               style={{ ...mono, fontSize: 9, color: AMBER, textDecoration: 'underline', wordBreak: 'break-all' }}>
@@ -158,8 +167,8 @@ function SchoolRow({ s }: { s: RecentSchoolEntry }) {
   )
 }
 
-function StatsBar({ eventsFound, eventsCreated, processed, total, newSchoolsQueued }: {
-  eventsFound: number; eventsCreated: number; processed: number; total: number; newSchoolsQueued: number
+function StatsBar({ eventsFound, eventsCreated, processed, total, newSchoolsQueued, costUsd }: {
+  eventsFound: number; eventsCreated: number; processed: number; total: number; newSchoolsQueued: number; costUsd: number
 }) {
   return (
     <div style={{
@@ -168,9 +177,15 @@ function StatsBar({ eventsFound, eventsCreated, processed, total, newSchoolsQueu
     }}>
       <span>{eventsFound} found</span>
       <span style={{ color: 'var(--rule)' }}>·</span>
-      <span>{eventsCreated} created</span>
+      <span>{eventsCreated} persisted</span>
       <span style={{ color: 'var(--rule)' }}>·</span>
       <span>{total > 0 ? Math.round((processed / total) * 100) : 0}%</span>
+      {costUsd > 0 && (
+        <>
+          <span style={{ color: 'var(--rule)' }}>·</span>
+          <span>${costUsd.toFixed(4)}</span>
+        </>
+      )}
       {newSchoolsQueued > 0 && (
         <>
           <span style={{ color: 'var(--rule)' }}>·</span>
@@ -262,6 +277,7 @@ export function ClassDiscoveryDashboard({ onMinimize }: { onMinimize: () => void
           processed={cd.schoolsScraped}
           total={cd.totalSchools || cd.schoolsScraped}
           newSchoolsQueued={cd.newSchoolsQueued}
+          costUsd={cd.totalCostUsd}
         />
       </div>
 

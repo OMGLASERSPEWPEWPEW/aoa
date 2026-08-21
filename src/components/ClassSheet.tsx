@@ -151,16 +151,24 @@ export function ClassSheet({ school, allSchools, onClose, onSelectSchool }: Prop
         <div style={{ padding: '0 20px 24px' }}>
           {/* Header */}
           <div style={{ marginBottom: 14 }}>
-            {/* Photo placeholder */}
-            <div style={{
-              width: 88, height: 66, borderRadius: 3,
-              background: 'var(--bg-card)', border: '1px solid var(--rule)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: 10,
-              ...mono, fontSize: 8, color: 'var(--ink-faint)', letterSpacing: '0.1em',
-            }}>
-              THE ROOM
-            </div>
+            {school.photo_url ? (
+              <img
+                src={school.photo_url}
+                alt={school.name}
+                style={{ width: 88, height: 66, borderRadius: 3, objectFit: 'cover', marginBottom: 10 }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+            ) : (
+              <div style={{
+                width: 88, height: 66, borderRadius: 3,
+                background: 'var(--bg-card)', border: '1px solid var(--rule)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 10,
+                ...mono, fontSize: 8, color: 'var(--ink-faint)', letterSpacing: '0.1em',
+              }}>
+                {school.discipline.toUpperCase()}
+              </div>
+            )}
 
             <div style={{ ...serif, fontStyle: 'italic', fontSize: 21, color: 'var(--ink)', marginBottom: 4 }}>
               {school.name}
@@ -168,6 +176,16 @@ export function ClassSheet({ school, allSchools, onClose, onSelectSchool }: Prop
             <div style={{ ...mono, fontSize: 10.5, letterSpacing: '0.08em', color: 'var(--ink-faint)' }}>
               {[school.neighborhood, school.discipline.toUpperCase(), school.price_band].filter(Boolean).join(' · ')}
             </div>
+            {school.address && (
+              <a
+                href={`https://maps.google.com/maps?q=${encodeURIComponent(school.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ ...mono, fontSize: 10, color: 'var(--ink-dim)', marginTop: 2, textDecoration: 'none', display: 'block' }}
+              >
+                ⌖ {school.address}
+              </a>
+            )}
             <div style={{ ...mono, fontSize: 10, color: 'var(--ink-ghost)', marginTop: 4 }}>
               NEVER TAKEN A CLASS HERE
             </div>
@@ -249,29 +267,43 @@ export function ClassSheet({ school, allSchools, onClose, onSelectSchool }: Prop
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
-            <button style={{
-              flex: 1, height: 46,
-              ...serif, fontStyle: 'italic', fontSize: 15,
-              background: enrolling ? dc : 'var(--ink)',
-              color: '#0c0a05',
-              border: 'none', borderRadius: 3, cursor: 'pointer',
-            }}>
-              {session?.drop_in ? 'Just show up' : enrolling ? 'Hold a spot' : 'Join the waitlist'}
-            </button>
+            {(() => {
+              const actionUrl = session?.signup_url ?? session?.source_url ?? school.url
+              return actionUrl ? (
+                <a
+                  href={actionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: 1, height: 46,
+                    ...serif, fontStyle: 'italic', fontSize: 15,
+                    background: enrolling ? dc : 'var(--ink)',
+                    color: '#0c0a05',
+                    border: 'none', borderRadius: 3, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {session?.drop_in ? 'Just show up' : enrolling ? 'Hold a spot' : 'Join the waitlist'}
+                </a>
+              ) : (
+                <button
+                  disabled
+                  style={{
+                    flex: 1, height: 46,
+                    ...serif, fontStyle: 'italic', fontSize: 15,
+                    background: 'var(--bg-card)', color: 'var(--ink-faint)',
+                    border: '1px solid var(--rule)', borderRadius: 3, cursor: 'default', opacity: 0.6,
+                  }}
+                >
+                  No link yet
+                </button>
+              )
+            })()}
 
-            <button style={{
-              height: 46, padding: '0 16px',
-              ...mono, fontSize: 11,
-              background: 'transparent',
-              color: 'var(--ink-dim)',
-              border: '1px solid var(--rule)', borderRadius: 3, cursor: 'pointer',
-            }}>
-              TELL ME MORE
-            </button>
-
-            {school.url && (
+            {(session?.signup_url ?? session?.source_url ?? school.url) && (
               <a
-                href={`https://maps.google.com/maps?q=${school.latitude},${school.longitude}`}
+                href={session?.signup_url ?? session?.source_url ?? school.url!}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -316,6 +348,62 @@ export function ClassSheet({ school, allSchools, onClose, onSelectSchool }: Prop
               </div>
             </div>
           )}
+
+          {/* THE CLASSES */}
+          {(() => {
+            const now = new Date()
+            const seen = new Set<string>()
+            const classSessions = school.sessions
+              .filter(s => !s.starts_on || new Date(s.starts_on) >= now)
+              .filter(s => {
+                const key = `${s.title}|${s.schedule ?? ''}`
+                if (seen.has(key)) return false
+                seen.add(key)
+                return true
+              })
+              .slice(0, 12)
+
+            if (classSessions.length === 0) return null
+
+            return (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+                  <span>THE CLASSES</span>
+                  <span style={{ color: dc }}>{classSessions.length} ENROLLING</span>
+                </div>
+                {classSessions.map(s => {
+                  const url = s.signup_url ?? s.source_url
+                  const row = (
+                    <div
+                      key={s.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 0',
+                        borderTop: '1px solid var(--rule-soft, var(--rule))',
+                        minHeight: 44, cursor: url ? 'pointer' : 'default',
+                      }}
+                      onClick={url ? () => window.open(url, '_blank', 'noopener') : undefined}
+                    >
+                      <span style={{
+                        ...mono, fontSize: 9,
+                        color: isEnrolling(s) ? 'var(--ink)' : 'var(--ink-faint)',
+                        whiteSpace: 'nowrap', minWidth: 40,
+                      }}>
+                        {s.starts_on ? fmtStartDate(s.starts_on) : 'LATER'}
+                      </span>
+                      <span style={{ ...serif, fontStyle: 'italic', fontSize: 14, color: 'var(--ink)', flex: 1 }}>
+                        {s.title}
+                      </span>
+                      <span style={{ ...mono, fontSize: 9, color: 'var(--ink-faint)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {[s.schedule, s.price != null ? `$${s.price}` : null].filter(Boolean).join(' · ')}
+                      </span>
+                    </div>
+                  )
+                  return row
+                })}
+              </div>
+            )
+          })()}
 
           {/* ALSO NEARBY */}
           {nearby.length > 0 && (
