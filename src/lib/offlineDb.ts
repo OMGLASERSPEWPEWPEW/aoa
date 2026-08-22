@@ -12,9 +12,15 @@ export interface Setting {
   value: string
 }
 
+export interface QueryCacheEntry {
+  key: string
+  value: string
+}
+
 const db = new Dexie('aoa-offline') as Dexie & {
   pendingWrites: EntityTable<PendingWrite, 'id'>
   settings: EntityTable<Setting, 'key'>
+  queryCache: EntityTable<QueryCacheEntry, 'key'>
 }
 
 db.version(1).stores({
@@ -24,6 +30,12 @@ db.version(1).stores({
 db.version(2).stores({
   pendingWrites: '++id, table, createdAt',
   settings: 'key',
+})
+
+db.version(3).stores({
+  pendingWrites: '++id, table, createdAt',
+  settings: 'key',
+  queryCache: 'key',
 })
 
 export { db }

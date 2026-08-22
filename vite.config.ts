@@ -42,6 +42,18 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/react-router')) return 'vendor-react'
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) return 'vendor-react'
+          if (id.includes('node_modules/@tanstack/react-query') || id.includes('node_modules/@supabase')) return 'vendor-data'
+          if (id.includes('node_modules/mapbox-gl')) return 'vendor-mapbox'
+        },
+      },
+    },
+  },
   server: { port: 5204, strictPort: true },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),

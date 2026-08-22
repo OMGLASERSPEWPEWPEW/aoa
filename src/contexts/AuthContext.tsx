@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
+import { clearPersistedCache } from '../lib/queryPersist'
+import { queryClient } from '../App'
 import type { Session, User } from '@supabase/supabase-js'
 
 interface AuthContextType {
@@ -59,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    queryClient.clear()
+    await clearPersistedCache()
   }
 
   return (
