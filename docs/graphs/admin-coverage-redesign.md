@@ -522,7 +522,19 @@ CLAUDE.md (Key Files + Database, at acr-docs-qa) · Feature doc **NEW** `docs/fe
 | Status promotion | class-scrape-batch/index.ts:257 | venue,school | ⊘ exempt | candidate→active |
 | Scrape timestamps | various | venue | ⊘ exempt | metadata only |
 
-*(Executor appends below: copy-sweep grep output, screenshots refs, additional deviations, attempts summaries.)*
+**Phase 6 — Suggestions UI:** ✅ Complete.
+- `acr-suggestions-ui`: `preferSuggestion()` with 8 passing tests (events_found, confidence, times_suggested rules). `SuggestionCard.tsx` with evidence-driven default button. `useCuratorSuggestions.ts` hook with accept/dismiss/dismissAll. Suggestions section wired into both detail pages with header reassurance copy, per-field note cards, and bulk dismiss. ProvenanceStrip gains `onOpenNotes` toggle.
+- **Deviation:** Graph specifies v0.28.0 but shipped with Phase 7 in a single version bump.
+
+**Phase 7 — Copy + Teardown:** ✅ Complete.
+- `acr-copy-sweep`: "Scrape Shows" → "Curate shows", "Scrape Classes" → "Curate classes", "SCRAPE COMPLETE/ERROR/SCRAPING CLASSES" → "CURATION COMPLETE/ERROR/CURATING CLASSES". Gate grep clean: `rg -i 'scrap' src/ --glob '!*.test.*'` returns only identifiers.
+- `acr-teardown`: `CoverageMetricsCards.tsx` and `VenueAuditTable.tsx` deleted. `VenueAuditTable` replaced with `AuditRow` components with navigation to detail pages. tsc and build clean post-deletion.
+- **Deviation:** Version shipped as v0.27.0 (combined Phases 6+7) instead of v0.28.0 + v0.28.1 per graph.
+
+**Phase 8 — Documentation Closure:** ✅ Complete.
+- `acr-docs-qa`: CLAUDE.md updated with detail pages, curator guard, blocklist, and fieldMeta key files. Database paragraph extended with blocked_sources, field_overrides, curator_suggestions. Graph execution notes complete with all phases recorded.
+
+**All phases complete. Admin coverage redesign shipped.**
 
 ---
 

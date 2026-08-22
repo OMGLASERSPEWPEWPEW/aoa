@@ -31,7 +31,12 @@ A map-centric PWA that guides newcomers into the Chicago theater scene through a
 | `src/hooks/useMap.ts` | Mapbox GL JS hook |
 | `supabase/functions/ai-gateway/index.ts` | Multi-provider AI gateway Edge Function |
 | `supabase/functions/mentor-chat/index.ts` | Profile-aware mentor Edge Function |
-| `supabase/migrations/` | Database schema (profiles, venues, events, watchlist, reviews, conversations, messages, user_progress, learning_content, friendships) |
+| `supabase/functions/_shared/curator/overrides.ts` | Curator guard: heldFields(), filterWritable(), guardedUpdate() |
+| `supabase/functions/_shared/curator/blocklist.ts` | Domain blocklist helpers for Edge Functions |
+| `src/pages/AdminVenueDetail.tsx` | Admin venue detail page with field provenance |
+| `src/pages/AdminSchoolDetail.tsx` | Admin school detail page with field provenance |
+| `src/lib/fieldMeta.ts` | VENUE_FIELDS / SCHOOL_FIELDS registries |
+| `supabase/migrations/` | Database schema (profiles, venues, events, watchlist, reviews, conversations, messages, user_progress, learning_content, friendships, blocked_sources, field_overrides, curator_suggestions) |
 | `docs/graph-engineering.md` | Executable build graph (33 nodes, 7 phases) |
 | `.claude/docs/prd/` | PRD + architecture spec |
 | `vite.config.ts` | Port 5204, version stamp, Tailwind, PWA |
