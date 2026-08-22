@@ -27,6 +27,8 @@ export function MapView() {
   const venueMarkersRef = useRef<Map<string, { marker: mapboxgl.Marker; el: HTMLDivElement; venue: Venue }>>(new Map())
   const classMarkersRef = useRef<Map<string, { marker: mapboxgl.Marker; el: HTMLDivElement; school: SchoolWithSession }>>(new Map())
   const markerClickedRef = useRef(false)
+  const selectedVenueRef = useRef<Venue | null>(null)
+  const selectedSchoolRef = useRef<SchoolWithSession | null>(null)
   const { user } = useAuth()
   const { resolved: theme } = useTheme()
   const { getStatus } = useWatchlist()
@@ -37,6 +39,9 @@ export function MapView() {
   const [classFilters, setClassFilters] = useState<Set<string>>(new Set())
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
   const [selectedSchool, setSelectedSchool] = useState<SchoolWithSession | null>(null)
+
+  useEffect(() => { selectedVenueRef.current = selectedVenue }, [selectedVenue])
+  useEffect(() => { selectedSchoolRef.current = selectedSchool }, [selectedSchool])
 
   const hasToken = !!import.meta.env.VITE_MAPBOX_TOKEN
   const lastScrapeTs = useLastScrape()
@@ -156,6 +161,7 @@ export function MapView() {
 
   // Render venue markers (shows mode only)
   useEffect(() => {
+    if (import.meta.env.DEV) (window as any).__pfpMarkerRebuilds = ((window as any).__pfpMarkerRebuilds ?? 0) + 1
     const map = mapRef.current
     if (!map) return
 
@@ -175,7 +181,7 @@ export function MapView() {
         relationship: firstEventStatus,
         dominantColor: venueEmotionColors[venue.id] ?? null,
         isTonight: tonightEvts.length > 0,
-        isSelected: selectedVenue?.id === venue.id,
+        isSelected: false,
         dimmed,
         hasClassEvents: false,
         onClick: () => {
@@ -192,10 +198,23 @@ export function MapView() {
 
       venueMarkersRef.current.set(venue.id, { marker, el, venue })
     }
-  }, [venues, events, showFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors, mode, selectedVenue, timeFilter])
+
+    const sel = selectedVenueRef.current
+    if (sel) {
+      const entry = venueMarkersRef.current.get(sel.id)
+      if (entry) {
+        const chip = entry.el.querySelector('.chip') as HTMLElement | null
+        if (chip) {
+          chip.style.transform = 'scale(1.18)'
+          chip.style.boxShadow = '0 3px 8px rgba(0,0,0,.7), 0 0 12px var(--accent)'
+        }
+      }
+    }
+  }, [venues, events, showFilters, getStatus, tonightEventsByVenue, isVenueDimmed, venueEmotionColors, mode, timeFilter])
 
   // Render class markers (classes mode only)
   useEffect(() => {
+    if (import.meta.env.DEV) (window as any).__pfpMarkerRebuilds = ((window as any).__pfpMarkerRebuilds ?? 0) + 1
     const map = mapRef.current
     if (!map) return
 
@@ -207,7 +226,6 @@ export function MapView() {
     const CHICAGO_CENTER_LAT = 41.8781
     const CHICAGO_CENTER_LNG = -87.6298
 
-    // Group schools by approximate coordinate for co-located fan-out
     const coordGroups = new Map<string, typeof schools>()
     for (const school of schools) {
       if (school.latitude === CHICAGO_CENTER_LAT && school.longitude === CHICAGO_CENTER_LNG) continue
@@ -224,7 +242,7 @@ export function MapView() {
 
         const el = createClassMarkerElement({
           school,
-          isSelected: selectedSchool?.id === school.id,
+          isSelected: false,
           dimmed,
           onClick: () => {
             markerClickedRef.current = true
@@ -234,7 +252,6 @@ export function MapView() {
           },
         })
 
-        // Radial pixel offset for co-located markers
         if (n > 1) {
           const angle = (2 * Math.PI * i) / n
           const radius = 16
@@ -249,7 +266,16 @@ export function MapView() {
         classMarkersRef.current.set(school.id, { marker, el, school })
       })
     }
-  }, [schools, classFilters, isSchoolDimmed, mode, selectedSchool])
+
+    const sel = selectedSchoolRef.current
+    if (sel) {
+      const entry = classMarkersRef.current.get(sel.id)
+      if (entry) {
+        entry.el.style.transform = 'scale(1.18)'
+        entry.el.style.boxShadow = '0 3px 8px rgba(0,0,0,.7), 0 0 12px var(--accent)'
+      }
+    }
+  }, [schools, classFilters, isSchoolDimmed, mode])
 
   // Theme change
   useEffect(() => {
@@ -271,6 +297,17 @@ export function MapView() {
       }
     }
   }, [selectedVenue])
+
+  // Selected state styling for class markers
+  useEffect(() => {
+    for (const [id, { el }] of classMarkersRef.current) {
+      const selected = selectedSchool?.id === id
+      el.style.transform = selected ? 'scale(1.18)' : 'scale(1)'
+      el.style.boxShadow = selected
+        ? '0 3px 8px rgba(0,0,0,.7), 0 0 12px var(--accent)'
+        : '0 3px 8px rgba(0,0,0,.7)'
+    }
+  }, [selectedSchool])
 
   if (!hasToken) {
     return (
