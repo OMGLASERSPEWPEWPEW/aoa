@@ -65,4 +65,11 @@ blob-report/
 .claude/queries/
 
 # Generated reference docs (for external LLM review)
-docs/edge-functions-reference.md
+docs/edge-functions-reference*.md
+docs/class-scrape-log-*.md
+
+# Working docs (local-only)
+docs/Fix plans/
+docs/design/
+docs/troubleshooting/
+diagnosis/
