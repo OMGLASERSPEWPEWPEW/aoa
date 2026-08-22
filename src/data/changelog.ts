@@ -4,6 +4,22 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.29.0',
+    date: '2026-08-21',
+    title: 'Admin coverage: the redesign actually lands',
+    summary: 'Frame 6a/6b behave as designed; blocking schools works; the blocklist no longer locks a domain on an entry block.',
+    details: [
+      'Fix: audit rows show their real diagnosis — DEAD SITE, MISTYPED, AGGREGATOR now reach the screen',
+      'New: WorkActions + NEEDS A LOOK tiles wired; old five-button block, scaffold BLOCKED button, and legacy class-stats row removed; tiles filter the list',
+      'Fix: blocking a school sends entity_type school — entry-scoped school blocks now hide the school and its classes',
+      'Fix: block sheet states the affected count even when it is 0',
+      'New: migration 20260823000010 — blocklist uniqueness is scope-partial; entry blocks no longer occupy the domain slot',
+      'Fix: MISTYPED only fires for storefront-typed, zero-event, institution-named venues',
+      'New: dry-pipeline card to spec (THE PIPELINE IS DRY, reduced-motion-safe pulse); discipline bar shows even when the pipeline is dry',
+      'New: per-school CURATE via single-target curation',
+    ],
+  },
+  {
     version: '0.28.0',
     date: '2026-08-21',
     title: 'Cost truth: one ledger for AI spend',
