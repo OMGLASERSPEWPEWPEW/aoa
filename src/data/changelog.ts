@@ -4,6 +4,22 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.27.0',
+    date: '2026-08-21',
+    title: 'Suggestions UI + copy sweep + teardown (Phases 6–8)',
+    summary: 'Curator suggestions appear on detail pages with evidence-driven recommendations. User-facing copy renamed from scrape to curate. Old admin components deleted.',
+    details: [
+      'New: preferSuggestion() — evidence-driven default button (events_found, confidence, times_suggested)',
+      'New: SuggestionCard component with KEEP MINE / TAKE THEIRS actions and mute-after-2 footnote',
+      'New: useCuratorSuggestions hook with accept, dismiss, and dismissAll',
+      'New: Suggestions section on detail pages with header reassurance copy and bulk dismiss',
+      'Copy: Scrape Shows → Curate shows, Scrape Classes → Curate classes',
+      'Copy: SCRAPE COMPLETE/ERROR → CURATION COMPLETE/ERROR',
+      'Teardown: CoverageMetricsCards.tsx deleted — replaced by CoverageBar',
+      'Teardown: VenueAuditTable.tsx deleted — replaced by AuditRow with navigation to detail pages',
+    ],
+  },
+  {
     version: '0.26.0',
     date: '2026-08-21',
     title: 'Admin detail pages + field provenance + curator guard',
