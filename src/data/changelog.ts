@@ -4,6 +4,15 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.31.1',
+    date: '2026-08-22',
+    title: 'Back-button fix for Coverage tab',
+    summary: 'Browser back from school/venue detail now returns to the Coverage tab instead of resetting to Design.',
+    details: [
+      'Fix: admin tab synced to URL search params (?tab=Coverage) so browser history preserves tab state',
+    ],
+  },
+  {
     version: '0.31.0',
     date: '2026-08-22',
     title: 'Half the download, twice the map',
