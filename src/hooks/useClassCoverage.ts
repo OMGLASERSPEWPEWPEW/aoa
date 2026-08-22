@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
 import type { ClassCoverageMetrics } from '../lib/types'
 
-export function useClassCoverage() {
+export function useClassCoverage(enabled = true) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.schools.coverage,
     queryFn: async () => {
@@ -11,6 +11,7 @@ export function useClassCoverage() {
       if (error) throw error
       return data as ClassCoverageMetrics
     },
+    enabled,
   })
 
   return {

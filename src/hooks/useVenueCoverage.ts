@@ -10,10 +10,11 @@ interface UseCoverageResult {
   refetch: () => void
 }
 
-export function useVenueCoverage(): UseCoverageResult {
+export function useVenueCoverage(enabled = true): UseCoverageResult {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.venues.coverage,
     queryFn: fetchVenueCoverage,
+    enabled,
   })
 
   return {

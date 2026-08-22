@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { queryKeys } from '../lib/queryKeys'
-import { fetchVenueAuditRows, fetchEventVenueIds, buildAuditVenues } from '../lib/queries'
+import { fetchVenueAuditRows, fetchEventsPerVenue, buildAuditVenues } from '../lib/queries'
 import { diagnoseVenue } from '../lib/diagnosis'
 import type { Diagnosis } from '../lib/diagnosis'
 import type { AuditVenue } from '../lib/types'
@@ -21,7 +21,7 @@ interface Filters {
   blocked: boolean
 }
 
-export function useVenueAudit() {
+export function useVenueAudit(enabled = true) {
   const [sort, setSort] = useState('event_count_asc')
   const [filters, setFiltersState] = useState<Filters>({ missingCalendar: false, missingPhoto: false, zeroEvents: false, blocked: false })
 
@@ -30,7 +30,7 @@ export function useVenueAudit() {
     queryFn: async () => {
       const [venueRows, eventCounts] = await Promise.all([
         fetchVenueAuditRows(),
-        fetchEventVenueIds(),
+        fetchEventsPerVenue(),
       ])
       const venues = buildAuditVenues(venueRows, eventCounts)
 
@@ -68,6 +68,7 @@ export function useVenueAudit() {
         }
       })
     },
+    enabled,
   })
 
   const setFilters = useCallback((partial: Partial<Filters>) => {

@@ -397,9 +397,12 @@ function CostsTab() {
 
 function CoverageTab() {
   const navigate = useNavigate()
-  const { metrics, loading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useVenueCoverage()
+  const [domain, setDomain] = useState<'theaters' | 'schools'>(() =>
+    (sessionStorage.getItem('admin-domain-tab') as 'theaters' | 'schools') || 'theaters'
+  )
+  const { metrics, loading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useVenueCoverage(domain === 'theaters')
   const { items: queueItems, loading: queueLoading, dismiss, refetch: refetchQueue } = useDiscoveryQueue()
-  const audit = useVenueAudit()
+  const audit = useVenueAudit(domain === 'theaters')
   const [promotingItem, setPromotingItem] = useState<QueueItem | null>(null)
   const { discovery: progress, scraper, classDiscovery, setDashboardOpen, setClassDashboardOpen, runDiscovery, runScraper, runClassDiscovery } = useScrape()
   const eventBusy = progress.phase === 'discovering' || progress.phase === 'enriching' || scraper.phase === 'scraping'
@@ -413,11 +416,8 @@ function CoverageTab() {
   const { items: blockedItems } = useBlockedSources()
   const [blockTarget, setBlockTarget] = useState<{ entityType: 'venue' | 'school'; id: string; name: string; url: string | null; affectedClasses: number; affectedEvents: number } | null>(null)
   const [showBlockedList, setShowBlockedList] = useState(false)
-  const [domain, setDomain] = useState<'theaters' | 'schools'>(() =>
-    (sessionStorage.getItem('admin-domain-tab') as 'theaters' | 'schools') || 'theaters'
-  )
-  const classCov = useClassCoverage()
-  const schoolAudit = useSchoolAudit()
+  const classCov = useClassCoverage(domain === 'schools')
+  const schoolAudit = useSchoolAudit(domain === 'schools')
 
   useEffect(() => {
     supabase

@@ -308,6 +308,7 @@ export interface VenueAuditRow {
 
 export interface EventCountRow {
   venue_id: string
+  event_count?: number
 }
 
 export async function fetchVenueAuditRows(): Promise<VenueAuditRow[]> {
@@ -317,17 +318,15 @@ export async function fetchVenueAuditRows(): Promise<VenueAuditRow[]> {
   return (data ?? []) as VenueAuditRow[]
 }
 
-export async function fetchEventVenueIds(): Promise<EventCountRow[]> {
-  const { data } = await supabase
-    .from('events')
-    .select('venue_id')
+export async function fetchEventsPerVenue(): Promise<EventCountRow[]> {
+  const { data } = await supabase.rpc('get_events_per_venue')
   return (data ?? []) as EventCountRow[]
 }
 
 export function buildAuditVenues(venueRows: VenueAuditRow[], eventCounts: EventCountRow[]): AuditVenue[] {
   const countMap = new Map<string, number>()
   for (const e of eventCounts) {
-    countMap.set(e.venue_id, (countMap.get(e.venue_id) ?? 0) + 1)
+    countMap.set(e.venue_id, (countMap.get(e.venue_id) ?? 0) + (typeof e.event_count === 'number' ? e.event_count : 1))
   }
   return venueRows.map((v) => ({
     id: v.id,

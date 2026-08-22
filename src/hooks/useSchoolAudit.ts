@@ -27,7 +27,7 @@ interface Filters {
   blocked: boolean
 }
 
-export function useSchoolAudit() {
+export function useSchoolAudit(enabled = true) {
   const [sort, setSort] = useState<string>('session_count_asc')
   const [filters, setFiltersState] = useState<Filters>({ neverCurated: false, noPhoto: false, blocked: false })
 
@@ -93,6 +93,7 @@ export function useSchoolAudit() {
         }
       })
     },
+    enabled,
   })
 
   const schools = useMemo(() => {
