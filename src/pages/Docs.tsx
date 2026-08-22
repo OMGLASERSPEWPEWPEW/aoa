@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCostDashboard } from '../hooks/useCostDashboard'
 import { useVenueCoverage } from '../hooks/useVenueCoverage'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'
@@ -149,8 +149,17 @@ BOUNDARIES:
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 
 export function Docs() {
-  const [tab, setTab] = useState<Tab>('Design')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = tabs.includes(searchParams.get('tab') as Tab)
+    ? (searchParams.get('tab') as Tab)
+    : 'Design'
+  const [tab, setTab] = useState<Tab>(initialTab)
   const [expanded, setExpanded] = useState<string | null>(null)
+
+  function handleTab(t: Tab) {
+    setTab(t)
+    setSearchParams(t === 'Design' ? {} : { tab: t }, { replace: true })
+  }
 
   return (
     <div style={{ padding: '0 0 40px', maxWidth: 640, margin: '0 auto' }}>
@@ -170,7 +179,7 @@ export function Docs() {
         {tabs.map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => handleTab(t)}
             style={{
               ...mono,
               fontSize: 11,
