@@ -4,6 +4,19 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.28.0',
+    date: '2026-08-21',
+    title: 'Cost truth: one ledger for AI spend',
+    summary: 'Curation costs now reach the Costs tab; every AI call is priced by its real model.',
+    details: [
+      'New: CostBudget.recordAiCall is model-aware via the shared MODEL_PRICING map (gpt-4o-mini no longer priced as DeepSeek-Flash)',
+      'New: usage sink — every v4 curation AI call logs to ai_usage (feature: class-curation) with real model, tokens, and cost',
+      'Fix: curation dashboard per-row stats ($ · AI calls · pages) render again — recent_schools entries now carry the nested trace the client expects',
+      'Fix: show-path scrape_logs now records cost_usd, fetches, pages_visited (were always null)',
+      'Docs: ADR-0013 — ai_usage is the ledger of record; scrape_logs/scrape_jobs are per-run telemetry',
+    ],
+  },
+  {
     version: '0.27.0',
     date: '2026-08-21',
     title: 'Suggestions UI + copy sweep + teardown (Phases 6–8)',
