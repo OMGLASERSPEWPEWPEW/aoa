@@ -212,6 +212,7 @@ function mergeExtractionResults(
   return merged;
 }
 
+// LEGACY: superseded by _shared/scraper/process-venue.ts — do not extend
 export async function processVenue(
   venue: VenueTarget,
   runId: string,

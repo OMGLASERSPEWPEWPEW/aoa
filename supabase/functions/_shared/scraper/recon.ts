@@ -149,7 +149,7 @@ Respond with only: {"identity":"match"|"mismatch"|"uncertain","confidence":0.0-1
       clearTimeout(timeout);
       if (res.ok) {
         const data: DeepSeekResponse = await res.json();
-        budget.recordAiCall(data.usage.prompt_tokens, data.usage.completion_tokens);
+        budget.recordAiCall(data.usage.prompt_tokens, data.usage.completion_tokens, ai.model);
         const raw = data.choices?.[0]?.message?.content ?? "";
         const parsed = JSON.parse(raw.replace(/```json\s*/g, "").replace(/```/g, "").trim());
         result.identity = parsed.identity ?? "uncertain";

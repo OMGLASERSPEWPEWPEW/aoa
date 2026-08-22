@@ -261,7 +261,27 @@ Phase A and Phase B are independent; run A first (the user's priority) but B may
 - **DG-2:** Single-target curation approved for `class-scrape-batch` (`venue_id` param, per-school CURATE). Venue ↻ via `event-scrape-batch` **deferred** — gap note: "venue ↻ deferred — no single-target endpoint for event-scrape-batch this pass."
 - **DG-3:** Jina API key is free tier. Jina pricing out of scope — stays unpriced.
 
-*(Executor appends below: recordAiCall census, leak-probe verdict, deviations, attempts summaries.)*
+### recordAiCall Census (2026-08-21)
+
+| File:Line | Path | Model Threaded | Sink Coverage |
+|-----------|------|---------------|---------------|
+| `recon.ts:152` | v4 | ✓ `ai.model` | v4=sink |
+| `page-classifier.ts:82` | v4 | ✓ `ai.model` | v4=sink |
+| `strategy-agent.ts:981` | v4 (extractClassPrograms) | ✓ `ai.model` | v4=sink |
+| `link-extractor.ts:308` | v4 (scoreLinksLLM) | ✓ `ai.model` | v4=sink |
+| `strategy-agent.ts:434` | v3 (extractWithAllModels) | default | v3=per-step logUsage |
+| `strategy-agent.ts:584` | v3 (callDeepSeek fallback) | default | v3=per-step logUsage |
+| `strategy-agent.ts:663` | v3 (callDeepSeek BFS) | default | v3=per-step logUsage |
+| `strategy-agent.ts:758` | v3 (callDeepSeek verify) | default | v3=per-step logUsage |
+
+All v4 sites threaded and covered by the attached usage sink. v3 sites use default (deepseek-v4-flash) and log through the existing per-step `logUsage` in `process-venue.ts`.
+
+### Deviations
+
+- `trace.wallMs` not available in `StrategyTrace`; dashboard `durationMs` renders as 0. Acceptable — duration tracking was never wired for v4.
+- Venue ↻ deferred per DG-2.
+
+*(Executor appends below: leak-probe verdict, Phase B attempts summaries.)*
 
 ---
 

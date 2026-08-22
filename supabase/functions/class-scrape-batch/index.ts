@@ -329,14 +329,18 @@ serve(async (req) => {
         name: school.name, venueId: school.id, status,
         invocations: (idx >= 0 ? (((recentSchools[idx] as any).invocations as number) ?? 1) : 0) + 1,
         eventsFound, eventsCreated,
-        programsExtracted: result?.programs?.length ?? 0,
-        costUsd: trace?.budgetUsed ?? null,
-        pagesVisited: trace?.totalFetches ?? null,
-        stopReason: trace?.stopReason ?? null,
-        completeness: trace?.completenessAfterFollows ?? null,
         address: result?.schoolAddress ?? null,
         calendarUrl: school.calendar_url,
         timestamp: new Date().toISOString(),
+        trace: trace ? {
+          stopReason: trace.stopReason ?? null,
+          aiCalls: trace.totalAiCalls ?? null,
+          fetches: trace.totalFetches ?? null,
+          durationMs: trace.wallMs ?? 0,
+          costUsd: trace.budgetUsed ?? null,
+          programsExtracted: result?.programs?.length ?? null,
+          modelResults: null,
+        } : null,
       };
       if (idx >= 0) recentSchools.splice(idx, 1);
       recentSchools.unshift(entry);

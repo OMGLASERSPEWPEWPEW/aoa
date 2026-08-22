@@ -305,7 +305,7 @@ Respond with only a JSON array: [{"i":0,"score":95}, ...]. Every input i exactly
     if (!res.ok) return scores;
 
     const data: DeepSeekResponse = await res.json();
-    budget.recordAiCall(data.usage.prompt_tokens, data.usage.completion_tokens);
+    budget.recordAiCall(data.usage.prompt_tokens, data.usage.completion_tokens, ai.model);
     const raw = data.choices?.[0]?.message?.content ?? "";
     const parsed = JSON.parse(raw.replace(/```json\s*/g, "").replace(/```/g, "").trim());
 

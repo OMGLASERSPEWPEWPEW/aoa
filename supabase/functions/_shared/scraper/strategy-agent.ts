@@ -5,7 +5,8 @@ import { buildVerificationPrompt } from "./verification-prompt.ts";
 import { buildTargetedExtractionPrompt } from "./targeted-prompt.ts";
 import { extractCandidateLinks, prioritizeLinks, canonicalizeUrl, hardFilterLinks, scoreLinksLLM } from "./link-extractor.ts";
 import { DEFAULT_FIELD_WEIGHTS, shouldFollowLinks, mergeTargetedExtraction, averageCompleteness, evaluateCompleteness, averageProgramCompleteness } from "./completeness-evaluator.ts";
-import { CostBudget, CLASS_CRAWL_TOTALS } from "./cost-budget.ts";
+import { CostBudget, CLASS_CRAWL_TOTALS, providerFor } from "./cost-budget.ts";
+import { logUsage } from "../logUsage.ts";
 import { lookupVenueOnTic, ticShowsToEnrichments, enrichFromTicDetail } from "./tic-lookup.ts";
 import { resolveVenueUrl } from "./url-resolver.ts";
 import { runRecon, type ReconResult } from "./recon.ts";
@@ -977,7 +978,7 @@ async function extractClassPrograms(
     if (!res.ok) return null;
 
     const data: DeepSeekResponse = await res.json();
-    budget.recordAiCall(data.usage.prompt_tokens, data.usage.completion_tokens);
+    budget.recordAiCall(data.usage.prompt_tokens, data.usage.completion_tokens, ai.model);
     const raw = data.choices?.[0]?.message?.content ?? "";
     const parsed = repairJson(raw);
     if (!parsed || typeof parsed !== "object") return null;
@@ -1043,6 +1044,18 @@ export async function executeClassStrategy(
   }
 
   const budget = CostBudget.fromResumable(CLASS_CRAWL_TOTALS, state.budget_used);
+  budget.attachUsageSink((u) =>
+    logUsage(sb, {
+      userId: null,
+      model: u.model,
+      provider: providerFor(u.model),
+      feature: "class-curation",
+      inputTokens: u.inputTokens,
+      outputTokens: u.outputTokens,
+      estimatedCostUsd: u.costUsd,
+      metadata: { venue_id: venue.id, venue_name: venue.name, invocation: state.invocation_count + 1 },
+    }),
+  );
   const steps: StrategyStep[] = [];
   const visited = new Set(state.visited);
   const scoreCache = new Map(Object.entries(state.link_score_cache));

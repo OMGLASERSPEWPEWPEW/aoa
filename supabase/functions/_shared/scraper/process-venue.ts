@@ -157,6 +157,7 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
   }
 
   result.duration_ms = Date.now() - start;
+  const traceObj = strategyTrace as any;
   await supabase.from("scrape_logs").insert({
     run_id: runId, venue_id: venue.id, venue_name: venue.name,
     status: result.status, events_found: result.events_found,
@@ -164,6 +165,9 @@ export async function processVenue(venue: VenueTarget, runId: string, options?: 
     error_message: result.error_message, ai_input_tokens: result.ai_input_tokens,
     ai_output_tokens: result.ai_output_tokens, duration_ms: result.duration_ms,
     strategy_trace: strategyTrace,
+    cost_usd: traceObj?.budgetUsed ?? null,
+    fetches: traceObj?.totalFetches ?? null,
+    pages_visited: (traceObj?.linksFollowed?.length ?? 0) + 1,
   });
 
   return result;

@@ -1,7 +1,7 @@
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 // Per-1M-token pricing (USD). Keep in sync with ai-gateway MODEL_PRICING.
-const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+export const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   "claude-opus-4-7": { input: 15.0, output: 75.0 },
   "claude-sonnet-4-6": { input: 3.0, output: 15.0 },
   "claude-haiku-4-5-20251001": { input: 0.80, output: 4.0 },

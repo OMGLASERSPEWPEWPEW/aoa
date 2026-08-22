@@ -1,3 +1,5 @@
+import { MODEL_PRICING } from "../logUsage.ts";
+
 const DEEPSEEK_FLASH_INPUT = 0.10;
 const DEEPSEEK_FLASH_OUTPUT = 0.40;
 
@@ -15,13 +17,26 @@ const DEFAULTS: BudgetOpts = {
   wallClockMs: 180_000,
 };
 
+export type UsageSink = (u: { model: string; inputTokens: number; outputTokens: number; costUsd: number }) => void | Promise<void>;
+
+export function providerFor(model: string): string {
+  if (model.startsWith("gpt-")) return "openai";
+  if (model.startsWith("deepseek-")) return "deepseek";
+  if (model.startsWith("claude-")) return "anthropic";
+  if (model.startsWith("gemini-")) return "google";
+  return "unknown";
+}
+
 export class CostBudget {
   private opts: BudgetOpts;
   private startTime: number;
   private _aiCallsMade = 0;
   private _fetchesMade = 0;
   private _spent = 0;
+  private _inputTokens = 0;
+  private _outputTokens = 0;
   private _stopReason: string | null = null;
+  private _sink: UsageSink | null = null;
 
   constructor(opts?: Partial<BudgetOpts>) {
     this.opts = { ...DEFAULTS, ...opts };
@@ -31,7 +46,13 @@ export class CostBudget {
   get aiCallsMade(): number { return this._aiCallsMade; }
   get fetchesMade(): number { return this._fetchesMade; }
   get spent(): number { return this._spent; }
+  get inputTokens(): number { return this._inputTokens; }
+  get outputTokens(): number { return this._outputTokens; }
   get stopReason(): string | null { return this._stopReason; }
+
+  attachUsageSink(sink: UsageSink): void {
+    this._sink = sink;
+  }
 
   isExhausted(): boolean {
     if (this._stopReason) return true;
@@ -50,9 +71,21 @@ export class CostBudget {
     return !this.isExhausted() && this._fetchesMade < this.opts.maxFetches;
   }
 
-  recordAiCall(inputTokens: number, outputTokens: number): void {
+  recordAiCall(inputTokens: number, outputTokens: number, model = "deepseek-v4-flash"): void {
     this._aiCallsMade++;
-    this._spent += (inputTokens * DEEPSEEK_FLASH_INPUT + outputTokens * DEEPSEEK_FLASH_OUTPUT) / 1_000_000;
+    const pricing = MODEL_PRICING[model] ?? { input: DEEPSEEK_FLASH_INPUT, output: DEEPSEEK_FLASH_OUTPUT };
+    const cost = (inputTokens * pricing.input + outputTokens * pricing.output) / 1_000_000;
+    this._spent += cost;
+    this._inputTokens += inputTokens;
+    this._outputTokens += outputTokens;
+
+    if (this._sink) {
+      try {
+        void Promise.resolve(this._sink({ model, inputTokens, outputTokens, costUsd: cost })).catch(() => {});
+      } catch {
+        // sink must never fail the crawl
+      }
+    }
   }
 
   recordFetch(): void {
@@ -63,8 +96,15 @@ export class CostBudget {
     if (!this._stopReason) this._stopReason = reason;
   }
 
-  toJSON(): { fetches: number; aiCalls: number; usd: number; wallMs: number } {
-    return { fetches: this._fetchesMade, aiCalls: this._aiCallsMade, usd: this._spent, wallMs: Date.now() - this.startTime };
+  toJSON(): { fetches: number; aiCalls: number; usd: number; wallMs: number; inputTokens: number; outputTokens: number } {
+    return {
+      fetches: this._fetchesMade,
+      aiCalls: this._aiCallsMade,
+      usd: this._spent,
+      wallMs: Date.now() - this.startTime,
+      inputTokens: this._inputTokens,
+      outputTokens: this._outputTokens,
+    };
   }
 
   static fromResumable(
