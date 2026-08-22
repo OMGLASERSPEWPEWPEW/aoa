@@ -9,16 +9,19 @@ interface SchoolFactsBandProps {
   school: School
   shortNameDraft: string | null
   priceBandDraft: string | null
+  addressDraft: string | null
   onEditShortName: (v: string) => void
   onEditPriceBand: (v: string) => void
+  onEditAddress: (v: string) => void
 }
 
 export function SchoolFactsBand({
-  school, shortNameDraft, priceBandDraft, onEditShortName, onEditPriceBand,
+  school, shortNameDraft, priceBandDraft, addressDraft, onEditShortName, onEditPriceBand, onEditAddress,
 }: SchoolFactsBandProps) {
   const disc = DISCIPLINE_STYLES[school.discipline] ?? DISCIPLINE_STYLES.acting
   const shortName = shortNameDraft ?? school.short_name ?? ''
   const priceBand = priceBandDraft ?? school.price_band ?? ''
+  const address = addressDraft ?? school.address ?? ''
   const charCount = shortName.length
 
   const domain = school.url
@@ -86,9 +89,24 @@ export function SchoolFactsBand({
             background: 'var(--bg-card)',
             padding: '8px 10px',
           }}>
-            <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.3 }}>
-              {school.address || 'No address'}
-            </p>
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => onEditAddress(e.target.value)}
+              placeholder="No address"
+              style={{
+                width: '100%',
+                margin: 0,
+                padding: 0,
+                fontSize: '14px',
+                lineHeight: 1.3,
+                color: 'var(--ink)',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                fontFamily: 'inherit',
+              }}
+            />
             {geocodeOk && (
               <p style={{
                 margin: '2px 0 0',

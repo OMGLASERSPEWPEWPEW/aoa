@@ -113,8 +113,10 @@ export function AdminSchoolDetail() {
           school={school}
           shortNameDraft={edits.short_name as string | null ?? null}
           priceBandDraft={edits.price_band as string | null ?? null}
+          addressDraft={edits.address as string | null ?? null}
           onEditShortName={(v) => setEdit('short_name', v)}
           onEditPriceBand={(v) => setEdit('price_band', v)}
+          onEditAddress={(v) => setEdit('address', v)}
         />
 
         {/* Suggestions */}
