@@ -146,7 +146,7 @@ export function BlockSheet({ target, onConfirm, onCancel }: BlockSheetProps) {
             {/* Consequences */}
             <div style={{ ...news, fontSize: 14, color: 'var(--ink-dim)', lineHeight: 1.5, margin: '16px 0' }}>
               Removes it from the map and every list
-              {affectedCount > 0 ? `, drops ${affectedCount} ${affectedLabel}` : ''}
+              {`, drops ${affectedCount} ${affectedLabel}`}
               {scope === 'domain' ? `, and adds the domain to the curator's permanent blocklist` : ''}.
               {' '}Reversible from BLOCKED.
             </div>

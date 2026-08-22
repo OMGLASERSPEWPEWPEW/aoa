@@ -34,9 +34,9 @@ export function diagnoseVenue(v: VenueDiagnosisInput): Diagnosis {
   }
 
   const nameLower = v.name.toLowerCase()
-  const isMistyped = INSTITUTION_HINTS.some(h => nameLower.includes(h)) && v.venue_type !== 'school'
+  const isMistyped = v.venue_type === 'storefront' && v.event_count === 0 && INSTITUTION_HINTS.some(h => nameLower.includes(h))
   if (isMistyped) {
-    segments.push('MISTYPED')
+    segments.push('MISTYPED · SHOULD BE INSTITUTIONAL')
   }
 
   if (!v.has_calendar_url) {

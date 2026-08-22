@@ -20,10 +20,21 @@ describe('diagnoseVenue', () => {
     expect(d.severity).toBe('danger')
   })
 
-  it('returns mistyped for institution-named non-school', () => {
-    const d = diagnoseVenue({ ...base, name: 'Columbia College Theater Dept' })
+  it('returns mistyped for storefront institution name with 0 events', () => {
+    const d = diagnoseVenue({ ...base, name: 'Columbia College Theater Dept', venue_type: 'storefront', event_count: 0 })
     expect(d.kind).toBe('mistyped')
     expect(d.label).toContain('MISTYPED')
+    expect(d.label).toContain('SHOULD BE INSTITUTIONAL')
+  })
+
+  it('does NOT mistype an institutional-typed college venue', () => {
+    const d = diagnoseVenue({ ...base, name: 'Columbia College Chicago', venue_type: 'school', event_count: 0 })
+    expect(d.kind).not.toBe('mistyped')
+  })
+
+  it('does NOT mistype a storefront college name with events', () => {
+    const d = diagnoseVenue({ ...base, name: 'Columbia College Theater Dept', venue_type: 'storefront', event_count: 5 })
+    expect(d.kind).not.toBe('mistyped')
   })
 
   it('returns no_calendar when has_calendar_url is false', () => {
@@ -39,14 +50,16 @@ describe('diagnoseVenue', () => {
   })
 
   it('precedence: dead_site wins over mistyped', () => {
-    const d = diagnoseVenue({ ...base, name: 'University Theater', consecutive_failures: 2 })
+    const d = diagnoseVenue({ ...base, name: 'University Theater', venue_type: 'storefront', event_count: 0, consecutive_failures: 2 })
     expect(d.kind).toBe('dead_site')
   })
 
-  it('limits label to 3 segments', () => {
-    const d = diagnoseVenue({ ...base, name: 'University Theater', consecutive_failures: 2, has_calendar_url: false, event_count: 0 })
-    const segments = d.label.split(' · ')
-    expect(segments.length).toBeLessThanOrEqual(3)
+  it('limits label to 3 diagnostic segments', () => {
+    const d = diagnoseVenue({ ...base, name: 'University Theater', venue_type: 'storefront', consecutive_failures: 2, has_calendar_url: false, event_count: 0 })
+    expect(d.label).toContain('DEAD SITE')
+    expect(d.label).toContain('MISTYPED')
+    expect(d.label).toContain('NO CAL')
+    expect(d.label).not.toContain('NEVER CURATED')
   })
 })
 

@@ -6,7 +6,7 @@ import { useVenueCoverage } from '../hooks/useVenueCoverage'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'
 import { useClassCoverage } from '../hooks/useClassCoverage'
 import { useSchoolAudit } from '../hooks/useSchoolAudit'
-import type { QueueItem, AuditVenue } from '../lib/types'
+import type { QueueItem } from '../lib/types'
 import { useVenueAudit } from '../hooks/useVenueAudit'
 import { useScrape } from '../contexts/ScrapeContext'
 import { useBlockSource } from '../hooks/useBlockSource'
@@ -22,6 +22,8 @@ import { AuditRow } from '../components/admin/AuditRow'
 import { DryPipelineCard } from '../components/admin/DryPipelineCard'
 import { DisciplineBar } from '../components/admin/DisciplineBar'
 import { ClassFieldTiles } from '../components/admin/ClassFieldTiles'
+import { WorkActions } from '../components/admin/WorkActions'
+import { NeedsALookTiles } from '../components/admin/NeedsALookTiles'
 
 const tabs = ['Design', 'AI Prompts', 'Costs', 'Coverage'] as const
 type Tab = (typeof tabs)[number]
@@ -407,10 +409,9 @@ function CoverageTab() {
   const [discoveryRunning, setDiscoveryRunning] = useState(false)
   const [discoveryResult, setDiscoveryResult] = useState<{ inserted: number; known: number; blocked: number; queries_run: number; warning?: string; schools?: Array<{ name: string; url: string; domain: string }> } | null>(null)
   const [unlinkedCount, setUnlinkedCount] = useState<number | null>(null)
-  const [classMetrics, setClassMetrics] = useState<{ school_count: number; session_count: number; with_teacher: number; with_level: number } | null>(null)
   const { block, unblock } = useBlockSource()
   const { items: blockedItems } = useBlockedSources()
-  const [blockTarget, setBlockTarget] = useState<AuditVenue | null>(null)
+  const [blockTarget, setBlockTarget] = useState<{ entityType: 'venue' | 'school'; id: string; name: string; url: string | null; affectedClasses: number; affectedEvents: number } | null>(null)
   const [showBlockedList, setShowBlockedList] = useState(false)
   const [domain, setDomain] = useState<'theaters' | 'schools'>(() =>
     (sessionStorage.getItem('admin-domain-tab') as 'theaters' | 'schools') || 'theaters'
@@ -426,12 +427,6 @@ function CoverageTab() {
       .eq('event_type', 'show')
       .then(({ count }) => setUnlinkedCount(count ?? 0))
   }, [backfillResult])
-
-  useEffect(() => {
-    supabase.rpc('get_class_coverage_metrics').then(({ data }) => {
-      if (data) setClassMetrics(data as typeof classMetrics)
-    })
-  }, [classDiscovery.phase])
 
   const handleRunBackfill = async () => {
     setBackfillRunning(true)
@@ -469,6 +464,51 @@ function CoverageTab() {
     refetchMetrics()
   }
 
+  const handleSchoolDiscovery = async () => {
+    setDiscoveryRunning(true)
+    setDiscoveryResult(null)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { setDiscoveryRunning(false); return }
+    try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 120_000)
+      let res: Response
+      try {
+        res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/school-discovery`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ action: 'discover' }),
+          signal: controller.signal,
+        })
+      } catch {
+        await new Promise(r => setTimeout(r, 3000))
+        const controller2 = new AbortController()
+        const timer2 = setTimeout(() => controller2.abort(), 120_000)
+        try {
+          res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/school-discovery`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ action: 'discover' }),
+            signal: controller2.signal,
+          })
+        } finally {
+          clearTimeout(timer2)
+        }
+      } finally {
+        clearTimeout(timer)
+      }
+      const d = await res!.json()
+      setDiscoveryResult(d)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed'
+      const userMsg = msg === 'Failed to fetch' || msg.includes('load failed') || msg.includes('aborted')
+        ? 'Network error — the server took too long or the connection dropped. Try again.'
+        : msg
+      setDiscoveryResult({ inserted: 0, known: 0, blocked: 0, queries_run: 0, warning: userMsg })
+    }
+    setDiscoveryRunning(false)
+  }
+
   const handleDomainChange = (d: 'theaters' | 'schools') => {
     setDomain(d)
     sessionStorage.setItem('admin-domain-tab', d)
@@ -492,144 +532,17 @@ function CoverageTab() {
           animate
         />
       )}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-        <div>
-          <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>
-            Venue Coverage
-          </div>
-        </div>
-        <button
-          onClick={handleRunDiscovery}
-          disabled={eventBusy}
-          style={{
-            ...mono,
-            fontSize: 10,
-            padding: '6px 14px',
-            background: eventBusy ? 'var(--bg-chrome)' : 'var(--accent)',
-            color: eventBusy ? 'var(--ink-dim)' : 'var(--accent-on)',
-            border: 'none',
-            borderRadius: 2,
-            cursor: eventBusy ? 'default' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {progress.phase === 'discovering' && 'Finding...'}
-          {progress.phase === 'enriching' && `Adding ${progress.promoted}...`}
-          {(progress.phase === 'idle' || progress.phase === 'done' || progress.phase === 'error') && 'Find Venues'}
-        </button>
-        <button
-          onClick={scraper.phase === 'scraping' ? () => setDashboardOpen(true) : handleRunScraper}
-          disabled={eventBusy && scraper.phase !== 'scraping'}
-          style={{
-            ...mono,
-            fontSize: 10,
-            padding: '6px 14px',
-            background: scraper.phase === 'scraping' ? 'var(--accent-bg)' : 'var(--bg-card)',
-            color: scraper.phase === 'scraping' ? 'var(--accent-text)' : 'var(--ink)',
-            border: scraper.phase === 'scraping' ? '1px solid var(--accent-border)' : '1px solid var(--rule)',
-            borderRadius: 2,
-            cursor: scraper.phase === 'scraping' ? 'pointer' : eventBusy ? 'default' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {scraper.phase === 'scraping' ? `View Progress ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : ''}` : 'Curate shows'}
-        </button>
-        <button
-          onClick={handleRunBackfill}
-          disabled={backfillRunning || eventBusy}
-          style={{
-            ...mono,
-            fontSize: 10,
-            padding: '6px 14px',
-            background: backfillRunning ? 'var(--bg-chrome)' : 'var(--bg-card)',
-            color: backfillRunning ? 'var(--ink-dim)' : 'var(--ink)',
-            border: '1px solid var(--rule)',
-            borderRadius: 2,
-            cursor: backfillRunning || eventBusy ? 'default' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {backfillRunning ? 'Matching...' : `Play Backfill${unlinkedCount !== null ? ` (${unlinkedCount})` : ''}`}
-        </button>
-        <button
-          onClick={async () => {
-            setDiscoveryRunning(true)
-            setDiscoveryResult(null)
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) { setDiscoveryRunning(false); return }
-            try {
-              const controller = new AbortController()
-              const timer = setTimeout(() => controller.abort(), 120_000)
-              let res: Response
-              try {
-                res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/school-discovery`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-                  body: JSON.stringify({ action: 'discover' }),
-                  signal: controller.signal,
-                })
-              } catch (fetchErr) {
-                // Retry once on network failure
-                await new Promise(r => setTimeout(r, 3000))
-                const controller2 = new AbortController()
-                const timer2 = setTimeout(() => controller2.abort(), 120_000)
-                try {
-                  res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/school-discovery`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ action: 'discover' }),
-                    signal: controller2.signal,
-                  })
-                } finally {
-                  clearTimeout(timer2)
-                }
-              } finally {
-                clearTimeout(timer)
-              }
-              const d = await res!.json()
-              setDiscoveryResult(d)
-            } catch (e) {
-              const msg = e instanceof Error ? e.message : 'Failed'
-              const userMsg = msg === 'Failed to fetch' || msg.includes('load failed') || msg.includes('aborted')
-                ? 'Network error — the server took too long or the connection dropped. Try again.'
-                : msg
-              setDiscoveryResult({ inserted: 0, known: 0, blocked: 0, queries_run: 0, warning: userMsg })
-            }
-            setDiscoveryRunning(false)
-          }}
-          disabled={discoveryRunning}
-          style={{
-            ...mono,
-            fontSize: 10,
-            padding: '6px 14px',
-            background: discoveryRunning ? '#0a1a05' : '#0a1a05',
-            color: discoveryRunning ? '#166534' : '#22C55E',
-            border: `1px solid ${discoveryRunning ? '#166534' : '#22C55E'}`,
-            borderRadius: 2,
-            cursor: discoveryRunning ? 'default' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {discoveryRunning ? 'Searching...' : 'Find Schools'}
-        </button>
-        <button
-          onClick={classDiscovery.phase === 'scraping' ? () => setClassDashboardOpen(true) : () => { runClassDiscovery(); refetchMetrics() }}
-          disabled={classBusy && classDiscovery.phase !== 'scraping'}
-          style={{
-            ...mono,
-            fontSize: 10,
-            padding: '6px 14px',
-            background: classDiscovery.phase === 'scraping' ? '#2a1a05' : '#1a1005',
-            color: '#D4A017',
-            border: '1px solid #D4A017',
-            borderRadius: 2,
-            cursor: classDiscovery.phase === 'scraping' ? 'default' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {classDiscovery.phase === 'scraping' ? `View Progress ${classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : ''}` : 'Curate classes'}
-        </button>
-      </div>
+      <WorkActions
+        domain="theaters"
+        lastRunAt={null}
+        queueCount={scraper.total || 0}
+        backfillCount={unlinkedCount ?? 0}
+        running={eventBusy ? (progress.phase === 'discovering' || progress.phase === 'enriching' ? 'find' : 'curate') : null}
+        onFind={handleRunDiscovery}
+        onCurate={handleRunScraper}
+        onBackfill={handleRunBackfill}
+        onQueue={() => setDashboardOpen(true)}
+      />
       {discoveryResult && (
         <div style={{ marginBottom: 8 }}>
           <div style={{ ...mono, fontSize: 10, color: discoveryResult.warning ? '#ef4444' : '#D4A017' }}>
@@ -685,67 +598,41 @@ function CoverageTab() {
         </div>
       )}
 
-      {classMetrics && (
-        <div style={{ marginTop: 14, marginBottom: 14 }}>
-          <div style={{ ...mono, fontSize: 9, letterSpacing: '0.1em', color: '#D4A017', marginBottom: 6 }}>
-            CLASS COVERAGE
-          </div>
-          <div style={{ display: 'flex', gap: 16 }}>
-            {[
-              { value: classMetrics.school_count, label: 'SCHOOLS' },
-              { value: classMetrics.session_count, label: 'CLASSES' },
-              { value: classMetrics.with_teacher, label: 'W/ INSTRUCTOR' },
-              { value: classMetrics.with_level, label: 'W/ LEVEL' },
-            ].map(s => (
-              <div key={s.label} style={{ textAlign: 'center' }}>
-                <div style={{ ...mono, fontSize: 18, color: 'var(--ink)' }}>{s.value}</div>
-                <div style={{ ...mono, fontSize: 8, letterSpacing: '0.08em', color: 'var(--ink-faint)' }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <NeedsALookTiles
+        tiles={[
+          { key: 'zeroEvents', label: '0 events', count: metrics?.venues_zero_events ?? 0, severity: 'warn', active: audit.filters.zeroEvents },
+          { key: 'missingCalendar', label: 'No cal', count: metrics?.venues_missing_calendar ?? 0, severity: 'warn', active: audit.filters.missingCalendar },
+          { key: 'missingPhoto', label: 'No photo', count: metrics?.venues_missing_photo ?? 0, severity: 'neutral', active: audit.filters.missingPhoto },
+          { key: 'blocked', label: 'Blocked', count: blockedItems.length, severity: 'danger', active: false },
+        ]}
+        onToggle={(key) => {
+          if (key === 'blocked') { setShowBlockedList(true); return }
+          const k = key as keyof typeof audit.filters
+          audit.setFilters({ [k]: !audit.filters[k] })
+        }}
+      />
 
-      {/* SCAFFOLD: BLOCKED count — removed by acr-6a-tiles-audit */}
-      {blockedItems.length > 0 && (
-        <button
-          onClick={() => setShowBlockedList(true)}
-          style={{
-            ...mono, fontSize: 9, letterSpacing: '0.08em',
-            padding: '4px 10px', marginBottom: 8,
-            background: 'var(--danger-bg)', color: 'var(--danger)',
-            border: '1px solid var(--danger)', borderRadius: 3, cursor: 'pointer',
-            textTransform: 'uppercase',
-          }}
-        >
-          BLOCKED ({blockedItems.length})
-        </button>
-      )}
-
-      {!audit.loading && audit.venues.length > 0 && (
+      {!audit.loading && audit.venues.length > 0 && (() => {
+        const activeFilter = audit.filters.zeroEvents ? '0 events' : audit.filters.missingCalendar ? 'no cal' : audit.filters.missingPhoto ? 'no photo' : null
+        return (
         <div style={{ marginTop: 8 }}>
-          <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase', marginBottom: 6 }}>
-            Venue Audit ({audit.venues.length})
+          <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ color: activeFilter ? 'var(--accent)' : 'var(--ink-faint)' }}>
+              {audit.venues.length} venues · {activeFilter ?? 'all'}
+            </span>
+            {activeFilter && <span style={{ ...mono, fontSize: 8, color: 'var(--ink-ghost)', letterSpacing: '0.06em' }}>TAP FOR WHY</span>}
           </div>
-          {audit.venues.slice(0, 30).map(v => (
+          {audit.venues.map(v => (
             <AuditRow
               key={v.id}
-              row={{
-                id: v.id,
-                name: v.name,
-                venue_type: v.venue_type,
-                neighborhood: v.neighborhood,
-                diagnosis: { kind: 'ok', label: v.has_calendar_url ? `${v.event_count} events` : 'NO CALENDAR', severity: v.has_calendar_url ? 'neutral' : 'danger' },
-                event_count: v.event_count,
-                domain: null,
-                has_open_suggestions: false,
-              }}
+              row={v}
               onOpen={(id) => navigate(`/app/admin/venue/${id}`)}
-              onBlock={() => setBlockTarget(v)}
+              onBlock={() => setBlockTarget({ entityType: 'venue', id: v.id, name: v.name, url: v.website_url, affectedClasses: 0, affectedEvents: v.event_count })}
             />
           ))}
         </div>
-      )}
+        )
+      })()}
 
       {!queueLoading && (
         <DiscoveryQueueSection
@@ -769,47 +656,58 @@ function CoverageTab() {
       </>)}
 
       {domain === 'schools' && (<>
+        <WorkActions
+          domain="schools"
+          lastRunAt={classCov.metrics?.last_curated_at ?? null}
+          queueCount={classCov.metrics?.school_count ?? 0}
+          backfillCount={classCov.metrics?.schools_never_curated ?? 0}
+          running={discoveryRunning ? 'find' : classBusy ? 'curate' : null}
+          onFind={handleSchoolDiscovery}
+          onCurate={() => { runClassDiscovery(); refetchMetrics() }}
+          onBackfill={() => { runClassDiscovery(); refetchMetrics() }}
+          onQueue={() => setClassDashboardOpen(true)}
+        />
         {classCov.metrics && (
           <>
+            {classCov.metrics.school_count > 0 && (
+              <DisciplineBar byDiscipline={classCov.metrics.by_discipline} total={classCov.metrics.school_count} />
+            )}
             {classCov.metrics.session_count === 0 && classCov.metrics.school_count > 0 && (
               <DryPipelineCard schoolCount={classCov.metrics.school_count} onCurateAll={() => { runClassDiscovery(); classCov.refetch() }} />
             )}
             {classCov.metrics.session_count > 0 && (
-              <>
-                <DisciplineBar byDiscipline={classCov.metrics.by_discipline} total={classCov.metrics.school_count} />
-                <ClassFieldTiles
-                  sessionCount={classCov.metrics.session_count}
-                  fields={[
-                    { label: 'START DATE', count: classCov.metrics.with_start_date },
-                    { label: 'PRICE', count: classCov.metrics.with_price },
-                    { label: 'LEVEL', count: classCov.metrics.with_level },
-                    { label: 'TEACHER', count: classCov.metrics.with_teacher },
-                  ]}
-                />
-              </>
+              <ClassFieldTiles
+                sessionCount={classCov.metrics.session_count}
+                fields={[
+                  { label: 'START DATE', count: classCov.metrics.with_start_date },
+                  { label: 'PRICE', count: classCov.metrics.with_price },
+                  { label: 'LEVEL', count: classCov.metrics.with_level },
+                  { label: 'TEACHER', count: classCov.metrics.with_teacher },
+                ]}
+              />
             )}
           </>
         )}
         {!schoolAudit.loading && schoolAudit.schools.length > 0 && (
           <div style={{ marginTop: 12 }}>
-            <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-faint)', textTransform: 'uppercase', marginBottom: 8 }}>
-              School Audit ({schoolAudit.schools.length})
+            <div style={{ ...mono, fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8, color: 'var(--ink-faint)' }}>
+              {schoolAudit.schools.length} schools
             </div>
-            {schoolAudit.schools.slice(0, 30).map(s => (
+            {schoolAudit.schools.map(s => (
               <AuditRow
                 key={s.id}
-                row={{
-                  id: s.id,
-                  name: s.name,
-                  neighborhood: s.neighborhood,
-                  diagnosis: s.diagnosis,
-                  session_count: s.session_count,
-                  consecutive_failures: s.consecutive_failures,
-                  domain: s.domain,
-                  has_open_suggestions: s.has_open_suggestions,
-                }}
+                row={s}
                 onOpen={(id) => navigate(`/app/admin/school/${id}`)}
-                onBlock={() => setBlockTarget({ id: s.id, name: s.name, neighborhood: s.neighborhood, venue_type: 'school', has_calendar_url: true, has_photo: !!s.url, event_count: s.session_count, source: 'school', website_url: s.url })}
+                onCurate={s.diagnosis.kind !== 'aggregator' ? async () => {
+                  const { data: { session } } = await supabase.auth.getSession()
+                  if (!session) return
+                  await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/class-scrape-batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ action: 'start', venue_id: s.id }),
+                  })
+                } : undefined}
+                onBlock={() => setBlockTarget({ entityType: 'school', id: s.id, name: s.name, url: s.url, affectedClasses: s.session_count, affectedEvents: 0 })}
               />
             ))}
           </div>
@@ -819,19 +717,19 @@ function CoverageTab() {
       {blockTarget && (
         <BlockSheet
           target={{
-            entityType: 'venue',
+            entityType: blockTarget.entityType,
             id: blockTarget.id,
             name: blockTarget.name,
-            domain: normalizeDomain(blockTarget.website_url) ?? blockTarget.source ?? '',
-            affectedEvents: blockTarget.event_count,
-            affectedClasses: 0,
+            domain: normalizeDomain(blockTarget.url) ?? '',
+            affectedEvents: blockTarget.affectedEvents,
+            affectedClasses: blockTarget.affectedClasses,
           }}
           onConfirm={async (scope, reason, note) => {
             await block({
-              entity_type: 'venue',
+              entity_type: blockTarget.entityType,
               entity_id: blockTarget.id,
               name: blockTarget.name,
-              url: blockTarget.website_url ?? '',
+              url: blockTarget.url ?? '',
               scope,
               reason,
               note: note ?? undefined,

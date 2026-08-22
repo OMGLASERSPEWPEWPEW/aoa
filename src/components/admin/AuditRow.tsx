@@ -136,20 +136,22 @@ export function AuditRow({ row, onOpen, onCurate, onBlock }: AuditRowProps) {
             aria-label={`Curate ${row.name}`}
             title="Curate"
             style={{
-              width: 44,
+              ...mono,
               height: 44,
+              padding: '0 10px',
               background: 'none',
-              border: '1px solid var(--rule)',
+              border: '1px solid var(--accent)',
               borderRadius: 3,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 16,
+              fontSize: 9,
+              letterSpacing: '0.06em',
               color: 'var(--accent)',
             }}
           >
-            &curren;
+            CURATE
           </button>
         )}
         {onBlock && (
