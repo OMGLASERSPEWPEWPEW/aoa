@@ -404,7 +404,7 @@ function CoverageTab() {
   const { discovery: progress, scraper, classDiscovery, setDashboardOpen, setClassDashboardOpen, runDiscovery, runScraper, runClassDiscovery } = useScrape()
   const eventBusy = progress.phase === 'discovering' || progress.phase === 'enriching' || scraper.phase === 'scraping'
   const classBusy = classDiscovery.phase === 'scraping'
-  const [backfillRunning, setBackfillRunning] = useState(false)
+  const [, setBackfillRunning] = useState(false)
   const [backfillResult, setBackfillResult] = useState<{ exact_matches: number; fuzzy_matches: number; ai_matches: number; plays_created: number; events_unmatched: number; events_processed: number } | null>(null)
   const [discoveryRunning, setDiscoveryRunning] = useState(false)
   const [discoveryResult, setDiscoveryResult] = useState<{ inserted: number; known: number; blocked: number; queries_run: number; warning?: string; schools?: Array<{ name: string; url: string; domain: string }> } | null>(null)
