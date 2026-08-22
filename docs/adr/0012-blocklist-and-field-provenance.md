@@ -56,4 +56,10 @@ Constraints in force: RLS on every table; never query `auth.users` in policies; 
 - **Positive:** blocks survive re-discovery and are reversible in one delete; zero joins added to hot read paths; the admin's corrections are provably durable (integration test: hold 3 fields → curate → 0 changed, 3 suggestions); enforcement is testable at each of the three points independently.
 - **Negative:** RLS SELECT policies on four public tables now call a function per row — `STABLE` + the `(entity_type, entity_id)` and partial domain indexes keep it cheap at this data size (hundreds of rows), but it is a per-row cost to monitor if venue count grows 100×. The guard is a per-write-site obligation: a forgotten call silently breaks the promise, which is why the graph's guard node greps every `.update`/`.upsert` site and the integration test is mandatory.
 - **Negative:** jwt-email allowlist inside `is_admin()` means adding an admin is a migration, not a UI action. Accepted at current team size; revisit as a `profiles.is_admin` flag if that changes.
-- **Neutral:** `UNIQUE(domain)` makes domain blocks global across entity types; `accept_suggestion` deleting the override means "take theirs" is a full hand-back, by design; the two legacy hardcoded-email policies remain until a cleanup pass.
+- **Neutral:** `accept_suggestion` deleting the override means "take theirs" is a full hand-back, by design; the two legacy hardcoded-email policies remain until a cleanup pass.
+
+## Amendment (2026-08-21) — D-2 Uniqueness Now Scope-Partial
+
+**Context:** F91 (Cost Truth + Admin Coverage Remediation) found that the unconditional `UNIQUE(domain)` constraint caused an entry block to occupy the domain slot — a second entry block or a later domain block on the same domain raised `'domain already blocked'`.
+
+**Change:** migration `20260823000010` drops `UNIQUE(domain)` and replaces it with two partial unique indexes: `(domain) WHERE scope = 'domain'` and `(entity_type, entity_id) WHERE scope = 'entry'`. `block_source` now conflicts per scope with scope-specific error text. Entry rows retain `domain NOT NULL` for audit display.
