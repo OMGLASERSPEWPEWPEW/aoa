@@ -28,10 +28,18 @@ function getCorsHeaders(req: Request): Record<string, string> {
   };
 }
 
-async function getNextSchool(supabase: ReturnType<typeof createClient>): Promise<{ school: VenueTarget | null; remaining: number }> {
+async function getNextSchool(supabase: ReturnType<typeof createClient>, targetVenueId?: string): Promise<{ school: VenueTarget | null; remaining: number }> {
+  if (targetVenueId) {
+    const { data: venue } = await supabase
+      .from("venues")
+      .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
+      .eq("id", targetVenueId)
+      .single();
+    return { school: venue as VenueTarget | null, remaining: venue ? 1 : 0 };
+  }
+
   const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  // Prioritize venues with running crawl_state (resume before starting new)
   const { data: running } = await supabase
     .from("crawl_state")
     .select("venue_id")
@@ -45,7 +53,6 @@ async function getNextSchool(supabase: ReturnType<typeof createClient>): Promise
       .eq("id", running[0].venue_id)
       .single();
     if (venue) {
-      // Check if this running venue is blocked
       const blocked = await isEntityBlocked(supabase, "venue", venue.id, venue.website_url ?? venue.calendar_url);
       if (!blocked) {
         const { count } = await supabase
@@ -60,7 +67,6 @@ async function getNextSchool(supabase: ReturnType<typeof createClient>): Promise
     }
   }
 
-  // Fetch a few extra candidates to account for blocked ones
   const { data } = await supabase
     .from("venues")
     .select("id, name, slug, calendar_url, website_url, photo_url, photo_url_source")
@@ -118,6 +124,7 @@ serve(async (req) => {
 
     const jobId = body.job_id as string | undefined;
     const action = body.action as string | undefined;
+    const targetVenueId = body.venue_id as string | undefined;
 
     if (action === "start" || (!jobId && !action)) {
       const { data: existingJob } = await supabase
@@ -138,7 +145,7 @@ serve(async (req) => {
     let currentJobId = jobId;
 
     if (action === "start") {
-      const { school: firstCheck, remaining: totalSchools } = await getNextSchool(supabase);
+      const { school: firstCheck, remaining: totalSchools } = await getNextSchool(supabase, targetVenueId);
 
       if (!firstCheck) {
         return new Response(
@@ -169,7 +176,7 @@ serve(async (req) => {
       }
     }
 
-    const { school, remaining } = await getNextSchool(supabase);
+    const { school, remaining } = await getNextSchool(supabase, targetVenueId);
 
     if (!school) {
       if (currentJobId) {

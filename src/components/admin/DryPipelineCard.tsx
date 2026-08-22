@@ -11,34 +11,40 @@ export function DryPipelineCard({ schoolCount, onCurateAll }: DryPipelineCardPro
     <div
       style={{
         background: 'var(--danger-bg)',
-        border: '1px solid var(--danger-border)',
+        border: '1.5px solid var(--danger)',
         borderRadius: 4,
         padding: '16px 20px',
         marginBottom: 16,
       }}
     >
-      <div
-        style={{
-          ...display,
-          fontSize: 15,
-          fontStyle: 'italic',
-          color: 'var(--danger)',
-          marginBottom: 8,
-          lineHeight: 1.4,
-        }}
-      >
-        No classes found yet.{' '}
-        <span style={{ color: 'var(--ink-dim)', fontStyle: 'normal' }}>
-          {schoolCount} school{schoolCount !== 1 ? 's' : ''} in registry without sessions.
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: '50%',
+            background: 'var(--danger)',
+            display: 'inline-block',
+            flexShrink: 0,
+            animation: 'dry-pulse 2s ease-in-out infinite',
+          }}
+        />
+        <span style={{ ...mono, fontSize: 9, letterSpacing: '0.18em', color: 'var(--danger)', textTransform: 'uppercase' }}>
+          The pipeline is dry
         </span>
+      </div>
+      <div style={{ ...display, fontSize: 16, fontStyle: 'italic', color: 'var(--ink)', lineHeight: 1.5, marginBottom: 12 }}>
+        <span style={{ fontSize: 26 }}>{schoolCount}</span>{' '}
+        school{schoolCount !== 1 ? 's' : ''} registered, none curated yet.
       </div>
       <button
         onClick={onCurateAll}
         style={{
-          ...mono,
-          fontSize: 11,
-          padding: '0 16px',
-          minHeight: 44,
+          ...display,
+          fontSize: 16,
+          fontStyle: 'italic',
+          width: '100%',
+          minHeight: 46,
           background: 'var(--danger)',
           color: '#fff',
           border: 'none',
@@ -48,6 +54,15 @@ export function DryPipelineCard({ schoolCount, onCurateAll }: DryPipelineCardPro
       >
         Curate all {schoolCount} schools
       </button>
+      <style>{`
+        @keyframes dry-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          [style*="dry-pulse"] { animation: none !important; }
+        }
+      `}</style>
     </div>
   )
 }
