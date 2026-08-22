@@ -4,6 +4,24 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.30.0',
+    date: '2026-08-22',
+    title: 'Admin class editing: 7b + 7d',
+    summary: 'School detail shows 83 grouped sessions with diagnosis, in-place editing, soft delete with undo, and drag-to-reorder.',
+    details: [
+      'New: SchoolFactsBand — photo, address, geocode, website, SHORT NAME with live char counter, BAND, discipline TYPE',
+      'New: class list grouped by program — ClassGroupHeader with collapse, ClassRow with status pill, ONLINE chip, diagnosis',
+      'New: WON\'T SHOW diagnosis for sessions missing both starts_on and schedule',
+      'New: ClassRowExpanded (7d) — 6 editable fields with per-field save via apply_field_override',
+      'New: soft_delete_class_session + restore + 4-second undo strip',
+      'New: add_class_session_by_hand with field_overrides fan-out',
+      'New: drag-to-reorder with keyboard accessibility (Space/arrows/Esc) + aria-live announcements',
+      'New: reorder_class_sessions RPC — batch sort_order + program_group update',
+      'New: RLS policy filters deleted_at IS NULL for non-admin reads',
+      'Schema: sort_order, program_group, delivery, deleted_at columns + partial index',
+    ],
+  },
+  {
     version: '0.29.0',
     date: '2026-08-21',
     title: 'Admin coverage: the redesign actually lands',
