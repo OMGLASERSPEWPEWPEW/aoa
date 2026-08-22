@@ -1,13 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEntityDetail } from '../hooks/useEntityDetail'
+import { useCuratorSuggestions } from '../hooks/useCuratorSuggestions'
 import { useProfile } from '../hooks/useProfile'
 import { ADMINS } from '../lib/constants'
 import { ProvenanceStrip } from '../components/admin/ProvenanceStrip'
 import { AdminField } from '../components/admin/AdminField'
+import { SuggestionCard } from '../components/admin/SuggestionCard'
 import { supabase } from '../lib/supabase'
 import { useQueryClient } from '@tanstack/react-query'
 import { invalidateAfterOverride } from '../lib/adminInvalidation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export function AdminSchoolDetail() {
   const { id } = useParams<{ id: string }>()
@@ -15,11 +17,13 @@ export function AdminSchoolDetail() {
   const { profile } = useProfile()
   const qc = useQueryClient()
   const isAdmin = ADMINS.includes(profile?.username?.toLowerCase() ?? '')
+  const [showNotes, setShowNotes] = useState(false)
 
   const {
     entity, fields, counts, lastCuratedAt,
     loading, edits, setEdit, discard, save, dirtyCount,
   } = useEntityDetail('school', id!)
+  const { suggestions, accept, dismiss, dismissAll } = useCuratorSuggestions('school', id!)
 
   useEffect(() => {
     if (dirtyCount > 0) {
@@ -62,12 +66,48 @@ export function AdminSchoolDetail() {
         total={counts.total}
         held={counts.held}
         empty={counts.empty}
-        notes={counts.notes}
+        notes={suggestions.length}
         lastCuratedAt={lastCuratedAt}
+        onOpenNotes={() => setShowNotes(v => !v)}
       />
 
-      {/* Fields */}
+      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
+        {/* Suggestions section */}
+        {showNotes && suggestions.length > 0 && (
+          <div className="px-4 py-3 space-y-3">
+            <div className="p-3 rounded" style={{ background: 'var(--accent-bg)' }}>
+              <div className="font-mono text-xs font-bold" style={{ color: 'var(--accent-text)' }}>
+                THE CURATOR HAS {suggestions.length} NOTE{suggestions.length !== 1 ? 'S' : ''}
+              </div>
+              <div className="text-sm mt-1" style={{ color: 'var(--ink)' }}>
+                It found different values for fields you hold. Nothing was changed — your versions are still live.
+              </div>
+            </div>
+            {suggestions.map(s => {
+              const field = fields.find(f => f.name === s.field_name)
+              return (
+                <SuggestionCard
+                  key={s.id}
+                  suggestion={s}
+                  currentValue={field?.value}
+                  label={field?.label ?? s.field_name.toUpperCase()}
+                  onAccept={() => accept(s.id)}
+                  onDismiss={() => dismiss(s.id)}
+                />
+              )
+            })}
+            <button
+              onClick={dismissAll}
+              className="w-full min-h-[44px] rounded font-mono text-xs"
+              style={{ background: 'var(--bg-card)', color: 'var(--ink)', border: '1px solid var(--rule)' }}
+            >
+              Keep everything I wrote
+            </button>
+          </div>
+        )}
+
+        {/* Fields */}
         <div className="flex flex-col gap-px" style={{ background: 'var(--rule)' }}>
           {fields.map(f => (
             <AdminField

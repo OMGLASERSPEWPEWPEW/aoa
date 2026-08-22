@@ -12,8 +12,6 @@ import { useScrape } from '../contexts/ScrapeContext'
 import { useBlockSource } from '../hooks/useBlockSource'
 import { useBlockedSources } from '../hooks/useBlockedSources'
 import { normalizeDomain } from '../lib/blocklist'
-import { CoverageMetricsCards } from '../components/admin/CoverageMetricsCards'
-import { VenueAuditTable } from '../components/admin/VenueAuditTable'
 import { DiscoveryQueueSection } from '../components/admin/DiscoveryQueueSection'
 import { VenuePromoteModal } from '../components/admin/VenuePromoteModal'
 import { BlockSheet } from '../components/admin/BlockSheet'
@@ -534,7 +532,7 @@ function CoverageTab() {
             whiteSpace: 'nowrap',
           }}
         >
-          {scraper.phase === 'scraping' ? `View Progress ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : ''}` : 'Scrape Shows'}
+          {scraper.phase === 'scraping' ? `View Progress ${scraper.total > 0 ? `${scraper.scraped}/${scraper.total}` : ''}` : 'Curate shows'}
         </button>
         <button
           onClick={handleRunBackfill}
@@ -629,7 +627,7 @@ function CoverageTab() {
             whiteSpace: 'nowrap',
           }}
         >
-          {classDiscovery.phase === 'scraping' ? `View Progress ${classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : ''}` : 'Scrape Classes'}
+          {classDiscovery.phase === 'scraping' ? `View Progress ${classDiscovery.totalSchools > 0 ? `${classDiscovery.schoolsScraped}/${classDiscovery.totalSchools}` : ''}` : 'Curate classes'}
         </button>
       </div>
       {discoveryResult && (
@@ -687,8 +685,6 @@ function CoverageTab() {
         </div>
       )}
 
-      {metrics && <CoverageMetricsCards metrics={metrics} />}
-
       {classMetrics && (
         <div style={{ marginTop: 14, marginBottom: 14 }}>
           <div style={{ ...mono, fontSize: 9, letterSpacing: '0.1em', color: '#D4A017', marginBottom: 6 }}>
@@ -726,15 +722,29 @@ function CoverageTab() {
         </button>
       )}
 
-      {!audit.loading && (
-        <VenueAuditTable
-          venues={audit.venues}
-          sort={audit.sort}
-          setSort={audit.setSort}
-          filters={audit.filters}
-          setFilters={audit.setFilters}
-          onBlock={setBlockTarget}
-        />
+      {!audit.loading && audit.venues.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ ...mono, fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--ink-faint)', textTransform: 'uppercase', marginBottom: 6 }}>
+            Venue Audit ({audit.venues.length})
+          </div>
+          {audit.venues.slice(0, 30).map(v => (
+            <AuditRow
+              key={v.id}
+              row={{
+                id: v.id,
+                name: v.name,
+                venue_type: v.venue_type,
+                neighborhood: v.neighborhood,
+                diagnosis: { kind: 'ok', label: v.has_calendar_url ? `${v.event_count} events` : 'NO CALENDAR', severity: v.has_calendar_url ? 'neutral' : 'danger' },
+                event_count: v.event_count,
+                domain: null,
+                has_open_suggestions: false,
+              }}
+              onOpen={(id) => navigate(`/app/admin/venue/${id}`)}
+              onBlock={() => setBlockTarget(v)}
+            />
+          ))}
+        </div>
       )}
 
       {!queueLoading && (

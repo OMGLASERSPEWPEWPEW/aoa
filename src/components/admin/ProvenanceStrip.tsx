@@ -6,9 +6,10 @@ interface Props {
   empty: number
   notes: number
   lastCuratedAt: string | null
+  onOpenNotes?: () => void
 }
 
-export const ProvenanceStrip: FC<Props> = ({ total, held, empty, notes, lastCuratedAt }) => {
+export const ProvenanceStrip: FC<Props> = ({ total, held, empty, notes, lastCuratedAt, onOpenNotes }) => {
   const curatedLabel = lastCuratedAt
     ? `CURATED ${new Date(lastCuratedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}`
     : 'NEVER CURATED'
@@ -23,7 +24,13 @@ export const ProvenanceStrip: FC<Props> = ({ total, held, empty, notes, lastCura
         {held > 0 && <span style={{ color: 'var(--accent-text)' }}>{held} YOURS</span>}
         {empty > 0 && <span style={{ color: 'var(--danger)' }}>{empty} EMPTY</span>}
         {notes > 0 && (
-          <span style={{ color: 'var(--accent-text)', cursor: 'pointer' }}>{notes} NOTES</span>
+          <button
+            onClick={onOpenNotes}
+            className="font-mono text-xs"
+            style={{ color: 'var(--accent-text)', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+          >
+            {notes} NOTES
+          </button>
         )}
       </div>
       <span

@@ -212,7 +212,7 @@ export function ClassDiscoveryDashboard({ onMinimize }: { onMinimize: () => void
         padding: '12px 16px', borderBottom: `1px solid ${AMBER_DIM}`, background: AMBER_BG,
       }}>
         <div style={{ ...mono, fontSize: 9, letterSpacing: '0.12em', color: AMBER }}>
-          {isDone ? 'SCRAPE COMPLETE' : isError ? 'SCRAPE ERROR' : 'SCRAPING CLASSES'}
+          {isDone ? 'CURATION COMPLETE' : isError ? 'CURATION ERROR' : 'CURATING CLASSES'}
         </div>
         <button onClick={onMinimize} style={{
           ...mono, fontSize: 9, letterSpacing: '0.08em', color: AMBER_DIM,
