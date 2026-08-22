@@ -348,11 +348,14 @@ export interface School {
   created_at: string
 }
 
+export type SessionStatus = 'open' | 'full' | 'waitlist' | 'unknown'
+export type Delivery = 'in_person' | 'online' | 'hybrid'
+
 export interface ClassSession {
   id: string
   school_id: string
   title: string
-  level: 1 | 2 | 3 | 4 | 5
+  level: number | null
   starts_on: string | null
   schedule: string | null
   weeks: number | null
@@ -367,6 +370,36 @@ export interface ClassSession {
   scraped_at: string | null
   source_url: string | null
   created_at: string
+  instructor_name: string | null
+  status: SessionStatus
+  program_name: string | null
+  program_group: string | null
+  sort_order: number | null
+  delivery: Delivery | null
+  deleted_at: string | null
+  day_of_week: string | null
+  start_time: string | null
+  end_time: string | null
+}
+
+export type SessionProblem = 'wont_show' | 'no_price' | 'no_level' | 'no_instructor'
+
+export interface SessionDiagnosis {
+  problems: SessionProblem[]
+  label: string | null
+  severity: 'neutral' | 'warn' | 'danger'
+}
+
+export interface ClassSessionRow extends ClassSession {
+  overrides: Record<string, FieldOverride>
+  diagnosis: SessionDiagnosis
+}
+
+export interface ClassGroup {
+  key: string
+  label: string
+  sessions: ClassSessionRow[]
+  collapsed: boolean
 }
 
 export interface ClassTeacher {
@@ -447,6 +480,7 @@ export type FieldState = 'curated' | 'held' | 'empty'
 export type FieldEditor =
   | 'text' | 'textarea' | 'url' | 'enum' | 'boolean'
   | 'money' | 'tags' | 'image' | 'latlng'
+  | 'date' | 'number' | 'pips'
 
 export interface AdminFieldModel {
   name: string

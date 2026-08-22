@@ -69,6 +69,9 @@ export const queryKeys = {
   },
   mapData: (userId: string | null, lastScrapeTs: string | null) =>
     ['map-data', userId, lastScrapeTs] as const,
+  classSessions: {
+    forSchool: (schoolId: string) => ['class-sessions', schoolId] as const,
+  },
   classMap: {
     all: (userId: string | null) => ['class-map', userId] as const,
   },

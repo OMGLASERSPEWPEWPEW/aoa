@@ -30,6 +30,19 @@ export const VENUE_FIELDS: readonly FieldMeta[] = [
     consequence: 'MISSING FROM THE MAP' },
 ] as const
 
+export const CLASS_SESSION_FIELDS: readonly FieldMeta[] = [
+  { name: 'starts_on', label: 'STARTS', editor: 'date',
+    consequence: "WON’T SHOW" },
+  { name: 'price', label: 'PRICE', editor: 'money',
+    consequence: 'NO PRICE ON THE SHEET' },
+  { name: 'weeks', label: 'SESSIONS', editor: 'number',
+    hint: 'WEEKS' },
+  { name: 'delivery', label: 'WHERE', editor: 'enum',
+    options: ['in_person', 'online'] },
+  { name: 'instructor_name', label: 'INSTRUCTOR', editor: 'text' },
+  { name: 'level', label: 'WHERE IT STARTS', editor: 'pips' },
+] as const
+
 export const SCHOOL_FIELDS: readonly FieldMeta[] = [
   { name: 'photo_url', label: 'PHOTO', editor: 'image',
     consequence: 'THE MAP SHOWS A BLANK' },
