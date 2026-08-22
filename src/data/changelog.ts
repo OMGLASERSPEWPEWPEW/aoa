@@ -4,6 +4,25 @@ export type { PatchNote }
 
 export const CHANGELOG: PatchNote[] = [
   {
+    version: '0.31.0',
+    date: '2026-08-22',
+    title: 'Half the download, twice the map',
+    summary: 'Route-level code splitting, single-round class data fetch, in-place marker styling, and IndexedDB-persisted query cache.',
+    details: [
+      'Perf: lazy routes + vendor chunks — initial JS from 741 KB to 174 KB gzip (77% reduction)',
+      'Perf: mapbox-gl isolated to lazy-loaded map chunk (501 KB loads only on /app/map)',
+      'Perf: class map data fetched in 1 PostgREST nested select instead of 3-4 sequential queries',
+      'Perf: markers restyle in place on pin tap — no more full DOM teardown/rebuild',
+      'Perf: ScrapeContext provider memoized + shallow-equality guards on poll updaters',
+      'New: get_events_per_venue RPC replaces client-side counting of all event rows',
+      'New: admin coverage hooks gated by domain tab — only active domain queries fire',
+      'New: IndexedDB-persisted query cache (24h max age, busted by app version)',
+      'Fix: class scrape invalidation key aligned with useClassMap query key',
+      'Fix: class map data prefetched at shell mount (parity with venue data)',
+      'Removed: dead useMap.ts hook (0 consumers)',
+    ],
+  },
+  {
     version: '0.30.0',
     date: '2026-08-22',
     title: 'Admin class editing: 7b + 7d',
