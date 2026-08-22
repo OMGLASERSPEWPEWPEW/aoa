@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { queryClient } from '../App'
 
@@ -184,6 +184,8 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       }
 
       setScraper(prev => {
+        if (progress.scraped === prev.scraped && progress.events === prev.events &&
+            progress.phase === prev.phase && progress.currentVenue === prev.currentVenue) return prev
         if (progress.scraped > prev.scraped || progress.phase === 'done') {
           queryClient.invalidateQueries({ queryKey: ['map-data'] })
           queryClient.invalidateQueries({ queryKey: ['tonight-events'] })
@@ -229,10 +231,12 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
       }
 
       setClassDiscovery(prev => {
+        if (progress.schoolsScraped === prev.schoolsScraped && progress.phase === prev.phase &&
+            progress.currentSchool === prev.currentSchool) return prev
         if (progress.schoolsScraped > prev.schoolsScraped || progress.phase === 'done') {
           queryClient.invalidateQueries({ queryKey: ['map-data'] })
           queryClient.invalidateQueries({ queryKey: ['discover'] })
-          queryClient.invalidateQueries({ queryKey: ['class'] })
+          queryClient.invalidateQueries({ queryKey: ['class-map'] })
         }
         return progress
       })
@@ -493,8 +497,15 @@ export function ScrapeProvider({ children }: { children: ReactNode }) {
     }
   }, [pollClassJob])
 
+  const value = useMemo(() => ({
+    discovery, scraper, classDiscovery, busy,
+    dashboardOpen, setDashboardOpen,
+    classDashboardOpen, setClassDashboardOpen,
+    runDiscovery, runScraper, runClassDiscovery,
+  }), [discovery, scraper, classDiscovery, busy, dashboardOpen, classDashboardOpen, runDiscovery, runScraper, runClassDiscovery])
+
   return (
-    <ScrapeContext.Provider value={{ discovery, scraper, classDiscovery, busy, dashboardOpen, setDashboardOpen, classDashboardOpen, setClassDashboardOpen, runDiscovery, runScraper, runClassDiscovery }}>
+    <ScrapeContext.Provider value={value}>
       {children}
     </ScrapeContext.Provider>
   )

@@ -73,6 +73,6 @@ export const queryKeys = {
     forSchool: (schoolId: string) => ['class-sessions', schoolId] as const,
   },
   classMap: {
-    all: (userId: string | null) => ['class-map', userId] as const,
+    all: (userId: string | null, lastScrapeTs: string | null) => ['class-map', userId, lastScrapeTs] as const,
   },
 } as const

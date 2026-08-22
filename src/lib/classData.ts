@@ -1,5 +1,7 @@
 import { supabase } from './supabase'
-import type { School, ClassSession, ClassTeacher, ClassInterest, SchoolWithSession, ClassMapData } from './types'
+import type { ClassSession, ClassTeacher, ClassInterest, SchoolWithSession, ClassMapData } from './types'
+
+type SessionWithTeachers = ClassSession & { class_teachers: ClassTeacher[] }
 
 export function isEnrolling(session: ClassSession | null): boolean {
   if (!session?.starts_on) return false
@@ -7,51 +9,40 @@ export function isEnrolling(session: ClassSession | null): boolean {
 }
 
 export async function fetchClassMapData(userId: string | null): Promise<ClassMapData> {
-  const { data: schools, error: schoolErr } = await supabase
+  const schoolsPromise = supabase
     .from('schools')
-    .select('*')
+    .select('*, class_sessions(*, class_teachers(*))')
     .eq('status', 'active')
+    .order('starts_on', { referencedTable: 'class_sessions', ascending: true, nullsFirst: false })
+
+  const interestsPromise = userId
+    ? supabase.from('class_interest').select('*').eq('user_id', userId)
+    : null
+
+  const [{ data: schools, error: schoolErr }, interestsResult] = await Promise.all([
+    schoolsPromise,
+    interestsPromise ?? Promise.resolve(null),
+  ])
 
   if (schoolErr) throw schoolErr
   if (!schools?.length) return { schools: [], userInterests: [] }
 
-  const schoolIds = schools.map((s: School) => s.id)
-
-  const { data: sessions } = await supabase
-    .from('class_sessions')
-    .select('*')
-    .in('school_id', schoolIds)
-    .order('starts_on', { ascending: true, nullsFirst: false })
-
-  const { data: teachers } = await supabase
-    .from('class_teachers')
-    .select('*')
-
-  const allSessions: ClassSession[] = sessions ?? []
-  const allTeachers: ClassTeacher[] = teachers ?? []
-
   const now = new Date()
-  const schoolsWithSessions: SchoolWithSession[] = schools.map((school: School) => {
-    const schoolSessions = allSessions.filter(s => s.school_id === school.id)
-    const futureSession = schoolSessions.find(s => s.starts_on && new Date(s.starts_on) > now)
-    const dropInSession = schoolSessions.find(s => s.drop_in)
-    const nextSession = futureSession ?? dropInSession ?? schoolSessions[0] ?? null
+  const schoolsWithSessions: SchoolWithSession[] = schools.map((school: any) => {
+    const embedded: SessionWithTeachers[] = school.class_sessions ?? []
+    const sessions: ClassSession[] = embedded.map(({ class_teachers: _, ...s }) => s)
+    const futureSession = embedded.find(s => s.starts_on && new Date(s.starts_on) > now)
+    const dropInSession = embedded.find(s => s.drop_in)
+    const nextEmbedded = futureSession ?? dropInSession ?? embedded[0] ?? null
+    const nextSession: ClassSession | null = nextEmbedded ? (() => { const { class_teachers: _, ...s } = nextEmbedded; return s })() : null
 
-    const sessionTeachers = nextSession
-      ? allTeachers.filter(t => t.session_id === nextSession.id)
-      : []
+    const sessionTeachers: ClassTeacher[] = nextEmbedded?.class_teachers ?? []
 
-    return { ...school, next_session: nextSession, sessions: schoolSessions, teachers: sessionTeachers }
+    const { class_sessions: _, ...schoolFields } = school
+    return { ...schoolFields, next_session: nextSession, sessions, teachers: sessionTeachers }
   })
 
-  let userInterests: ClassInterest[] = []
-  if (userId) {
-    const { data } = await supabase
-      .from('class_interest')
-      .select('*')
-      .eq('user_id', userId)
-    userInterests = data ?? []
-  }
+  const userInterests: ClassInterest[] = interestsResult?.data ?? []
 
   return { schools: schoolsWithSessions, userInterests }
 }
